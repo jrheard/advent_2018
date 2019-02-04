@@ -56,3 +56,14 @@ TODO read through https://doc.rust-lang.org/std/index.html
 ok here goes
 
 1a: sum all the numbers
+
+pretty straightforward
+
+1b is straightforward too but i'm confused about this:
+
+let set: HashSet<_> = [1, 2, 3].iter().cloned().collect();
+assert_eq!(set.contains(&1), true);
+assert_eq!(set.contains(&4), false);
+
+why does set.contains(&1) have to have the &?
+TODO ask peter
