@@ -1,0 +1,58 @@
+2/4/19
+
+at long last, chapter 13 is behind me and i'm about ready to start
+
+reading through https://doc.rust-lang.org/std/iter/trait.Iterator.html before i begin
+
+the bit about using collect() to collect a list of Results into a Result of lists is interesting
+
+btw here are the vim keybinds i've set up that i need to remember
+
+gd - go to definition
+gs - go to definition in a split
+,gd - look up documentation
+C-x C-o - completion (could thihs work with C-p instead?)
+
+useful-looking methods aside from the usual FP ones:
+* partition
+* inspect
+* filter_map
+* by_ref
+* all, any
+* find
+* find_map
+* position, rposition
+* max_by_key, max_by, min_by_key, min_by
+* rev
+* cloned
+
+things i know by different names:
+* `flat_map` is clj `mapcat`
+* `scan` is clj `reductions`
+* `skip` is clj `drop`
+* `fold` is clj `reduce`
+* `partition` is yelp_lib.iteration `winnow`
+
+things to watch out for:
+some of these methods (particularly map, filter, take_while, skip_while, etc)
+have this in their documentation (copy-pasting follows):
+
+Because the closure passed to filter() takes a reference, and many iterators iterate over
+references, this leads to a possibly confusing situation, where the type of the closure is a double reference.
+
+```
+let a = [0, 1, 2];
+
+let mut iter = a.into_iter().filter(|x| **x > 1); // need two *s!
+
+assert_eq!(iter.next(), Some(&2));
+assert_eq!(iter.next(), None);
+```
+
+so let's just keep an eye out for that.
+
+TODO read through https://doc.rust-lang.org/std/index.html
+
+ok here goes
+
+1a: sum all the numbers
