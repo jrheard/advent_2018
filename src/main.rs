@@ -103,7 +103,7 @@ fn two_b() -> String {
         .iter()
         .combinations(2)
         .map(|pair| (pair[0], pair[1]))
-        .find(|(box_a, box_b)| differing_character_positions(box_a, box_b).iter().count() == 1)
+        .find(|(box_a, box_b)| differing_character_positions(box_a, box_b).len() == 1)
         .unwrap();
 
     let differing_index = differing_character_positions(box_a, box_b)[0];
