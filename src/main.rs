@@ -92,15 +92,14 @@ fn two_b() -> String {
         for other_line in lines.iter().skip(i) {
             let diff_positions = differing_character_positions(line, other_line);
             if diff_positions.iter().count() == 1 {
-
                 let mut ret = String::new();
-                for (i, character) in line.chars().enumerate(){
+                for (i, character) in line.chars().enumerate() {
                     if i != diff_positions[0] {
                         ret.push(character);
                     }
                 }
 
-                return ret
+                return ret;
             }
         }
     }
