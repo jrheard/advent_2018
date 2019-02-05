@@ -5,3 +5,4 @@ authors = ["jrheard <jrheard@cs.stanford.edu>"]
 edition = "2018"
 
 [dependencies]
+hashbrown = "0.1"

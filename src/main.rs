@@ -1,5 +1,5 @@
-use std::collections::HashMap;
-use std::collections::HashSet;
+use hashbrown::HashMap;
+use hashbrown::HashSet;
 use std::fs;
 
 fn one_a() -> i32 {
@@ -54,11 +54,11 @@ fn two_a() -> i32 {
     num_with_a_letter_that_appears_twice * num_with_a_letter_that_appears_thrice
 }
 
-fn letter_frequencies(x: &str) -> HashMap<String, i32> {
+fn letter_frequencies(x: &str) -> HashMap<char, i32> {
     let mut ret = HashMap::new();
 
     for character in x.chars() {
-        let count = ret.entry(character.to_string()).or_insert(0);
+        let count = ret.entry(character).or_insert(0);
         *count += 1;
     }
 
@@ -69,6 +69,38 @@ fn main() {
     println!("1a: {}", one_a());
     println!("1b: {}", one_b());
     println!("2a: {}", two_a());
+}
 
+#[cfg(test)]
+mod test {
+    use super::*;
 
+    // I don't know anything about Rust macros yet, I'm copy-pasting this from
+    // https://stackoverflow.com/questions/27582739/how-do-i-create-a-hashmap-literal for now.
+    macro_rules! map(
+        { $($key:expr => $value:expr),+ } => {
+            {
+                let mut m = HashMap::new();
+                $(
+                    m.insert($key, $value);
+                )+
+                m
+            }
+        };
+    );
+
+    #[test]
+    fn test_letter_frequencies() {
+        assert_eq!(
+            letter_frequencies("aabbccccd"),
+            map! { 'a' => 2, 'b' => 2, 'c' => 4, 'd' => 1}
+        );
+
+        assert_eq!(
+            letter_frequencies("abcabcaa"),
+            map! {'a' => 4, 'b' => 2, 'c' => 2}
+        );
+
+        assert_eq!(letter_frequencies(""), HashMap::new());
+    }
 }

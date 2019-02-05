@@ -67,3 +67,18 @@ assert_eq!(set.contains(&4), false);
 
 why does set.contains(&1) have to have the &?
 TODO ask peter
+
+https://www.forrestthewoods.com/blog/learning-rust-via-advent-of-code/
+has a good list of iterator methods and useful crates
+
+mentions https://crates.io/crates/nom and https://crates.io/crates/pest as being
+possibly useful for day24
+
+recommends https://github.com/Amanieu/hashbrown
+
+let's try it out!
+2x speedup!!
+
+oh wow nice i hadn't tried building in release mode - 0.01 seconds for the whole thing atm
+
+
