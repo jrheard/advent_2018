@@ -88,23 +88,33 @@ fn two_b() -> String {
     let contents = fs::read_to_string("src/inputs/2.txt").unwrap();
     let lines: Vec<&str> = contents.lines().collect();
 
-    for (i, line) in lines.iter().enumerate() {
-        for other_line in lines.iter().skip(i) {
-            let diff_positions = differing_character_positions(line, other_line);
-            if diff_positions.iter().count() == 1 {
-                let mut ret = String::new();
-                for (i, character) in line.chars().enumerate() {
-                    if i != diff_positions[0] {
-                        ret.push(character);
-                    }
-                }
+    let (box_a, box_b) = lines
+        .iter()
+        .enumerate()
+        .flat_map(|(i, line)| {
+            lines
+                .iter()
+                .skip(i)
+                .map(move |other_line| (line, other_line))
+        })
+        .find(|(line, other_line)| {
+            differing_character_positions(line, other_line)
+                .iter()
+                .count()
+                == 1
+        })
+        .unwrap();
 
-                return ret;
-            }
+    let differing_index = differing_character_positions(box_a, box_b)[0];
+
+    let mut ret = String::new();
+    for (i, character) in box_a.chars().enumerate() {
+        if i != differing_index {
+            ret.push(character);
         }
     }
 
-    "unreachable".to_string()
+    return ret;
 }
 
 fn main() {
