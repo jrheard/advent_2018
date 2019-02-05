@@ -1,5 +1,7 @@
 use hashbrown::HashMap;
 use hashbrown::HashSet;
+use itertools::Itertools;
+
 use std::fs;
 
 fn one_a() -> i32 {
@@ -90,15 +92,10 @@ fn two_b() -> String {
 
     let (box_a, box_b) = lines
         .iter()
-        .enumerate()
-        .flat_map(|(i, line)| {
-            lines
-                .iter()
-                .skip(i)
-                .map(move |other_line| (line, other_line))
-        })
-        .find(|(line, other_line)| {
-            differing_character_positions(line, other_line)
+        .combinations(2)
+        .map(|pair| (pair[0], pair[1]))
+        .find(|(box_a, box_b)| {
+            differing_character_positions(box_a, box_b)
                 .iter()
                 .count()
                 == 1
