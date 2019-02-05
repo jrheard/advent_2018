@@ -133,6 +133,15 @@ mod test {
     );
 
     #[test]
+    // A test to ensure that I don't introduce regressions when refactoring.
+    fn test_solutions() {
+        assert_eq!(one_a(), 439);
+        assert_eq!(one_b(), 124645);
+        assert_eq!(two_a(), 5368);
+        assert_eq!(two_b(), "cvgywxqubnuaefmsljdrpfzyi");
+    }
+
+    #[test]
     fn test_letter_frequencies() {
         assert_eq!(
             letter_frequencies("aabbccccd"),
