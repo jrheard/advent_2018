@@ -2,6 +2,16 @@ use hashbrown::HashMap;
 use hashbrown::HashSet;
 use itertools::Itertools;
 
+// TODO: i don't understand anything about serde, serde_derive, serde_scan, or macro importing
+// i just found out about serde_derive through a reddit comment, it has a useful scan! macro
+extern crate serde;
+
+#[macro_use]
+extern crate serde_scan;
+
+#[macro_use]
+extern crate serde_derive;
+
 use std::fs;
 
 fn one_a() -> i32 {
@@ -105,6 +115,28 @@ fn two_b() -> String {
     ret
 }
 
+#[derive(Deserialize, Debug, PartialEq)]
+struct Claim {
+    id: i32,
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32,
+}
+
+impl Claim {
+    fn new(claim_str: &str) -> Claim {
+        let (id, x, y, width, height) = scan!("#{} @ {},{}: {}x{}" <- claim_str).unwrap();
+        Claim {
+            id,
+            x,
+            y,
+            width,
+            height,
+        }
+    }
+}
+
 fn main() {
     println!("1a: {}", one_a());
     println!("1b: {}", one_b());
@@ -159,4 +191,20 @@ mod test {
         assert_eq!(differing_character_positions("abcde", "axcye"), vec![1, 3]);
         assert_eq!(differing_character_positions("fghij", "fguij"), vec![2]);
     }
+
+    #[test]
+    fn test_claim_new() {
+        let input = "#123 @ 3,2: 5x4";
+        assert_eq!(
+            Claim::new(input),
+            Claim {
+                id: 123,
+                x: 3,
+                y: 2,
+                width: 5,
+                height: 4
+            }
+        );
+    }
+
 }
