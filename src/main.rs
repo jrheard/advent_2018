@@ -47,6 +47,11 @@ fn letter_frequencies(x: &str) -> HashMap<char, i32> {
     ret
 }
 
+// To make sure you didn't miss any, you scan the likely candidate boxes again,
+// counting the number that have an ID containing exactly two of any letter and
+// then separately counting those with exactly three of any letter. You can multiply
+// those two counts together to get a rudimentary checksum and compare it
+// to what your device predicts.
 fn two_a() -> i32 {
     let contents = fs::read_to_string("src/inputs/2.txt").unwrap();
 
@@ -77,6 +82,8 @@ fn differing_character_positions(x: &str, y: &str) -> Vec<usize> {
     ret
 }
 
+// The boxes will have IDs which differ by exactly one character at the same position in both strings.
+// What letters are common between the two correct box IDs?
 fn two_b() -> String {
     let contents = fs::read_to_string("src/inputs/2.txt").unwrap();
     let lines: Vec<&str> = contents.lines().collect();
