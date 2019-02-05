@@ -192,3 +192,48 @@ eh, it turns out this does the trick:
         .collect::<String>()
 
 but the forloop approach is simpler so i'll stick with that.
+
+======
+
+2/5/19
+
+3a+3b were easy
+
+starting 4a - first challenge is to sort the log entries chronologically
+
+https://crates.io/crates/chrono is apparently a good crate for time stuff
+
+also, HN says:
+
+`
+For sorting sequential fields you can chain comparisons with .then():
+    struct Date {
+        year: u32,
+        month: u32,
+        day: u32,
+    }
+
+    let mut vec: Vec<Date> = Vec::new();
+
+    vec.sort_by(|a,b| {
+       a.year.cmp(&b.year)
+        .then(a.month.cmp(&b.month))
+        .then(a.day.cmp(&b.day))
+    });
+Alternatively you can derive PartialEq, PartialOrd, Eq and Ord for your struct, which will
+produce a lexicographic ordering based on the top-to-bottom declaration order of the struct's members:
+    #[derive(PartialEq, PartialOrd, Eq, Ord)]
+    struct Date {
+        year: u32,
+        month: u32,
+        day: u32,
+    }
+
+`
+`
+Or you can use sort_by_key and extract the relevant sorting key as a tuple (or any other Ord structure) e.g.
+    vec.sort_by_key(|d| (d.year, d.month, d.day))
+sort_by is more flexible as it works fine with borrows, but when sorting on a series of integer values or references sort_by_key is great.
+`
+
+starting off with chrono

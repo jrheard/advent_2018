@@ -1,9 +1,8 @@
+use chrono::prelude::*;
 use hashbrown::HashMap;
 use hashbrown::HashSet;
 use itertools::Itertools;
 
-// TODO: i don't understand anything about serde, serde_derive, serde_scan, or macro importing
-// i just found out about serde_derive through a reddit comment, it has a useful scan! macro
 extern crate serde;
 
 #[macro_use]
@@ -137,7 +136,7 @@ impl Claim {
     }
 }
 
-type FabricGrid = [[i32; 1000]; 1000];
+type FabricGrid = Vec<Vec<i32>>;
 
 fn mark_claim_on_grid(grid: &mut FabricGrid, claim: &Claim) {
     for i in claim.x..(claim.x + claim.width) {
@@ -151,7 +150,7 @@ fn mark_claim_on_grid(grid: &mut FabricGrid, claim: &Claim) {
 fn three_a() -> usize {
     let contents = fs::read_to_string("src/inputs/3.txt").unwrap();
     let claims: Vec<Claim> = contents.lines().map(Claim::new).collect();
-    let mut grid: FabricGrid = [[0; 1000]; 1000];
+    let mut grid: FabricGrid = vec![vec![0; 1000]; 1000];
 
     for claim in &claims {
         mark_claim_on_grid(&mut grid, &claim);
@@ -168,7 +167,7 @@ fn three_a() -> usize {
 fn three_b() -> i32 {
     let contents = fs::read_to_string("src/inputs/3.txt").unwrap();
     let claims: Vec<Claim> = contents.lines().map(Claim::new).collect();
-    let mut grid: FabricGrid = [[0; 1000]; 1000];
+    let mut grid: FabricGrid = vec![vec![0; 1000]; 1000];
 
     for claim in &claims {
         mark_claim_on_grid(&mut grid, &claim);
@@ -192,6 +191,64 @@ fn three_b() -> i32 {
     -1
 }
 
+type GuardID = i32;
+
+#[derive(Debug, PartialEq)]
+enum LogEntryKind {
+    BeginsShift(GuardID),
+    FallsAsleep,
+    WakesUp,
+}
+
+#[derive(Debug, PartialEq)]
+struct LogEntry {
+    dt: DateTime<Utc>,
+    kind: LogEntryKind,
+}
+
+impl LogEntry {
+    fn new(log_entry_str: &str) -> LogEntry {
+        let dt = parse_log_entry_datetime(log_entry_str);
+
+        // TODO - would a match work here?
+        let kind = if log_entry_str.contains("begins shift") {
+            let relevant_string_portion = log_entry_str
+                .chars()
+                .skip_while(|&x| x != ']')
+                .collect::<String>();
+            let trimmed_str = relevant_string_portion.trim();
+            let guard_id = scan!("] Guard #{} begins shift" <- trimmed_str).unwrap();
+            LogEntryKind::BeginsShift(guard_id)
+        } else if log_entry_str.contains("falls asleep") {
+            LogEntryKind::FallsAsleep
+        } else {
+            LogEntryKind::WakesUp
+        };
+
+        LogEntry { dt, kind }
+    }
+}
+
+fn parse_log_entry_datetime(log_entry_str: &str) -> DateTime<Utc> {
+    let dt_string = log_entry_str
+        .chars()
+        .into_iter()
+        .take_while(|&x| x != ']')
+        .collect::<String>();
+    let dt_str = dt_string.as_str();
+    let (year, month, day, hour, minute) = scan!("[{}-{}-{} {}:{}" <- dt_str).unwrap();
+    Utc.ymd(year, month, day).and_hms(hour, minute, 0)
+}
+
+// Find the guard that has the most minutes asleep. What minute does that guard spend asleep the most?
+// What is the ID of the guard you chose multiplied by the minute you chose?
+fn four_a() -> i32 {
+    let contents = fs::read_to_string("src/inputs/4.txt").unwrap();
+    let lines: Vec<&str> = contents.lines().collect();
+
+    5
+}
+
 fn main() {
     println!("1a: {}", one_a());
     println!("1b: {}", one_b());
@@ -199,6 +256,7 @@ fn main() {
     println!("2b: {}", two_b());
     println!("3a: {}", three_a());
     println!("3b: {}", three_b());
+    println!("4a: {}", four_a());
 }
 
 #[cfg(test)]
@@ -226,6 +284,8 @@ mod test {
         assert_eq!(one_b(), 124645);
         assert_eq!(two_a(), 5368);
         assert_eq!(two_b(), "cvgywxqubnuaefmsljdrpfzyi");
+        assert_eq!(three_a(), 101196);
+        assert_eq!(three_b(), 243);
     }
 
     #[test]
@@ -262,6 +322,37 @@ mod test {
                 height: 4
             }
         );
+    }
+
+    #[test]
+    fn test_parse_log_entry_datetime() {
+        let dt = parse_log_entry_datetime("[1518-10-18 23:51] Guard #349 begins shift");
+        let expected = Utc.ymd(1518, 10, 18).and_hms(23, 51, 0);
+        assert_eq!(dt, expected);
+    }
+
+    #[test]
+    fn test_log_entry_new() {
+        let entry = LogEntry::new("[1518-10-18 23:51] Guard #349 begins shift");
+        let expected = LogEntry {
+            kind: LogEntryKind::BeginsShift(349),
+            dt: Utc.ymd(1518, 10, 18).and_hms(23, 51, 0),
+        };
+        assert_eq!(entry, expected);
+
+        let entry = LogEntry::new("[1518-03-05 00:59] wakes up");
+        let expected = LogEntry {
+            kind: LogEntryKind::WakesUp,
+            dt: Utc.ymd(1518, 3, 5).and_hms(0, 59, 0),
+        };
+        assert_eq!(entry, expected);
+
+        let entry = LogEntry::new("[1518-04-03 00:19] falls asleep");
+        let expected = LogEntry {
+            kind: LogEntryKind::FallsAsleep,
+            dt: Utc.ymd(1518, 4, 3).and_hms(0, 19, 0),
+        };
+        assert_eq!(entry, expected);
     }
 
 }
