@@ -151,7 +151,6 @@ fn mark_claim_on_grid(grid: &mut FabricGrid, claim: &Claim) {
 fn three_a() -> usize {
     let contents = fs::read_to_string("src/inputs/3.txt").unwrap();
     let claims: Vec<Claim> = contents.lines().map(Claim::new).collect();
-
     let mut grid: FabricGrid = [[0; 1000]; 1000];
 
     for claim in &claims {
@@ -165,12 +164,41 @@ fn three_a() -> usize {
         .count()
 }
 
+// What is the ID of the only claim that doesn't overlap?
+fn three_b() -> i32 {
+    let contents = fs::read_to_string("src/inputs/3.txt").unwrap();
+    let claims: Vec<Claim> = contents.lines().map(Claim::new).collect();
+    let mut grid: FabricGrid = [[0; 1000]; 1000];
+
+    for claim in &claims {
+        mark_claim_on_grid(&mut grid, &claim);
+    }
+
+    for claim in &claims {
+        let mut contested = false;
+        for i in claim.x..(claim.x + claim.width) {
+            for j in claim.y..(claim.y + claim.height) {
+                if grid[i as usize][j as usize] > 1 {
+                    contested = true;
+                }
+            }
+        }
+
+        if !contested {
+            return claim.id;
+        }
+    }
+
+    -1
+}
+
 fn main() {
     println!("1a: {}", one_a());
     println!("1b: {}", one_b());
     println!("2a: {}", two_a());
     println!("2b: {}", two_b());
     println!("3a: {}", three_a());
+    println!("3b: {}", three_b());
 }
 
 #[cfg(test)]
