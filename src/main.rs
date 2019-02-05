@@ -36,6 +36,17 @@ fn one_b() -> i32 {
     -1
 }
 
+fn letter_frequencies(x: &str) -> HashMap<char, i32> {
+    let mut ret = HashMap::new();
+
+    for character in x.chars() {
+        let count = ret.entry(character).or_insert(0);
+        *count += 1;
+    }
+
+    ret
+}
+
 fn two_a() -> i32 {
     let contents = fs::read_to_string("src/inputs/2.txt").unwrap();
 
@@ -54,21 +65,47 @@ fn two_a() -> i32 {
     num_with_a_letter_that_appears_twice * num_with_a_letter_that_appears_thrice
 }
 
-fn letter_frequencies(x: &str) -> HashMap<char, i32> {
-    let mut ret = HashMap::new();
+fn differing_character_positions(x: &str, y: &str) -> Vec<usize> {
+    let mut ret = Vec::new();
 
-    for character in x.chars() {
-        let count = ret.entry(character).or_insert(0);
-        *count += 1;
+    for (i, character) in x.chars().enumerate() {
+        if y.chars().nth(i).unwrap() != character {
+            ret.push(i);
+        }
     }
 
     ret
+}
+
+fn two_b() -> String {
+    let contents = fs::read_to_string("src/inputs/2.txt").unwrap();
+    let lines: Vec<&str> = contents.lines().collect();
+
+    for (i, line) in lines.iter().enumerate() {
+        for other_line in lines.iter().skip(i) {
+            let diff_positions = differing_character_positions(line, other_line);
+            if diff_positions.iter().count() == 1 {
+
+                let mut ret = String::new();
+                for (i, character) in line.chars().enumerate(){
+                    if i != diff_positions[0] {
+                        ret.push(character);
+                    }
+                }
+
+                return ret
+            }
+        }
+    }
+
+    "unreachable".to_string()
 }
 
 fn main() {
     println!("1a: {}", one_a());
     println!("1b: {}", one_b());
     println!("2a: {}", two_a());
+    println!("2b: {}", two_b());
 }
 
 #[cfg(test)]
@@ -102,5 +139,11 @@ mod test {
         );
 
         assert_eq!(letter_frequencies(""), HashMap::new());
+    }
+
+    #[test]
+    fn test_differing_character_positions() {
+        assert_eq!(differing_character_positions("abcde", "axcye"), vec![1, 3]);
+        assert_eq!(differing_character_positions("fghij", "fguij"), vec![2]);
     }
 }
