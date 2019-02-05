@@ -47,11 +47,15 @@ fn one_b() -> i32 {
     -1
 }
 
-fn letter_frequencies(x: &str) -> HashMap<char, i32> {
+fn frequencies<I, T>(x: I) -> HashMap<T, u32>
+where
+    I: Iterator<Item = T>,
+    T: Eq + std::hash::Hash,
+{
     let mut ret = HashMap::new();
 
-    for character in x.chars() {
-        let count = ret.entry(character).or_insert(0);
+    for item in x {
+        let count = ret.entry(item).or_insert(0);
         *count += 1;
     }
 
@@ -69,7 +73,7 @@ fn two_a() -> i32 {
     let mut num_with_a_letter_that_appears_twice = 0;
     let mut num_with_a_letter_that_appears_thrice = 0;
 
-    for letter_freq_map in contents.lines().map(letter_frequencies) {
+    for letter_freq_map in contents.lines().map(|line| frequencies(line.chars())) {
         if letter_freq_map.values().into_iter().any(|&x| x == 2) {
             num_with_a_letter_that_appears_twice += 1;
         }
@@ -191,22 +195,24 @@ fn three_b() -> i32 {
     -1
 }
 
-type GuardID = i32;
+type GuardID = u32;
 
-#[derive(Debug, PartialEq)]
+// TODO - is this deriving all sane?
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum LogEntryKind {
     BeginsShift(GuardID),
     FallsAsleep,
     WakesUp,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct LogEntry {
     dt: DateTime<Utc>,
     kind: LogEntryKind,
 }
 
 impl LogEntry {
+    // Takes a string like "[1518-10-18 23:51] Guard #349 begins shift", returns a LogEntry.
     fn new(log_entry_str: &str) -> LogEntry {
         let dt = parse_log_entry_datetime(log_entry_str);
 
@@ -242,11 +248,48 @@ fn parse_log_entry_datetime(log_entry_str: &str) -> DateTime<Utc> {
 
 // Find the guard that has the most minutes asleep. What minute does that guard spend asleep the most?
 // What is the ID of the guard you chose multiplied by the minute you chose?
-fn four_a() -> i32 {
+fn four_a() -> u32 {
     let contents = fs::read_to_string("src/inputs/4.txt").unwrap();
-    let lines: Vec<&str> = contents.lines().collect();
+    let mut entries: Vec<LogEntry> = contents.lines().map(LogEntry::new).collect();
 
-    5
+    // Your entries are in the order you found them. You'll need to organize them before they can be analyzed.
+    entries.sort();
+
+    // Because all asleep/awake times are during the midnight hour (00:00 - 00:59),
+    // only the minute portion (00 - 59) is relevant for those events.
+    let mut guard_sleep_log: HashMap<GuardID, Vec<u32>> = HashMap::new();
+    let mut current_guard_id = 0;
+    let mut sleep_start_minute = 0;
+
+    for entry in &entries {
+        match entry.kind {
+            LogEntryKind::BeginsShift(guard_id) => {
+                current_guard_id = guard_id;
+            }
+            LogEntryKind::FallsAsleep => {
+                sleep_start_minute = entry.dt.minute();
+            }
+            LogEntryKind::WakesUp => {
+                let guard_entry = guard_sleep_log
+                    .entry(current_guard_id)
+                    .or_insert(Vec::new());
+                guard_entry.extend(sleep_start_minute..entry.dt.minute());
+            }
+        }
+    }
+
+    let (sleepiest_guard_id, sleep_minutes) = guard_sleep_log
+        .iter()
+        .max_by_key(|(_, sleep_minutes)| sleep_minutes.len())
+        .unwrap();
+
+    let sleep_minute_frequencies = frequencies(sleep_minutes.iter());
+    let (sleepiest_minute, _) = sleep_minute_frequencies
+        .iter()
+        .max_by_key(|(_, count)| *count)
+        .unwrap();
+
+    *sleepiest_guard_id * **sleepiest_minute
 }
 
 fn main() {
@@ -286,21 +329,22 @@ mod test {
         assert_eq!(two_b(), "cvgywxqubnuaefmsljdrpfzyi");
         assert_eq!(three_a(), 101196);
         assert_eq!(three_b(), 243);
+        assert_eq!(four_a(), 99911);
     }
 
     #[test]
-    fn test_letter_frequencies() {
+    fn test_frequencies() {
         assert_eq!(
-            letter_frequencies("aabbccccd"),
+            frequencies("aabbccccd".chars()),
             map! { 'a' => 2, 'b' => 2, 'c' => 4, 'd' => 1}
         );
 
         assert_eq!(
-            letter_frequencies("abcabcaa"),
+            frequencies("abcabcaa".chars()),
             map! {'a' => 4, 'b' => 2, 'c' => 2}
         );
 
-        assert_eq!(letter_frequencies(""), HashMap::new());
+        assert_eq!(frequencies("".chars()), HashMap::new());
     }
 
     #[test]
