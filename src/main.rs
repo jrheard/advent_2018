@@ -137,18 +137,47 @@ impl Claim {
     }
 }
 
+type FabricGrid = [[i32; 1000]; 1000];
+
+fn mark_claim_on_grid(grid: &mut FabricGrid, claim: &Claim) {
+    for i in claim.x..(claim.x + claim.width) {
+        for j in claim.y..(claim.y + claim.height) {
+            grid[i as usize][j as usize] += 1;
+        }
+    }
+}
+
+// How many square inches of fabric are within two or more claims?
+fn three_a() -> usize {
+    let contents = fs::read_to_string("src/inputs/3.txt").unwrap();
+    let claims: Vec<Claim> = contents.lines().map(Claim::new).collect();
+
+    let mut grid: FabricGrid = [[0; 1000]; 1000];
+
+    for claim in &claims {
+        mark_claim_on_grid(&mut grid, &claim);
+    }
+
+    grid.iter()
+        .map(|x| x.iter())
+        .flatten()
+        .filter(|x| **x > 1)
+        .count()
+}
+
 fn main() {
     println!("1a: {}", one_a());
     println!("1b: {}", one_b());
     println!("2a: {}", two_a());
     println!("2b: {}", two_b());
+    println!("3a: {}", three_a());
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
 
-    // I don't know anything about Rust macros yet, I'm copy-pasting this from
+    // XXX I don't know anything about Rust macros yet, I'm copy-pasting this from
     // https://stackoverflow.com/questions/27582739/how-do-i-create-a-hashmap-literal for now.
     macro_rules! map(
         { $($key:expr => $value:expr),+ } => {
