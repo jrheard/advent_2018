@@ -246,9 +246,7 @@ fn parse_log_entry_datetime(log_entry_str: &str) -> DateTime<Utc> {
     Utc.ymd(year, month, day).and_hms(hour, minute, 0)
 }
 
-// Find the guard that has the most minutes asleep. What minute does that guard spend asleep the most?
-// What is the ID of the guard you chose multiplied by the minute you chose?
-fn four_a() -> u32 {
+fn get_guard_sleep_log() -> HashMap<GuardID, Vec<u32>> {
     let contents = fs::read_to_string("src/inputs/4.txt").unwrap();
     let mut entries: Vec<LogEntry> = contents.lines().map(LogEntry::new).collect();
 
@@ -278,6 +276,14 @@ fn four_a() -> u32 {
         }
     }
 
+    guard_sleep_log
+}
+
+// Find the guard that has the most minutes asleep. What minute does that guard spend asleep the most?
+fn four_a() -> u32 {
+    let guard_sleep_log = get_guard_sleep_log();
+
+    // TODO - better understand when+how+why i have to dereference things in the lines below
     let (sleepiest_guard_id, sleep_minutes) = guard_sleep_log
         .iter()
         .max_by_key(|(_, sleep_minutes)| sleep_minutes.len())
@@ -289,7 +295,33 @@ fn four_a() -> u32 {
         .max_by_key(|(_, count)| *count)
         .unwrap();
 
+    // What is the ID of the guard you chose multiplied by the minute you chose?
     *sleepiest_guard_id * **sleepiest_minute
+}
+
+// Of all guards, which guard is most frequently asleep on the same minute?
+fn four_b() -> u32 {
+    let guard_sleep_log = get_guard_sleep_log();
+    let mut sleepiest_minute_per_guard: HashMap<GuardID, (u32, u32)> = HashMap::new();
+
+    for (&guard_id, sleep_minutes) in &guard_sleep_log {
+        let sleep_minute_frequencies = frequencies(sleep_minutes.iter());
+        // TODO why do i have to double-deref sleepiest_minute here?
+        let (&&sleepiest_minute, &sleep_count_for_minute) = sleep_minute_frequencies
+            .iter()
+            .max_by_key(|(_, count)| *count)
+            .unwrap();
+
+        sleepiest_minute_per_guard.insert(guard_id, (sleepiest_minute, sleep_count_for_minute));
+    }
+
+    let (guard_id, (sleepiest_minute, _)) = sleepiest_minute_per_guard
+        .iter()
+        .max_by_key(|(_, (_, count))| count)
+        .unwrap();
+
+    // What is the ID of the guard you chose multiplied by the minute you chose?
+    guard_id * sleepiest_minute
 }
 
 fn main() {
@@ -300,6 +332,7 @@ fn main() {
     println!("3a: {}", three_a());
     println!("3b: {}", three_b());
     println!("4a: {}", four_a());
+    println!("4b: {}", four_b());
 }
 
 #[cfg(test)]
@@ -330,6 +363,7 @@ mod test {
         assert_eq!(three_a(), 101196);
         assert_eq!(three_b(), 243);
         assert_eq!(four_a(), 99911);
+        assert_eq!(four_b(), 65854);
     }
 
     #[test]
