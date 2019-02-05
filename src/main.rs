@@ -73,15 +73,11 @@ fn two_a() -> i32 {
 }
 
 fn differing_character_positions(x: &str, y: &str) -> Vec<usize> {
-    let mut ret = Vec::new();
-
-    for (i, character) in x.chars().enumerate() {
-        if y.chars().nth(i).unwrap() != character {
-            ret.push(i);
-        }
-    }
-
-    ret
+    x.chars()
+        .enumerate()
+        .filter(|(i, character)| y.chars().nth(*i).unwrap() != *character)
+        .map(|(i, _)| i)
+        .collect()
 }
 
 // The boxes will have IDs which differ by exactly one character at the same position in both strings.
