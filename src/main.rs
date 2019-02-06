@@ -13,6 +13,25 @@ extern crate serde_derive;
 
 use std::fs;
 
+fn frequencies<I, T>(x: I) -> HashMap<T, u32>
+where
+    I: Iterator<Item = T>,
+    T: Eq + std::hash::Hash,
+{
+    let mut ret = HashMap::new();
+
+    for item in x {
+        let count = ret.entry(item).or_insert(0);
+        *count += 1;
+    }
+
+    ret
+}
+
+//*******
+//* Day 1
+//*******
+
 fn one_a() -> i32 {
     let contents = fs::read_to_string("src/inputs/1.txt").unwrap();
     contents.lines().map(|x| x.parse::<i32>().unwrap()).sum()
@@ -47,20 +66,9 @@ fn one_b() -> i32 {
     -1
 }
 
-fn frequencies<I, T>(x: I) -> HashMap<T, u32>
-where
-    I: Iterator<Item = T>,
-    T: Eq + std::hash::Hash,
-{
-    let mut ret = HashMap::new();
-
-    for item in x {
-        let count = ret.entry(item).or_insert(0);
-        *count += 1;
-    }
-
-    ret
-}
+//*******
+//* Day 2
+//*******
 
 // To make sure you didn't miss any, you scan the likely candidate boxes again,
 // counting the number that have an ID containing exactly two of any letter and
@@ -117,6 +125,10 @@ fn two_b() -> String {
 
     ret
 }
+
+//*******
+//* Day 3
+//*******
 
 #[derive(Deserialize, Debug, PartialEq)]
 struct Claim {
@@ -195,6 +207,10 @@ fn three_b() -> i32 {
     -1
 }
 
+//*******
+//* Day 4
+//*******
+
 type GuardID = u32;
 
 // TODO - is this deriving all sane?
@@ -235,6 +251,7 @@ impl LogEntry {
     }
 }
 
+// Parses a DateTime<Utc> out of a string like "[1518-10-18 23:51] Guard #349 begins shift".
 fn parse_log_entry_datetime(log_entry_str: &str) -> DateTime<Utc> {
     let dt_string = log_entry_str
         .chars()
