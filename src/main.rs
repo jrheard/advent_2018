@@ -13,6 +13,7 @@ extern crate serde_scan;
 #[macro_use]
 extern crate serde_derive;
 
+use std::env;
 use std::fs;
 
 fn frequencies<I, T>(x: I) -> HashMap<T, u32>
@@ -434,6 +435,8 @@ fn five_b() -> usize {
 }
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+
     println!("1a: {}", one_a());
     println!("1b: {}", one_b());
     println!("2a: {}", two_a());
@@ -442,8 +445,11 @@ fn main() {
     println!("3b: {}", three_b());
     println!("4a: {}", four_a());
     println!("4b: {}", four_b());
-    //println!("5a: {}", five_a());
-    //println!("5b: {}", five_b());
+
+    if args.len() > 1 && args[1] == "--include-slow" {
+        println!("5a: {}", five_a());
+        println!("5b: {}", five_b());
+    }
 }
 
 #[cfg(test)]
