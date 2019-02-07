@@ -356,11 +356,12 @@ fn four_b() -> u32 {
 ///
 /// In abBA, bB destroys itself, leaving aA. As above, this then destroys itself, leaving nothing.
 
-/// Returns true if `a` is lowercase, `b` is uppercase, and both characters are the same letter.
+/// Returns true if `a` is lowercase, `b` is uppercase, and both are the same letter.
 fn polymer_chars_react_one_way_check(a: char, b: char) -> bool {
     a.is_lowercase() && a.to_uppercase().nth(0).unwrap() == b
 }
 
+/// Turns "abBA" into "aA".
 fn react_polymer_one_step(polymer: &str) -> String {
     let mut ret = String::new();
     let mut prev_char = ' ';
@@ -380,6 +381,7 @@ fn react_polymer_one_step(polymer: &str) -> String {
     ret
 }
 
+/// Turns "cabBA" into "c".
 fn react_polymer(polymer: &str) -> String {
     let mut polymer = polymer.to_string();
 
