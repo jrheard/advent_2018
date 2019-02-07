@@ -237,3 +237,35 @@ sort_by is more flexible as it works fine with borrows, but when sorting on a se
 `
 
 starting off with chrono
+
+====
+
+2/6/19
+
+trying out vs code
+seems reasonable so far
+had to turn off intellisense (autocomplete) in text files just now,
+https://stackoverflow.com/questions/38832753/how-to-disable-intellisense-in-vs-code-for-markdown was really useful for that
+
+USEFUL KEYBOARD SHORTCUTS I WILL NEED TO MEMORIZE
+gd - go to definition
+gh - "equivalent to hovering your mouse over wherever the cursor is. Handy for seeing types and error messages without reaching for the mouse!"
+Cmd-K Cmd-Z - zen mode (fullscreen)
+Cmd-shift-, - go one tab to the left
+Cmd-shift-. - go one tab to the right
+Ctrl-` - open terminal pane
+Cmd-shift-up - toggle maximized/regular pane size
+
+less often:
+Cmd-shift-X - show extensions
+Cmd-shift-F - show search
+Cmd-shift-e - show explorer
+Cmd-shift-U - show output pane
+Cmd-shift-m - show problems pane
+Cmd-b - show/hide sidebar
+
+full list at https://code.visualstudio.com/shortcuts/keyboard-shortcuts-macos.pdf
+
+TODO consider learning about vim-easymotion, https://github.com/easymotion/vim-easymotion
+vs code vim bindings plugin has support for it
+
