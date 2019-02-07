@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
+
 use chrono::prelude::{DateTime, TimeZone, Timelike, Utc};
 use hashbrown::HashMap;
 use hashbrown::HashSet;
@@ -48,7 +50,7 @@ fn one_b() -> i32 {
         // times before a duplicate frequency is found."
         .cycle()
         .scan(0, |state, x| {
-            *state = *state + x;
+            *state += x;
             Some(*state)
         });
 
@@ -82,10 +84,10 @@ fn two_a() -> i32 {
     let mut num_with_a_letter_that_appears_thrice = 0;
 
     for letter_freq_map in contents.lines().map(|line| frequencies(line.chars())) {
-        if letter_freq_map.values().into_iter().any(|&x| x == 2) {
+        if letter_freq_map.values().any(|&x| x == 2) {
             num_with_a_letter_that_appears_twice += 1;
         }
-        if letter_freq_map.values().into_iter().any(|&x| x == 3) {
+        if letter_freq_map.values().any(|&x| x == 3) {
             num_with_a_letter_that_appears_thrice += 1;
         }
     }
@@ -255,7 +257,6 @@ impl LogEntry {
 fn parse_log_entry_datetime(log_entry_str: &str) -> DateTime<Utc> {
     let dt_string = log_entry_str
         .chars()
-        .into_iter()
         .take_while(|&x| x != ']')
         .collect::<String>();
     let dt_str = dt_string.as_str();
