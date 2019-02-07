@@ -342,6 +342,66 @@ fn four_b() -> u32 {
     guard_id * sleepiest_minute
 }
 
+//*******
+//* Day 5
+//*******
+
+/// The term "polymer" derives from the Greek word πολύς (polus, meaning "many, much") and μέρος
+/// (meros, meaning "part"), and refers to a molecule whose structure is composed of multiple repeating units.
+
+/// The polymer is formed by smaller units which, when triggered, react with each other such that
+/// two adjacent units of the same type and opposite polarity are destroyed. Units' types are
+/// represented by letters; units' polarity is represented by capitalization. For instance, r and R
+/// are units with the same type but opposite polarity, whereas r and s are entirely different types and do not react.
+///
+/// In abBA, bB destroys itself, leaving aA. As above, this then destroys itself, leaving nothing.
+
+/// Returns true if `a` is lowercase, `b` is uppercase, and both characters are the same letter.
+fn polymer_chars_react_one_way_check(a: char, b: char) -> bool {
+    a.is_lowercase() && a.to_uppercase().nth(0).unwrap() == b
+}
+
+fn react_polymer_one_step(polymer: &str) -> String {
+    let mut ret = String::new();
+    let mut prev_char = ' ';
+
+    for character in polymer.chars() {
+        let should_destroy = polymer_chars_react_one_way_check(prev_char, character)
+            || polymer_chars_react_one_way_check(character, prev_char);
+        if should_destroy {
+            ret.pop();
+            prev_char = ' ';
+        } else {
+            ret.push(character);
+            prev_char = character;
+        }
+    }
+
+    ret
+}
+
+fn react_polymer(polymer: &str) -> String {
+    let mut polymer = polymer.to_string();
+
+    loop {
+        let reacted_polymer = react_polymer_one_step(&polymer[..]);
+        if polymer == reacted_polymer {
+            break;
+        } else {
+            polymer = reacted_polymer;
+        }
+    }
+
+    polymer
+}
+
+// How many units remain after fully reacting the polymer you scanned?
+fn five_a() -> usize {
+    let contents = fs::read_to_string("src/inputs/5.txt").unwrap();
+
+    react_polymer(contents.trim()).len()
+}
+
 fn main() {
     println!("1a: {}", one_a());
     println!("1b: {}", one_b());
@@ -351,6 +411,7 @@ fn main() {
     println!("3b: {}", three_b());
     println!("4a: {}", four_a());
     println!("4b: {}", four_b());
+    println!("5a: {}", five_a());
 }
 
 #[cfg(test)]
@@ -382,6 +443,7 @@ mod test {
         assert_eq!(three_b(), 243);
         assert_eq!(four_a(), 99911);
         assert_eq!(four_b(), 65854);
+        assert_eq!(five_a(), 9900);
     }
 
     #[test]

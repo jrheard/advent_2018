@@ -253,7 +253,7 @@ gh - "equivalent to hovering your mouse over wherever the cursor is. Handy for s
 Cmd-K Cmd-Z - zen mode (fullscreen)
 Cmd-shift-, - go one tab to the left
 Cmd-shift-. - go one tab to the right
-Ctrl-` - open terminal pane
+Cmd-t - open terminal pane
 Cmd-shift-up - toggle maximized/regular pane size
 
 less often:
