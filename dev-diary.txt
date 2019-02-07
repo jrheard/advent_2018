@@ -269,3 +269,11 @@ full list at https://code.visualstudio.com/shortcuts/keyboard-shortcuts-macos.pd
 TODO consider learning about vim-easymotion, https://github.com/easymotion/vim-easymotion
 vs code vim bindings plugin has support for it
 
+TODO use dbg!() instead of println for inspecting data
+
+TODO read the edition guide after the book: https://rust-lang-nursery.github.io/edition-guide/introduction.html
+
+TODO read https://blog.burntsushi.net/rust-error-handling/
+
+https://www.ragona.com/posts/learning_rust_2019 talks about Box, i'm sure i'll understand this more
+once i've gotten to that part of the book

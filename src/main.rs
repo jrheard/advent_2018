@@ -397,11 +397,40 @@ fn react_polymer(polymer: &str) -> String {
     polymer
 }
 
-// How many units remain after fully reacting the polymer you scanned?
+/// How many units remain after fully reacting the polymer you scanned?
 fn five_a() -> usize {
     let contents = fs::read_to_string("src/inputs/5.txt").unwrap();
-
     react_polymer(contents.trim()).len()
+}
+
+fn string_without_char(string: &str, character: char) -> String {
+    let char_uppercase = character.to_uppercase().nth(0).unwrap();
+
+    string
+        .trim()
+        .chars()
+        .filter(|&char| char != character && char != char_uppercase)
+        .collect::<String>()
+}
+
+/// One of the unit types is causing problems; it's preventing the polymer from
+/// collapsing as much as it should. Your goal is to figure out which unit type
+/// is causing the most problems, remove all instances of it (regardless of polarity),
+/// fully react the remaining polymer, and measure its length.
+fn five_b() -> usize {
+    let contents = fs::read_to_string("src/inputs/5.txt").unwrap();
+    let contents = contents.trim();
+    let mut smallest_length = std::usize::MAX;
+
+    for character in "abcdefghijklmnopqrstuvwxyz".chars() {
+        let polymer = string_without_char(contents, character);
+        let reacted_polymer = react_polymer(polymer.as_str());
+        if reacted_polymer.len() < smallest_length {
+            smallest_length = reacted_polymer.len();
+        }
+    }
+
+    smallest_length
 }
 
 fn main() {
@@ -413,7 +442,8 @@ fn main() {
     println!("3b: {}", three_b());
     println!("4a: {}", four_a());
     println!("4b: {}", four_b());
-    println!("5a: {}", five_a());
+    //println!("5a: {}", five_a());
+    //println!("5b: {}", five_b());
 }
 
 #[cfg(test)]
@@ -446,6 +476,7 @@ mod test {
         assert_eq!(four_a(), 99911);
         assert_eq!(four_b(), 65854);
         assert_eq!(five_a(), 9900);
+        assert_eq!(five_b(), 4992);
     }
 
     #[test]
