@@ -552,4 +552,9 @@ mod test {
         assert_eq!(entry, expected);
     }
 
+    #[test]
+    fn test_react_polymer() {
+        assert_eq!(react_polymer("abBAacIiCdEQseztTi"), "adEQsezi");
+    }
+
 }
