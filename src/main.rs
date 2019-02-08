@@ -19,7 +19,7 @@ use std::fs;
 fn frequencies<I, T>(x: I) -> HashMap<T, u32>
 where
     I: Iterator<Item = T>,
-    T: Eq + std::hash::Hash,
+    T: Copy + Eq + std::hash::Hash,
 {
     let mut ret = HashMap::new();
 
@@ -29,6 +29,15 @@ where
     }
 
     ret
+}
+
+fn most_common<I, T>(x: I) -> T
+where
+    I: Iterator<Item = T>,
+    T: Copy + Eq + std::hash::Hash,
+{
+    let freqs = frequencies(x);
+    *(freqs.iter().max_by_key(|(_, count)| *count).unwrap().0)
 }
 
 //*******
@@ -308,14 +317,10 @@ fn four_a() -> u32 {
         .max_by_key(|(_, sleep_minutes)| sleep_minutes.len())
         .unwrap();
 
-    let sleep_minute_frequencies = frequencies(sleep_minutes.iter());
-    let (sleepiest_minute, _) = sleep_minute_frequencies
-        .iter()
-        .max_by_key(|(_, count)| *count)
-        .unwrap();
+    let sleepiest_minute = most_common(sleep_minutes.iter());
 
     // What is the ID of the guard you chose multiplied by the minute you chose?
-    *sleepiest_guard_id * **sleepiest_minute
+    *sleepiest_guard_id * sleepiest_minute
 }
 
 // Of all guards, which guard is most frequently asleep on the same minute?
@@ -433,6 +438,91 @@ fn five_b() -> usize {
     smallest_length
 }
 
+//*******
+//* Day 6
+//*******
+
+/// Using only the Manhattan distance, determine the area around each coordinate
+/// by counting the number of integer X,Y locations that are closest to that coordinate
+/// (and aren't tied in distance to any other coordinate).
+
+#[derive(Debug)]
+struct DangerLocation {
+    id: i32,
+    x: usize,
+    y: usize,
+}
+
+/// "The sum of the absolute values of the differences of the coordinates",
+/// according to math stackexchange.
+fn manhattan_distance(x1: usize, y1: usize, x2: usize, y2: usize) -> u32 {
+    ((x1 as i32 - x2 as i32).abs() + (y1 as i32 - y2 as i32).abs()) as u32
+}
+
+/// What is the size of the largest area that isn't infinite?
+fn six_a() -> u32 {
+    // Parse the input file into a Vec of DangerLocations.
+    let contents = fs::read_to_string("src/inputs/6.txt").unwrap();
+    let mut id = 0;
+    let mut locations = Vec::new();
+
+    for line in contents.lines() {
+        let (x, y) = scan!("{}, {}" <- line).unwrap();
+        locations.push(DangerLocation { id, x, y });
+        id += 1;
+    }
+
+    // Construct the grid.
+    let mut xs = locations
+        .iter()
+        .map(|location| location.x)
+        .collect::<Vec<_>>();
+    let mut ys = locations
+        .iter()
+        .map(|location| location.y)
+        .collect::<Vec<_>>();
+    xs.sort();
+    ys.sort();
+
+    let (min_x, max_x) = (xs[0], *xs.last().unwrap());
+    let (min_y, max_y) = (ys[0], *ys.last().unwrap());
+
+    let mut grid = vec![vec![-1; max_y as usize]; max_x as usize];
+
+    let sentinel_location = DangerLocation { id: -1, x: 0, y: 0 };
+
+    // Calculate the ID of the closest location to each spot on the grid.
+
+    for x in min_x..max_x {
+        for y in min_y..max_y {
+            let mut closest_location = &locations[0];
+            let mut smallest_distance = std::u32::MAX;
+
+            for location in &locations {
+                let distance = manhattan_distance(location.x, location.y, x, y);
+
+                if distance < smallest_distance {
+                    smallest_distance = distance;
+                    closest_location = location;
+                } else if distance == smallest_distance {
+                    closest_location = &sentinel_location;
+                }
+            }
+
+            grid[x as usize][y as usize] = closest_location.id;
+        }
+    }
+
+    let candidate_spaces = grid.iter().flatten().cloned().filter(|&x| x != -1);
+    let freqs = frequencies(candidate_spaces);
+
+    // Incorrect - returns 17 on sample input (correct!), but 4472 on actual input (too high!).
+
+    dbg!(freqs.iter().max_by_key(|(_, &count)| count).unwrap());
+
+    *(freqs.iter().max_by_key(|(_, &count)| count).unwrap().1)
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -450,6 +540,8 @@ fn main() {
         println!("5a: {}", five_a());
         println!("5b: {}", five_b());
     }
+
+    println!("6a: {}", six_a());
 }
 
 #[cfg(test)]
@@ -555,6 +647,12 @@ mod test {
     #[test]
     fn test_react_polymer() {
         assert_eq!(react_polymer("abBAacIiCdEQseztTi"), "adEQsezi");
+    }
+
+    #[test]
+    fn test_manhattan_distance() {
+        assert_eq!(manhattan_distance(5, 8, 10, 3), 10);
+        assert_eq!(manhattan_distance(2, 4, 0, 6), 4);
     }
 
 }
