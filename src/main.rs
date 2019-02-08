@@ -21,67 +21,9 @@ extern crate serde_derive;
 use std::env;
 use std::fs;
 
-fn frequencies<I, T>(x: I) -> HashMap<T, u32>
-where
-    I: Iterator<Item = T>,
-    T: Copy + Eq + std::hash::Hash,
-{
-    let mut ret = HashMap::new();
-
-    for item in x {
-        let count = ret.entry(item).or_insert(0);
-        *count += 1;
-    }
-
-    ret
-}
-
-fn most_common<I, T>(x: I) -> T
-where
-    I: Iterator<Item = T>,
-    T: Copy + Eq + std::hash::Hash,
-{
-    let freqs = frequencies(x);
-    *(freqs.iter().max_by_key(|(_, count)| *count).unwrap().0)
-}
-
-//*******
-//* Day 1
-//*******
-
-fn one_a() -> i32 {
-    let contents = fs::read_to_string("src/inputs/1.txt").unwrap();
-    contents.lines().map(|x| x.parse::<i32>().unwrap()).sum()
-}
-
-// You notice that the device repeats the same frequency change list over and over.
-// To calibrate the device, you need to find the first frequency it reaches twice.
-fn one_b() -> i32 {
-    let contents = fs::read_to_string("src/inputs/1.txt").unwrap();
-    let reductions = contents
-        .lines()
-        .map(|x| x.parse::<i32>().unwrap())
-        // "Note that your device might need to repeat its list of frequency changes many
-        // times before a duplicate frequency is found."
-        .cycle()
-        .scan(0, |state, x| {
-            *state += x;
-            Some(*state)
-        });
-
-    let mut seen_frequencies: HashSet<i32> = HashSet::new();
-    for frequency in reductions {
-        // TODO ask peter why i have to do &frequency here.
-        // Aren't i32s Copy? Shouldn't that mean that they're fine to pass around?
-        if seen_frequencies.contains(&frequency) {
-            return frequency;
-        } else {
-            seen_frequencies.insert(frequency);
-        }
-    }
-
-    -1
-}
+// XX use one? use utils?
+mod one;
+mod util;
 
 //*******
 //* Day 2
@@ -98,7 +40,7 @@ fn two_a() -> i32 {
     let mut num_with_a_letter_that_appears_twice = 0;
     let mut num_with_a_letter_that_appears_thrice = 0;
 
-    for letter_freq_map in contents.lines().map(|line| frequencies(line.chars())) {
+    for letter_freq_map in contents.lines().map(|line| util::frequencies(line.chars())) {
         if letter_freq_map.values().any(|&x| x == 2) {
             num_with_a_letter_that_appears_twice += 1;
         }
@@ -322,7 +264,7 @@ fn four_a() -> u32 {
         .max_by_key(|(_, sleep_minutes)| sleep_minutes.len())
         .unwrap();
 
-    let sleepiest_minute = most_common(sleep_minutes.iter());
+    let sleepiest_minute = util::most_common(sleep_minutes.iter());
 
     // What is the ID of the guard you chose multiplied by the minute you chose?
     *sleepiest_guard_id * sleepiest_minute
@@ -334,7 +276,7 @@ fn four_b() -> u32 {
     let mut sleepiest_minute_per_guard: HashMap<GuardID, (u32, u32)> = HashMap::new();
 
     for (&guard_id, sleep_minutes) in &guard_sleep_log {
-        let sleep_minute_frequencies = frequencies(sleep_minutes.iter());
+        let sleep_minute_frequencies = util::frequencies(sleep_minutes.iter());
         // TODO why do i have to double-deref sleepiest_minute here?
         let (&&sleepiest_minute, &sleep_count_for_minute) = sleep_minute_frequencies
             .iter()
@@ -487,7 +429,7 @@ struct LocationGrid {
 }
 
 /// Returns a LocationGrid whose values are all -1.
-fn initialize_grid(locations: &[DangerLocation]) -> LocationGrid {
+fn initialize_danger_location_grid(locations: &[DangerLocation]) -> LocationGrid {
     let mut xs = locations
         .iter()
         .map(|location| location.x)
@@ -517,7 +459,7 @@ fn initialize_grid(locations: &[DangerLocation]) -> LocationGrid {
 fn six_a() -> u32 {
     let locations = load_locations();
 
-    let mut location_grid = initialize_grid(&locations);
+    let mut location_grid = initialize_danger_location_grid(&locations);
 
     let sentinel_location = DangerLocation { id: -1, x: 0, y: 0 };
 
@@ -567,7 +509,7 @@ fn six_a() -> u32 {
         .cloned()
         .filter(|&id| id != -1 && !infinite_area_location_ids.contains(&id));
 
-    let freqs = frequencies(candidate_spaces);
+    let freqs = util::frequencies(candidate_spaces);
 
     *(freqs.iter().max_by_key(|(_, &count)| count).unwrap().1)
 }
@@ -575,8 +517,8 @@ fn six_a() -> u32 {
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    println!("1a: {}", one_a());
-    println!("1b: {}", one_b());
+    println!("1a: {}", one::one_a());
+    println!("1b: {}", one::one_b());
     println!("2a: {}", two_a());
     println!("2b: {}", two_b());
     println!("3a: {}", three_a());
@@ -597,25 +539,9 @@ fn main() {
 mod test {
     use super::*;
 
-    // XXX I don't know anything about Rust macros yet, I'm copy-pasting this from
-    // https://stackoverflow.com/questions/27582739/how-do-i-create-a-hashmap-literal for now.
-    macro_rules! map(
-        { $($key:expr => $value:expr),+ } => {
-            {
-                let mut m = HashMap::new();
-                $(
-                    m.insert($key, $value);
-                )+
-                m
-            }
-        };
-    );
-
     #[test]
     // A test to ensure that I don't introduce regressions when refactoring.
     fn test_solutions() {
-        assert_eq!(one_a(), 439);
-        assert_eq!(one_b(), 124645);
         assert_eq!(two_a(), 5368);
         assert_eq!(two_b(), "cvgywxqubnuaefmsljdrpfzyi");
         assert_eq!(three_a(), 101196);
@@ -625,21 +551,6 @@ mod test {
         assert_eq!(five_a(), 9900);
         assert_eq!(five_b(), 4992);
         assert_eq!(six_a(), 4284);
-    }
-
-    #[test]
-    fn test_frequencies() {
-        assert_eq!(
-            frequencies("aabbccccd".chars()),
-            map! { 'a' => 2, 'b' => 2, 'c' => 4, 'd' => 1}
-        );
-
-        assert_eq!(
-            frequencies("abcabcaa".chars()),
-            map! {'a' => 4, 'b' => 2, 'c' => 2}
-        );
-
-        assert_eq!(frequencies("".chars()), HashMap::new());
     }
 
     #[test]

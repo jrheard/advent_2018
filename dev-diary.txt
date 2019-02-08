@@ -312,3 +312,26 @@ in ways that the compiler can't check the safety of statically."
 the book puts it this way: "The RefCell<T> type with its interior mutability gives us a type
 that we can use when we need an immutable type but need to change an inner value of that type;
 it also enforces the borrowing rules at runtime instead of compile time."
+
+====
+
+2/8/19
+
+so i'm noticing something in implementing 6
+
+i want to use the name "location" here, because it's short but clear
+
+but i'm worried about polluting the global namespace with a vague name, and so
+i'm calling it DangerLocation, and having functions with names like `initialize_danger_location_grid()`
+instead of `initialize_grid()`, etc.
+
+i think that this is a smell that means that i should be using modules!
+
+TODO after 6b: consider splitting each solution out into its own module + file,
+and having a "utils" module for now with shared functions like frequencies
+
+yeah that's definitely the right thing to do
+
+have a binary crate and a lib crate
+
+TODO rename DangerLocation and LocationGrid and etc back to less-specific names once we have that six namespace
