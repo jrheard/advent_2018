@@ -1,4 +1,7 @@
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
+#![cfg_attr(
+    feature = "cargo-clippy",
+    allow(clippy::unreadable_literal, clippy::needless_range_loop)
+)]
 
 use chrono::prelude::{DateTime, TimeZone, Timelike, Utc};
 use hashbrown::HashMap;
@@ -461,6 +464,8 @@ fn manhattan_distance(x1: usize, y1: usize, x2: usize, y2: usize) -> u32 {
 
 /// What is the size of the largest area that isn't infinite?
 fn six_a() -> u32 {
+    // TODO: refactor/extract a lot of this for 6b
+
     // Parse the input file into a Vec of DangerLocations.
     let contents = fs::read_to_string("src/inputs/6.txt").unwrap();
     let mut id = 0;
@@ -513,12 +518,30 @@ fn six_a() -> u32 {
         }
     }
 
-    let candidate_spaces = grid.iter().flatten().cloned().filter(|&x| x != -1);
+    // If a DangerLocation's .id appears on the edge of the grid,
+    // that means that it has the potential to claim an infinitely large area.
+
+    let mut infinite_area_location_ids = HashSet::new();
+
+    for &x in [min_x, max_x - 1].iter() {
+        for y in min_y..max_y {
+            infinite_area_location_ids.insert(grid[x][y]);
+        }
+    }
+
+    for &y in [min_y, max_y - 1].iter() {
+        for x in min_x..max_x {
+            infinite_area_location_ids.insert(grid[x][y]);
+        }
+    }
+
+    let candidate_spaces = grid
+        .iter()
+        .flatten()
+        .cloned()
+        .filter(|&id| id != -1 && !infinite_area_location_ids.contains(&id));
+
     let freqs = frequencies(candidate_spaces);
-
-    // Incorrect - returns 17 on sample input (correct!), but 4472 on actual input (too high!).
-
-    dbg!(freqs.iter().max_by_key(|(_, &count)| count).unwrap());
 
     *(freqs.iter().max_by_key(|(_, &count)| count).unwrap().1)
 }
