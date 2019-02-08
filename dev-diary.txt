@@ -327,11 +327,11 @@ instead of `initialize_grid()`, etc.
 
 i think that this is a smell that means that i should be using modules!
 
-TODO after 6b: consider splitting each solution out into its own module + file,
+DONE after 6b: consider splitting each solution out into its own module + file,
 and having a "utils" module for now with shared functions like frequencies
 
 yeah that's definitely the right thing to do
 
 have a binary crate and a lib crate
 
-TODO rename DangerLocation and LocationGrid and etc back to less-specific names once we have that six namespace
+DONE rename DangerLocation and LocationGrid and etc back to less-specific names once we have that six namespace

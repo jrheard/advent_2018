@@ -1,6 +1,6 @@
-use hashbrown::HashSet;
-
 use std::fs;
+
+use hashbrown::HashSet;
 
 pub fn one_a() -> i32 {
     let contents = fs::read_to_string("src/inputs/1.txt").unwrap();
