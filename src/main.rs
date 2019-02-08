@@ -1,3 +1,5 @@
+// This is the first nontrivial Rust code I've ever written, bear with me, I'm learning!
+
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(clippy::unreadable_literal, clippy::needless_range_loop)
@@ -462,11 +464,7 @@ fn manhattan_distance(x1: usize, y1: usize, x2: usize, y2: usize) -> u32 {
     ((x1 as i32 - x2 as i32).abs() + (y1 as i32 - y2 as i32).abs()) as u32
 }
 
-/// What is the size of the largest area that isn't infinite?
-fn six_a() -> u32 {
-    // TODO: refactor/extract a lot of this for 6b
-
-    // Parse the input file into a Vec of DangerLocations.
+fn load_locations() -> Vec<DangerLocation> {
     let contents = fs::read_to_string("src/inputs/6.txt").unwrap();
     let mut id = 0;
     let mut locations = Vec::new();
@@ -477,7 +475,19 @@ fn six_a() -> u32 {
         id += 1;
     }
 
-    // Construct the grid.
+    locations
+}
+
+struct LocationGrid {
+    grid: Vec<Vec<i32>>,
+    min_x: usize,
+    min_y: usize,
+    max_x: usize,
+    max_y: usize,
+}
+
+/// Returns a LocationGrid whose values are all -1.
+fn initialize_grid(locations: &[DangerLocation]) -> LocationGrid {
     let mut xs = locations
         .iter()
         .map(|location| location.x)
@@ -492,14 +502,29 @@ fn six_a() -> u32 {
     let (min_x, max_x) = (xs[0], *xs.last().unwrap());
     let (min_y, max_y) = (ys[0], *ys.last().unwrap());
 
-    let mut grid = vec![vec![-1; max_y as usize]; max_x as usize];
+    let grid = vec![vec![-1; max_y as usize]; max_x as usize];
+
+    LocationGrid {
+        grid,
+        min_x,
+        min_y,
+        max_x,
+        max_y,
+    }
+}
+
+/// What is the size of the largest area that isn't infinite?
+fn six_a() -> u32 {
+    let locations = load_locations();
+
+    let mut location_grid = initialize_grid(&locations);
 
     let sentinel_location = DangerLocation { id: -1, x: 0, y: 0 };
 
     // Calculate the ID of the closest location to each spot on the grid.
 
-    for x in min_x..max_x {
-        for y in min_y..max_y {
+    for x in location_grid.min_x..location_grid.max_x {
+        for y in location_grid.min_y..location_grid.max_y {
             let mut closest_location = &locations[0];
             let mut smallest_distance = std::u32::MAX;
 
@@ -514,7 +539,7 @@ fn six_a() -> u32 {
                 }
             }
 
-            grid[x as usize][y as usize] = closest_location.id;
+            location_grid.grid[x as usize][y as usize] = closest_location.id;
         }
     }
 
@@ -523,19 +548,20 @@ fn six_a() -> u32 {
 
     let mut infinite_area_location_ids = HashSet::new();
 
-    for &x in [min_x, max_x - 1].iter() {
-        for y in min_y..max_y {
-            infinite_area_location_ids.insert(grid[x][y]);
+    for &x in [location_grid.min_x, location_grid.max_x - 1].iter() {
+        for y in location_grid.min_y..location_grid.max_y {
+            infinite_area_location_ids.insert(location_grid.grid[x][y]);
         }
     }
 
-    for &y in [min_y, max_y - 1].iter() {
-        for x in min_x..max_x {
-            infinite_area_location_ids.insert(grid[x][y]);
+    for &y in [location_grid.min_y, location_grid.max_y - 1].iter() {
+        for x in location_grid.min_x..location_grid.max_x {
+            infinite_area_location_ids.insert(location_grid.grid[x][y]);
         }
     }
 
-    let candidate_spaces = grid
+    let candidate_spaces = location_grid
+        .grid
         .iter()
         .flatten()
         .cloned()
@@ -598,6 +624,7 @@ mod test {
         assert_eq!(four_b(), 65854);
         assert_eq!(five_a(), 9900);
         assert_eq!(five_b(), 4992);
+        assert_eq!(six_a(), 4284);
     }
 
     #[test]
