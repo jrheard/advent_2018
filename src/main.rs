@@ -408,7 +408,6 @@ fn string_without_char(string: &str, character: char) -> String {
     let char_uppercase = character.to_uppercase().nth(0).unwrap();
 
     string
-        .trim()
         .chars()
         .filter(|&char| char != character && char != char_uppercase)
         .collect::<String>()
@@ -447,6 +446,7 @@ fn main() {
     println!("4b: {}", four_b());
 
     if args.len() > 1 && args[1] == "--include-slow" {
+        // 5b is super slow. TODO: see what burntsushi and forrestthewoods did, look into concurrency
         println!("5a: {}", five_a());
         println!("5b: {}", five_b());
     }
