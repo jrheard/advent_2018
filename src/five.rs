@@ -9,30 +9,15 @@ use std::thread;
 ///
 /// In abBA, bB destroys itself, leaving aA. As above, this then destroys itself, leaving nothing.
 
-/// Returns true if `a` is lowercase, `b` is uppercase, and both are the same letter.
-fn polymer_chars_react_one_way_check(a: char, b: char) -> bool {
-    // XXX jrheard see if to_uppercase() is slow
-    // it probably is!
-    // maybe generate an array of lowercase and uppercase letters, one array per category
-    a.is_lowercase() && a.to_uppercase().nth(0).unwrap() == b
-}
-
 /// Turns "abBA" into "aA".
 fn react_polymer_one_step(polymer: &str) -> String {
     let mut ret = String::new();
     let mut prev_char = ' ';
 
-    // TODO kill polymer_chars_react_one_way_check and just inline it?
-    // or make it a closure that has access to our two arrays?
-
-    // TODO consider just doing some math on the character's byte
-    // so if it's lowercase 'f', we subtract lowercase 'a''s byte value from it
-    // and now we have our index into the upper/lowercase arrays
-
     for character in polymer.chars() {
-        let should_destroy = polymer_chars_react_one_way_check(prev_char, character)
-            || polymer_chars_react_one_way_check(character, prev_char);
-        if should_destroy {
+        if (prev_char.is_ascii_lowercase() && prev_char.to_ascii_uppercase() == character)
+            || (character.is_ascii_lowercase() && character.to_ascii_uppercase() == prev_char)
+        {
             ret.pop();
             prev_char = ' ';
         } else {
