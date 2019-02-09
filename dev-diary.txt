@@ -335,3 +335,25 @@ yeah that's definitely the right thing to do
 have a binary crate and a lib crate
 
 DONE rename DangerLocation and LocationGrid and etc back to less-specific names once we have that six namespace
+
+====
+
+2/9/19
+
+where's my snowpocalypse?
+
+so the concurrency chapter is talking about channels and mutexes
+
+it's not obvious to me which is the right approach for parallelizing 5b,
+they seem pretty equivalent in this case, and channels seem to have a nicer api for what i'm imagining
+
+the section on RefCell<T>/Rc<t> vs Mutex<T>/Arc<T> is interesting
+"In the same way we used RefCell<T> to allow us to mutate contents inside an Rc<T>,
+we use Mutex<T> to mutate contents inside an Arc<T>."
+
+i think i'll start with channels for 5b, then google to see what rayon is, i've heard it's relevant
+
+ok cool chapter 16 done, let's do this
+
+ok initial naive channel-based implementation gets us from 7.6 seconds to 4.2!
+still lots of room for improvement and i'm sure i did this in a clumsy way, but that's cool!

@@ -1,4 +1,6 @@
 use std::fs;
+use std::sync::mpsc;
+use std::thread;
 
 /// The polymer is formed by smaller units which, when triggered, react with each other such that
 /// two adjacent units of the same type and opposite polarity are destroyed. Units' types are
@@ -70,12 +72,22 @@ fn string_without_char(string: &str, character: char) -> String {
 pub fn five_b() -> usize {
     let contents = fs::read_to_string("src/inputs/5.txt").unwrap();
     let contents = contents.trim();
+    let alphabet = "abcdefghijklmnopqrstuvwxyz";
+
+    let (tx, rx) = mpsc::channel();
+
+    for character in alphabet.chars() {
+        let tx = mpsc::Sender::clone(&tx);
+        let polymer = string_without_char(contents, character);
+        thread::spawn(move || {
+            tx.send(react_polymer(polymer.as_str())).unwrap();
+        });
+    }
+
     let mut smallest_length = std::usize::MAX;
 
-    // TODO concurrency?
-    for character in "abcdefghijklmnopqrstuvwxyz".chars() {
-        let polymer = string_without_char(contents, character);
-        let reacted_polymer = react_polymer(polymer.as_str());
+    for _ in 0..alphabet.len() {
+        let reacted_polymer = rx.recv().unwrap();
         if reacted_polymer.len() < smallest_length {
             smallest_length = reacted_polymer.len();
         }
