@@ -1,4 +1,3 @@
-// This is the first nontrivial Rust code I've ever written, bear with me, I'm learning!
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(clippy::unreadable_literal, clippy::needless_range_loop)
