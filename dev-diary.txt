@@ -357,3 +357,59 @@ ok cool chapter 16 done, let's do this
 
 ok initial naive channel-based implementation gets us from 7.6 seconds to 4.2!
 still lots of room for improvement and i'm sure i did this in a clumsy way, but that's cool!
+
+next up i'm going to dig into rayon, starting by watching https://www.youtube.com/watch?v=gof_OEv71Aw
+this rust belt youtube channel looks promising, i'm sure i'm going to spend all day watching rust videos now
+
+around 6:20 - "and another problem is that some of the iterator combinators actually just don't make sense
+in parallel at all, like fold as we'll see" - eep - "and so we have to do different combinators that work
+a bit differently" - phew
+
+more about fold around 14:00
+
+with rayon, use .reduce() instead; it basically does several folds at once and then folds the results together
+hm, this doesn't sound like a good fit for 5b
+
+with rayon's .reduce(), the types of acc and x have to be the same, whereas with .fold() you can have acc be different
+(i'd want acc to be of a different type, eg (string last_char) or something)
+
+ok yeah just gonna watch vids all day and then come back to rayon once i've closed all these youtube tabs
+
+TODO for 5b: maybe split the string up into two sets of pairs (so we don't miss should-react letters on the pair boundary), like
+
+"aBbAcdeaFf" gets turned into
+"aB", "bA", "cd", "ea", "Ff" and
+"a", "Bb", "Ac", "de", "aF", f"
+and also each pair is marked with its associated indices in the string
+and then you check each pair to see if it should react, and record the indices if so
+and then sort the list of marked indices
+and if an index shows up twice, then you know that [index-1 index] is the right pair to react,
+and [index index+1] should be ignored, and you can handle that somehow
+
+https://www.youtube.com/watch?v=Fe6_LFGiqP0 - systems programming in rust
+"systems programming is when you spend more time looking at man pages than at stack overflow" - nice
+not much actual substance in this talk, this is all just stuff that's apparent if you read the book, oh well
+
+https://www.youtube.com/watch?v=Wz2oFEDwiOk - documentation talk
+this way of framing docs is useful:
+* the meet cute (what is this, why should i care)
+* the black triangle (hello world but with a focus on exercising the library's full pipeline)
+* the walkthrough
+* the reference
+
+https://www.youtube.com/watch?v=C4jQbc1RJPY - nov 2018 core rust devs talk
+interesting bit about "momentum" around the 16 minute mark
+"most RFCs never survive the first comment", meaning that the first comment
+sets the tone for the discussion that follows (particularly in open-source)
+she suggests that a tactic you can use is to ping someone you know and ask them
+to be the one to make the first comment, to ensure the discussion doesn't
+immediately go off the rails
+that all makes tons of sense!
+
+ok taking a break from vids
+
+so i snuck a peek at forrest's day5 solution (only that one tho!) and it looks like
+his is really similar to mine but doesn't have any perf issues
+i think that's because my `polymer_chars_react_one_way_check()` function happens
+in a tight loop and calls .to_uppercase() a million times and that's probably slow
+let's try having two arrays of letters a-z and A-Z

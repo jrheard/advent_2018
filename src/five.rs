@@ -11,6 +11,9 @@ use std::thread;
 
 /// Returns true if `a` is lowercase, `b` is uppercase, and both are the same letter.
 fn polymer_chars_react_one_way_check(a: char, b: char) -> bool {
+    // XXX jrheard see if to_uppercase() is slow
+    // it probably is!
+    // maybe generate an array of lowercase and uppercase letters, one array per category
     a.is_lowercase() && a.to_uppercase().nth(0).unwrap() == b
 }
 
@@ -18,6 +21,13 @@ fn polymer_chars_react_one_way_check(a: char, b: char) -> bool {
 fn react_polymer_one_step(polymer: &str) -> String {
     let mut ret = String::new();
     let mut prev_char = ' ';
+
+    // TODO kill polymer_chars_react_one_way_check and just inline it?
+    // or make it a closure that has access to our two arrays?
+
+    // TODO consider just doing some math on the character's byte
+    // so if it's lowercase 'f', we subtract lowercase 'a''s byte value from it
+    // and now we have our index into the upper/lowercase arrays
 
     for character in polymer.chars() {
         let should_destroy = polymer_chars_react_one_way_check(prev_char, character)
