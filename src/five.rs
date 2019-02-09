@@ -1,8 +1,5 @@
 use std::fs;
 
-/// The term "polymer" derives from the Greek word πολύς (polus, meaning "many, much") and μέρος
-/// (meros, meaning "part"), and refers to a molecule whose structure is composed of multiple repeating units.
-
 /// The polymer is formed by smaller units which, when triggered, react with each other such that
 /// two adjacent units of the same type and opposite polarity are destroyed. Units' types are
 /// represented by letters; units' polarity is represented by capitalization. For instance, r and R
@@ -75,6 +72,7 @@ pub fn five_b() -> usize {
     let contents = contents.trim();
     let mut smallest_length = std::usize::MAX;
 
+    // TODO concurrency?
     for character in "abcdefghijklmnopqrstuvwxyz".chars() {
         let polymer = string_without_char(contents, character);
         let reacted_polymer = react_polymer(polymer.as_str());

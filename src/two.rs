@@ -44,7 +44,7 @@ pub fn two_b() -> String {
     let (box_a, box_b) = lines
         .iter()
         .combinations(2)
-        .map(|pair| (pair[0], pair[1]))
+        .map(|pair_vec| (pair_vec[0], pair_vec[1]))
         .find(|(box_a, box_b)| differing_character_positions(box_a, box_b).len() == 1)
         .unwrap();
 
