@@ -434,3 +434,8 @@ let mut new_polymer = Vec::<u8>::with_capacity(source_polymer.len());
 
 i should try this!
 also check out char.eq_ignore_ascii_case(other_char)
+
+oh, i see - the thing forrest does makes sense.
+instead of having a recursive series of react_one_step() calls,
+he just realizes that the polymer being worked on is itself a stack
+that's clever.

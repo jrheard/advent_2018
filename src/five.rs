@@ -9,40 +9,32 @@ use rayon::prelude::*;
 ///
 /// In abBA, bB destroys itself, leaving aA. As above, this then destroys itself, leaving nothing.
 
-/// Turns "abBA" into "aA".
-fn react_polymer_one_step(polymer: &[u8]) -> Vec<u8> {
-    // Got the idea to use a Vec::<u8> here from forrestthewoods.
+/// Turns "cabBA" into "c".
+fn react_polymer(polymer: Vec<u8>) -> Vec<u8> {
     let mut ret = Vec::<u8>::with_capacity(polymer.len());
-    let mut prev_char = b' ';
 
-    for &character in polymer {
-        if (prev_char.is_ascii_lowercase() && prev_char.to_ascii_uppercase() == character)
-            || (character.is_ascii_lowercase() && character.to_ascii_uppercase() == prev_char)
-        {
-            ret.pop();
-            prev_char = b' ';
+    // This approach taken from forrestthewoods; not a direct copy-paste, but very very very very similar.
+    // See previous commits in this file to see my original solution, which worked fine but was way too slow.
+    // My solution involved a `react_polymer_one_step` function which was called over and over by `react_polymer()`.
+    // Forrest's solution recognizes that the polymer buffer being operated on can function as a stack,
+    // so there's no need to do a series of one-step reactions, it can all be done in one pass. Clever!
+    for character in polymer {
+        let should_push = match ret.last() {
+            None => true,
+            Some(&prev_char) => {
+                !prev_char.eq_ignore_ascii_case(&character)
+                    || prev_char.is_ascii_lowercase() == character.is_ascii_lowercase()
+            }
+        };
+
+        if should_push {
+            ret.push(character);
         } else {
-            ret.push(character as u8);
-            prev_char = character;
+            ret.pop();
         }
     }
 
     ret
-}
-
-/// Turns "cabBA" into "c".
-fn react_polymer(polymer: Vec<u8>) -> Vec<u8> {
-    let mut polymer = polymer;
-    loop {
-        let reacted_polymer = react_polymer_one_step(&polymer);
-        if polymer == reacted_polymer {
-            break;
-        } else {
-            polymer = reacted_polymer;
-        }
-    }
-
-    polymer
 }
 
 /// How many units remain after fully reacting the polymer you scanned?
