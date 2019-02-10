@@ -413,3 +413,24 @@ his is really similar to mine but doesn't have any perf issues
 i think that's because my `polymer_chars_react_one_way_check()` function happens
 in a tight loop and calls .to_uppercase() a million times and that's probably slow
 let's try having two arrays of letters a-z and A-Z
+
+nvm, chars have methods like .to_ascii_uppercase() and they're way way faster, that
+solved the problem! i tried an approach with explicit hand-coded math and it wasn't
+faster than .to_ascii_uppercase() and friends
+
+also rayon rules
+
+====
+
+2/10/19
+
+https://www.youtube.com/watch?v=grU-4u0Okto - traits in rust
+trait objects bit in the third segment seems to mainly be about Box?
+i need to learn more about what trait objects are, this is a good intro tho
+
+TODO: took another peek at forrest's day5 - instead of having his buffer be a string,
+he does:
+let mut new_polymer = Vec::<u8>::with_capacity(source_polymer.len());
+
+i should try this!
+also check out char.eq_ignore_ascii_case(other_char)

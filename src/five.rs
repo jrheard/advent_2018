@@ -10,18 +10,19 @@ use rayon::prelude::*;
 /// In abBA, bB destroys itself, leaving aA. As above, this then destroys itself, leaving nothing.
 
 /// Turns "abBA" into "aA".
-fn react_polymer_one_step(polymer: &str) -> String {
-    let mut ret = String::new();
-    let mut prev_char = ' ';
+fn react_polymer_one_step(polymer: &[u8]) -> Vec<u8> {
+    // Got the idea to use a Vec::<u8> here from forrestthewoods.
+    let mut ret = Vec::<u8>::with_capacity(polymer.len());
+    let mut prev_char = b' ';
 
-    for character in polymer.chars() {
+    for &character in polymer {
         if (prev_char.is_ascii_lowercase() && prev_char.to_ascii_uppercase() == character)
             || (character.is_ascii_lowercase() && character.to_ascii_uppercase() == prev_char)
         {
             ret.pop();
-            prev_char = ' ';
+            prev_char = b' ';
         } else {
-            ret.push(character);
+            ret.push(character as u8);
             prev_char = character;
         }
     }
@@ -30,11 +31,10 @@ fn react_polymer_one_step(polymer: &str) -> String {
 }
 
 /// Turns "cabBA" into "c".
-fn react_polymer(polymer: &str) -> String {
-    let mut polymer = polymer.to_string();
-
+fn react_polymer(polymer: Vec<u8>) -> Vec<u8> {
+    let mut polymer = polymer;
     loop {
-        let reacted_polymer = react_polymer_one_step(&polymer[..]);
+        let reacted_polymer = react_polymer_one_step(&polymer);
         if polymer == reacted_polymer {
             break;
         } else {
@@ -48,16 +48,16 @@ fn react_polymer(polymer: &str) -> String {
 /// How many units remain after fully reacting the polymer you scanned?
 pub fn five_a() -> usize {
     let contents = fs::read_to_string("src/inputs/5.txt").unwrap();
-    react_polymer(contents.trim()).len()
+    react_polymer(contents.trim().as_bytes().to_vec()).len()
 }
 
-fn string_without_char(string: &str, character: char) -> String {
-    let char_uppercase = character.to_uppercase().nth(0).unwrap();
+fn buf_without_char(buf: &[u8], to_remove: u8) -> Vec<u8> {
+    let to_remove_uppercase = to_remove.to_ascii_uppercase();
 
-    string
-        .chars()
-        .filter(|&char| char != character && char != char_uppercase)
-        .collect::<String>()
+    buf.iter()
+        .filter(|&&character| character != to_remove && character != to_remove_uppercase)
+        .cloned()
+        .collect()
 }
 
 /// One of the unit types is causing problems; it's preventing the polymer from
@@ -66,11 +66,11 @@ fn string_without_char(string: &str, character: char) -> String {
 /// fully react the remaining polymer, and measure its length.
 pub fn five_b() -> usize {
     let contents = fs::read_to_string("src/inputs/5.txt").unwrap();
-    let contents = contents.trim();
+    let contents = contents.trim().as_bytes().to_vec();
 
     "abcdefghijklmnopqrstuvwxyz"
         .par_chars()
-        .map(|character| react_polymer(&string_without_char(contents, character)).len())
+        .map(|character| react_polymer(buf_without_char(&contents, character as u8)).len())
         .min()
         .unwrap()
 }
@@ -88,6 +88,6 @@ mod test {
 
     #[test]
     fn test_react_polymer() {
-        assert_eq!(react_polymer("abBAacIiCdEQseztTi"), "adEQsezi");
+        assert_eq!(react_polymer(b"abBAacIiCdEQseztTi".to_vec()), b"adEQsezi");
     }
 }
