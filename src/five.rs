@@ -72,7 +72,6 @@ mod test {
     use super::*;
 
     #[test]
-    // A test to ensure that I don't introduce regressions when refactoring.
     fn test_solutions() {
         assert_eq!(five_a(), 9900);
         assert_eq!(five_b(), 4992);

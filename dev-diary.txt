@@ -439,3 +439,52 @@ oh, i see - the thing forrest does makes sense.
 instead of having a recursive series of react_one_step() calls,
 he just realizes that the polymer being worked on is itself a stack
 that's clever.
+
+so the reason that that took so long was that i came up with the multi-pass solution
+and immediately tunnel-visioned on it and didn't allow myself to think of other solutions.
+
+instead of trying over and over to optimize the multi-pass solution, i should have
+taken the opportunity to think: ok, putting that aside for a moment,
+what are some other ways that i might solve this problem from scratch?
+
+i'd like to think that i'd have come up with the single-pass solution if i'd done that,
+but even if i didn't come up with it, looking for fresh solutions still would have been the correct thing to do.
+
+https://www.youtube.com/watch?v=Dbytx0ivH7Q - concurrency in rust
+i'm familiar with everything in the first 30 mins, but then he talks about crossbeam and futures
+tokio lets you do async i/o with futures
+gives an implementation of an event loop
+around 44:00 he talks about how instead of doing `struct Future`, `trait Future` makes a lot more sense
+allows for different implementations of the same concept
+there's a bit around 48:00 i didn't quite follow about Box and virtual dispatch and type erasure (?)
+
+doodled around to see how to have a list of functions, got this:
+
+
+let x: Vec<Box<Fn() -> ()>> = vec![
+    Box::new(|| println!("1a: {}", one::one_a())),
+    Box::new(|| println!("1b: {}", one::one_b())),
+];
+
+x.iter().for_each(|y| y());
+
+might end up using that with rayon to execute all of our solutions at once once all 25 are done
+
+ok i'm done with youtube videos!
+
+http://smallcultfollowing.com/babysteps/blog/2015/12/18/rayon-data-parallelism-in-rust/ - old rayon article
+"one of the main points of this post is to advocate for _potential parallelism_ as the basis for Rust
+data parallelism libraries, in contrast to the _guaranteed concurrency_ that we have seen thus far."
+
+post is pretty similar to the brief rayon talk the creator gave in 2017 i think
+
+interesting note about how he has a sequential fallback for his quicksort algo
+
+"I think the reason that the code does as well as it does is because it gets the “big things” right
+– that is, Rayon avoids memory allocation and virtual dispatch"
+
+"Previously I thought that “dangling pointers” in sequential programs and “data races” were
+sort of distinct bugs: but now I see them as two heads of the same Hydra. Basically both are caused
+by having rampant aliasing and mutation, and both can be solved by the ownership and borrowing."
+
+https://blog.faraday.io/saved-by-the-compiler-parallelizing-a-loop-with-rust-and-rayon/
