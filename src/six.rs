@@ -137,6 +137,36 @@ pub fn six_a() -> u32 {
     *(freqs.iter().max_by_key(|(_, &count)| count).unwrap().1)
 }
 
+/// On the other hand, if the coordinates are safe, maybe the best you can do
+/// is try to find a region near as many coordinates as possible.
+/// What is the size of the region containing all locations which have
+/// a total distance to all given coordinates of less than 10000?
+pub fn six_b() -> usize {
+    let locations = load_locations();
+
+    let mut location_grid = initialize_grid(&locations);
+
+    // Mark each spot on the grid with the total distance to all Locations.
+    for x in location_grid.min_x..location_grid.max_x {
+        for y in location_grid.min_y..location_grid.max_y {
+            let mut distance = 0;
+            for location in &locations {
+                distance += manhattan_distance(location.x, location.y, x, y);
+            }
+
+            location_grid.grid[x as usize][y as usize] = distance as i32
+        }
+    }
+
+    location_grid
+        .grid
+        .iter()
+        .flatten()
+        .cloned()
+        .filter(|&total_distance| total_distance != SENTINEL_LOCATION_ID && total_distance < 10_000)
+        .count()
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -144,6 +174,7 @@ mod test {
     #[test]
     fn test_solutions() {
         assert_eq!(six_a(), 4284);
+        assert_eq!(six_b(), 35490);
     }
 
     #[test]

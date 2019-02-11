@@ -509,3 +509,11 @@ par_chunks for slices looks useful
 for the full list of parallel iterator methods, see
 https://docs.rs/rayon/*/rayon/iter/trait.ParallelIterator.html
 https://docs.rs/rayon/*/rayon/iter/trait.IndexedParallelIterator.html
+
+====
+
+2/11/19
+
+neat, rust game engine https://github.com/amethyst/amethyst
+parallel and uses entity component system
+

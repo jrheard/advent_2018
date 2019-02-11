@@ -29,4 +29,5 @@ fn main() {
     println!("5a: {}", five::five_a());
     println!("5b: {}", five::five_b());
     println!("6a: {}", six::six_a());
+    println!("6b: {}", six::six_b());
 }
