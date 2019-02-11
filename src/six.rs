@@ -149,12 +149,12 @@ pub fn six_b() -> usize {
     // Mark each spot on the grid with the total distance to all Locations.
     for x in location_grid.min_x..location_grid.max_x {
         for y in location_grid.min_y..location_grid.max_y {
-            let mut distance = 0;
-            for location in &locations {
-                distance += manhattan_distance(location.x, location.y, x, y);
-            }
+            let distance = locations
+                .iter()
+                .map(|location| manhattan_distance(location.x, location.y, x, y) as i32)
+                .sum();
 
-            location_grid.grid[x as usize][y as usize] = distance as i32
+            location_grid.grid[x as usize][y as usize] = distance;
         }
     }
 
