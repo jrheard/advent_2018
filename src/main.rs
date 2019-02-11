@@ -12,6 +12,7 @@ extern crate serde_derive;
 mod five;
 mod four;
 mod one;
+mod seven;
 mod six;
 mod three;
 mod two;
@@ -30,4 +31,5 @@ fn main() {
     println!("5b: {}", five::five_b());
     println!("6a: {}", six::six_a());
     println!("6b: {}", six::six_b());
+    println!("7a: {}", seven::seven_a());
 }
