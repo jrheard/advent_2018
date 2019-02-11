@@ -1,9 +1,5 @@
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(clippy::unreadable_literal, clippy::needless_range_loop)
-)]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
 
-// these imports appear to be global to all other files in the project?
 extern crate serde;
 
 #[macro_use]
@@ -12,7 +8,7 @@ extern crate serde_scan;
 #[macro_use]
 extern crate serde_derive;
 
-// rustfmt doesn't let me alphabetize these, oh well!
+// Rustfmt doesn't let me alphabetize these, oh well!
 mod five;
 mod four;
 mod one;

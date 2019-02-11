@@ -1,8 +1,12 @@
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::needless_range_loop))]
+
 use std::fs;
 
 use hashbrown::HashSet;
 
 use super::util;
+
+const SENTINEL_LOCATION_ID: i32 = -1;
 
 /// Using only the Manhattan distance, determine the area around each coordinate
 /// by counting the number of integer X,Y locations that are closest to that coordinate
@@ -43,7 +47,7 @@ struct LocationGrid {
     max_y: usize,
 }
 
-/// Returns a LocationGrid whose values are all -1.
+/// Returns a LocationGrid whose values are all SENTINEL_LOCATION_ID.
 fn initialize_grid(locations: &[Location]) -> LocationGrid {
     let mut xs = locations
         .iter()
@@ -59,7 +63,7 @@ fn initialize_grid(locations: &[Location]) -> LocationGrid {
     let (min_x, max_x) = (xs[0], *xs.last().unwrap());
     let (min_y, max_y) = (ys[0], *ys.last().unwrap());
 
-    let grid = vec![vec![-1; max_y as usize]; max_x as usize];
+    let grid = vec![vec![SENTINEL_LOCATION_ID; max_y as usize]; max_x as usize];
 
     LocationGrid {
         grid,
@@ -76,7 +80,11 @@ pub fn six_a() -> u32 {
 
     let mut location_grid = initialize_grid(&locations);
 
-    let sentinel_location = Location { id: -1, x: 0, y: 0 };
+    let sentinel_location = Location {
+        id: SENTINEL_LOCATION_ID,
+        x: 0,
+        y: 0,
+    };
 
     // Calculate the ID of the closest location to each spot on the grid.
 
@@ -122,7 +130,7 @@ pub fn six_a() -> u32 {
         .iter()
         .flatten()
         .cloned()
-        .filter(|&id| id != -1 && !infinite_area_location_ids.contains(&id));
+        .filter(|&id| id != SENTINEL_LOCATION_ID && !infinite_area_location_ids.contains(&id));
 
     let freqs = util::frequencies(candidate_spaces);
 

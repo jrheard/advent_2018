@@ -488,3 +488,24 @@ sort of distinct bugs: but now I see them as two heads of the same Hydra. Basica
 by having rampant aliasing and mutation, and both can be solved by the ownership and borrowing."
 
 https://blog.faraday.io/saved-by-the-compiler-parallelizing-a-loop-with-rust-and-rayon/
+
+https://github.com/rayon-rs/rayon/blob/master/FAQ.md
+has a good bit on usage guidelines for refcells
+"using very small borrow sections like this is an anti-pattern: you ought to be enclosing the entire transaction together"
+re: usage of .borrow()
+
+also an interesting example about how when doing a multi-thread search, you want to keep a `lowest_cost` variable
+around (or similar) and let all threads have access to it so that they can bail early if they're evaluating
+a result that costs more than the cheapest one already found, etc.
+
+https://docs.rs/rayon/*/rayon/iter/index.html
+`Strings (&str) offer methods like par_split and par_lines.`
+`Slices (&[T], &mut [T]) offer methods like par_split and par_windows, as well as various parallel sorting operations.`
+`Various collections offer par_extend, which grows a collection given a parallel iterator.
+(If you don't have a collection to extend, you can use collect() to create a new one from scratch.)`
+
+par_chunks for slices looks useful
+
+for the full list of parallel iterator methods, see
+https://docs.rs/rayon/*/rayon/iter/trait.ParallelIterator.html
+https://docs.rs/rayon/*/rayon/iter/trait.IndexedParallelIterator.html
