@@ -160,8 +160,9 @@ pub fn six_b() -> usize {
         .grid
         .iter()
         .flatten()
-        .cloned()
-        .filter(|&total_distance| total_distance != SENTINEL_LOCATION_ID && total_distance < 10_000)
+        .filter(|&&total_distance| {
+            total_distance != SENTINEL_LOCATION_ID && total_distance < 10_000
+        })
         .count()
 }
 

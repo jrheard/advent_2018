@@ -26,7 +26,6 @@ impl LogEntry {
     fn new(log_entry_str: &str) -> LogEntry {
         let dt = parse_log_entry_datetime(log_entry_str);
 
-        // TODO - would a match work here?
         let kind = if log_entry_str.contains("begins shift") {
             let relevant_string_portion = log_entry_str
                 .chars()
