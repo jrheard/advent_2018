@@ -7,6 +7,8 @@ use std::rc::Rc;
 use hashbrown::HashMap;
 use hashbrown::HashSet;
 
+const SENTINEL_ROOT_NODE_VALUE: char = '☃';
+
 #[derive(Debug, PartialEq)]
 struct StepConstraint {
     first: char,
@@ -69,7 +71,7 @@ fn construct_dependency_graph(step_constraints: &[StepConstraint]) -> Node {
     let steps_with_no_dependencies = all_steps.difference(&steps_with_dependencies);
 
     let root_node = Rc::new(Node {
-        step: ' ',
+        step: SENTINEL_ROOT_NODE_VALUE,
         children: RefCell::new(
             steps_with_no_dependencies
                 .map(|&step| Rc::new(Node::new(step)))
@@ -110,7 +112,9 @@ fn dependency_graph_resolution_order(root_node: Node) -> String {
     let mut buffer = vec![Rc::new(root_node)];
 
     while let Some(node) = buffer.pop() {
-        ret.push(node.step);
+        if node.step != SENTINEL_ROOT_NODE_VALUE {
+            ret.push(node.step);
+        }
 
         for child in node.children.borrow().iter() {
             if Rc::strong_count(child) == 1 {
@@ -142,7 +146,7 @@ mod test {
 
     #[test]
     fn test_solution() {
-        assert_eq!(seven_a(), " ABGKCMVWYDEHFOPQUILSTNZRJX");
+        assert_eq!(seven_a(), "ABGKCMVWYDEHFOPQUILSTNZRJX");
     }
 
     #[test]
