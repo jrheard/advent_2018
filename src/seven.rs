@@ -52,7 +52,7 @@ fn find_step_in_graph(node: Rc<Node>, step: char) -> Option<Rc<Node>> {
     None
 }
 
-fn construct_dependency_graph(step_constraints: &[StepConstraint]) -> Node {
+fn construct_dependency_graph(step_constraints: &[StepConstraint]) -> Rc<Node> {
     // Make a map of step -> [steps that depend on this step].
     let mut step_parents = HashMap::new();
     for constraint in step_constraints {
@@ -79,6 +79,7 @@ fn construct_dependency_graph(step_constraints: &[StepConstraint]) -> Node {
         ),
     });
 
+    // We've assembled our root node, we're good to go, let's start populating the graph.
     let mut constraint_deque = VecDeque::from_iter(step_constraints.iter());
 
     while let Some(constraint) = constraint_deque.pop_front() {
@@ -104,12 +105,12 @@ fn construct_dependency_graph(step_constraints: &[StepConstraint]) -> Node {
         }
     }
 
-    Rc::try_unwrap(root_node).unwrap()
+    root_node
 }
 
-fn dependency_graph_resolution_order(root_node: Node) -> String {
+fn dependency_graph_resolution_order(root_node: Rc<Node>) -> String {
     let mut ret = String::new();
-    let mut buffer = vec![Rc::new(root_node)];
+    let mut buffer = vec![root_node];
 
     while let Some(node) = buffer.pop() {
         if node.step != SENTINEL_ROOT_NODE_VALUE {
