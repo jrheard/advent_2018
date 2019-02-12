@@ -122,6 +122,7 @@ fn dependency_graph_resolution_order(root_node: Node) -> String {
             }
         }
 
+        // "If more than one step is ready, choose the step which is first alphabetically."
         buffer.sort_by_key(|node| node.step);
         buffer.reverse();
     }
@@ -132,6 +133,7 @@ fn dependency_graph_resolution_order(root_node: Node) -> String {
 /// The instructions specify a series of steps and requirements about
 /// which steps must be finished before others can begin (your puzzle input).
 /// Each step is designated by a single letter.
+/// Your first goal is to determine the order in which the steps should be completed.
 pub fn seven_a() -> String {
     let contents = fs::read_to_string("src/inputs/7.txt").unwrap();
     let steps: Vec<StepConstraint> = contents.lines().map(StepConstraint::new).collect();
