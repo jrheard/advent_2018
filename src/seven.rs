@@ -36,12 +36,14 @@ impl Node {
     }
 }
 
-fn find_step_in_graph(root_node: Rc<Node>, step: char) -> Option<Rc<Node>> {
-    if root_node.step == step {
-        return Some(root_node);
+fn find_step_in_graph<'a>(node: &'a Rc<Node>, step: char) -> Option<&'a Rc<Node>> {
+    if node.step == step {
+        return Some(node);
     } else {
-        for node in *root_node.children.borrow() {
-            if let Some(ret) = find_step_in_graph(node, step) {
+        // TODO beg peter for help
+        let children = node.children.borrow();
+        for child in children.iter() {
+            if let Some(ret) = find_step_in_graph(child, step) {
                 return Some(ret);
             }
         }
@@ -80,10 +82,10 @@ fn construct_dependency_graph(step_constraints: &[StepConstraint]) -> Node {
     let mut constraint_deque = VecDeque::from_iter(step_constraints.iter());
 
     while let Some(constraint) = constraint_deque.pop_front() {
-        if let Some(node_rc) = find_step_in_graph(root_node, constraint.first) {
+        if let Some(node_rc) = find_step_in_graph(&root_node, constraint.first) {
             // The first step of this constraint has an entry in the dependency graph!
 
-            let child = if let Some(child_rc) = find_step_in_graph(root_node, constraint.then) {
+            let child = if let Some(child_rc) = find_step_in_graph(&root_node, constraint.then) {
                 // The second step of this constraint also has an entry in the graph,
                 // so let's just Rc::clone it and that'll be this constraint's child node.
                 Rc::clone(&child_rc)

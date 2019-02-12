@@ -517,3 +517,42 @@ https://docs.rs/rayon/*/rayon/iter/trait.IndexedParallelIterator.html
 neat, rust game engine https://github.com/amethyst/amethyst
 parallel and uses entity component system
 
+having a lottttt of trouble with graphs in 7a.
+
+my Nodes look like this
+
+#[derive(Clone, Debug)]
+struct Node {
+    step: char,
+    children: RefCell<Vec<Rc<Node>>>,
+}
+
+and i'm trying to write a function that returns a Node if it's in the graph
+or None otherwise
+and this is what i have so far:
+
+fn find_step_in_graph(root_node: &Rc<Node>, step: char) -> Option<Rc<Node>> {
+    if root_node.step == step {
+        return Some(Rc::clone(root_node));
+    } else {
+        for node in *root_node.children.borrow() {
+            if let Some(ret) = find_step_in_graph(&node, step) {
+                return Some(Rc::clone(&ret));
+            }
+        }
+    }
+
+    None
+}
+
+and i'm getting errors about how i can't move out of borrowed content, ie root_node.children.borrow()
+
+which makes sense i guess but i don't really fully understand the ramifications and what i should do
+just need to give it a little bit of time to let it simmer in my brain
+
+also i found https://www.reddit.com/r/rust/comments/5ux4uq/rusts_poor_support_for_pointerbased_graphs/
+and several other links to this "petgraph" thing - TODO look that up after i get a graph working on my own
+
+things i'm confused about include: passing an Rc vs passing an &Rc
+
+https://stackoverflow.com/questions/29401626/how-do-i-return-a-reference-to-something-inside-a-refcell-without-breaking-encap ?
