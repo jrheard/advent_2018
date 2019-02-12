@@ -21,7 +21,7 @@ impl StepConstraint {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 struct Node {
     step: char,
     children: RefCell<Vec<Rc<Node>>>,
@@ -36,14 +36,12 @@ impl Node {
     }
 }
 
-fn find_step_in_graph<'a>(node: &'a Rc<Node>, step: char) -> Option<&'a Rc<Node>> {
+fn find_step_in_graph(node: Rc<Node>, step: char) -> Option<Rc<Node>> {
     if node.step == step {
         return Some(node);
     } else {
-        // TODO beg peter for help
-        let children = node.children.borrow();
-        for child in children.iter() {
-            if let Some(ret) = find_step_in_graph(child, step) {
+        for child in node.children.borrow().iter() {
+            if let Some(ret) = find_step_in_graph(Rc::clone(child), step) {
                 return Some(ret);
             }
         }
@@ -60,7 +58,7 @@ fn construct_dependency_graph(step_constraints: &[StepConstraint]) -> Node {
         depended_on_by.push(constraint.first);
     }
 
-    // Find the one step that isn't depended on by anything. That'll be our root step.
+    // Find the nodes that aren't depended on by anything.
     let mut all_steps = HashSet::new();
     for constraint in step_constraints {
         all_steps.insert(constraint.first);
@@ -68,24 +66,26 @@ fn construct_dependency_graph(step_constraints: &[StepConstraint]) -> Node {
     }
 
     let steps_with_dependencies = HashSet::from_iter(step_parents.keys().cloned());
-    let steps_with_no_dependencies: Vec<char> = all_steps
-        .difference(&steps_with_dependencies)
-        .cloned()
-        .collect();
+    let steps_with_no_dependencies = all_steps.difference(&steps_with_dependencies);
 
-    assert_eq!(steps_with_no_dependencies.iter().count(), 1);
-
-    // Found it!
-    let root_step = steps_with_no_dependencies[0];
-    let root_node = Rc::new(Node::new(root_step));
+    let root_node = Rc::new(Node {
+        step: ' ',
+        children: RefCell::new(
+            steps_with_no_dependencies
+                .map(|&step| Rc::new(Node::new(step)))
+                .collect(),
+        ),
+    });
 
     let mut constraint_deque = VecDeque::from_iter(step_constraints.iter());
 
     while let Some(constraint) = constraint_deque.pop_front() {
-        if let Some(node_rc) = find_step_in_graph(&root_node, constraint.first) {
+        if let Some(node_rc) = find_step_in_graph(Rc::clone(&root_node), constraint.first) {
             // The first step of this constraint has an entry in the dependency graph!
 
-            let child = if let Some(child_rc) = find_step_in_graph(&root_node, constraint.then) {
+            let child = if let Some(child_rc) =
+                find_step_in_graph(Rc::clone(&root_node), constraint.then)
+            {
                 // The second step of this constraint also has an entry in the graph,
                 // so let's just Rc::clone it and that'll be this constraint's child node.
                 Rc::clone(&child_rc)
@@ -105,22 +105,45 @@ fn construct_dependency_graph(step_constraints: &[StepConstraint]) -> Node {
     Rc::try_unwrap(root_node).unwrap()
 }
 
+fn dependency_graph_resolution_order(root_node: Node) -> String {
+    let mut ret = String::new();
+    let mut buffer = vec![Rc::new(root_node)];
+
+    while let Some(node) = buffer.pop() {
+        ret.push(node.step);
+
+        for child in node.children.borrow().iter() {
+            if Rc::strong_count(child) == 1 {
+                buffer.push(Rc::clone(child));
+            }
+        }
+
+        buffer.sort_by_key(|node| node.step);
+        buffer.reverse();
+    }
+
+    ret
+}
+
 /// The instructions specify a series of steps and requirements about
 /// which steps must be finished before others can begin (your puzzle input).
 /// Each step is designated by a single letter.
-pub fn seven_a() -> i32 {
-    let contents = fs::read_to_string("src/inputs/7_sample.txt").unwrap();
-
+pub fn seven_a() -> String {
+    let contents = fs::read_to_string("src/inputs/7.txt").unwrap();
     let steps: Vec<StepConstraint> = contents.lines().map(StepConstraint::new).collect();
+    let graph = construct_dependency_graph(&steps);
 
-    dbg!(construct_dependency_graph(&steps));
-
-    5
+    dependency_graph_resolution_order(graph)
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn test_solution() {
+        assert_eq!(seven_a(), " ABGKCMVWYDEHFOPQUILSTNZRJX");
+    }
 
     #[test]
     fn test_step_constraint_new() {

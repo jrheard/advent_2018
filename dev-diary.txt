@@ -556,3 +556,11 @@ and several other links to this "petgraph" thing - TODO look that up after i get
 things i'm confused about include: passing an Rc vs passing an &Rc
 
 https://stackoverflow.com/questions/29401626/how-do-i-return-a-reference-to-something-inside-a-refcell-without-breaking-encap ?
+
+ok i made a lot of progress thanks to smt - he says you never want to do an &Rc, instead you do a Rc::clone(thing)
+
+that fixed everything
+
+except so it turns out that in the actual puzzle input, there isn't a single root node, there are instead four
+and that breaks an assumption i made when writing this solution
+so i need to return to the drawing board and figure out how to adapt this solution to handle four top-level nodes
