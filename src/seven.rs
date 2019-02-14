@@ -127,6 +127,10 @@ impl GraphWalker {
         self.buffer[0].step
     }
 
+    fn available_steps(&self) -> Vec<char> {
+        self.buffer.iter().map(|node| node.step).collect()
+    }
+
     fn pop_node(&mut self, step: char) {
         let index = self
             .buffer
@@ -179,7 +183,7 @@ fn step_duration(step: char) -> u32 {
 }
 
 #[derive(Debug)]
-struct Job {
+struct ElfJob {
     step: char,
     time_left: u32,
 }
@@ -187,7 +191,7 @@ struct Job {
 #[derive(Debug)]
 struct ElfPool {
     num_elves: usize,
-    jobs: Vec<Job>,
+    jobs: Vec<ElfJob>,
 }
 
 /// A pool of helpful elves.
@@ -220,10 +224,14 @@ impl ElfPool {
     fn add_job(&mut self, step: char) {
         assert_ne!(self.jobs.len(), self.num_elves);
 
-        self.jobs.push(Job {
+        self.jobs.push(ElfJob {
             step,
             time_left: step_duration(step),
         });
+    }
+
+    fn steps_in_progress(&self) -> HashSet<char> {
+        HashSet::from_iter(self.jobs.iter().map(|job| job.step))
     }
 }
 
@@ -236,15 +244,14 @@ pub fn seven_b() -> i32 {
 
     let mut pool = ElfPool::new(5);
     let mut walker = GraphWalker::new(graph);
-
     let mut seconds = 0;
 
+    // While the sleigh is not yet put together:
     while !walker.buffer.is_empty() || !pool.jobs.is_empty() {
         // Figure out which steps are available but aren't yet being worked on.
-        let all_available_steps: HashSet<char> =
-            HashSet::from_iter(walker.buffer.iter().map(|node| node.step));
-        let steps_being_worked_on = HashSet::from_iter(pool.jobs.iter().map(|job| job.step));
-        let steps_not_being_worked_on = all_available_steps.difference(&steps_being_worked_on);
+        let all_available_steps: HashSet<char> = HashSet::from_iter(walker.available_steps());
+        let steps_in_progress = pool.steps_in_progress();
+        let steps_not_being_worked_on = all_available_steps.difference(&steps_in_progress);
 
         // Add jobs until all of the elves are busy or we can't add more jobs.
         for &step in steps_not_being_worked_on {
@@ -285,10 +292,10 @@ mod test {
             }
         )
     }
+
     #[test]
     fn test_step_duration() {
         assert_eq!(step_duration('A'), 61);
         assert_eq!(step_duration('Z'), 86);
     }
-
 }
