@@ -53,7 +53,7 @@ fn find_step_in_graph(node: Rc<Node>, step: char) -> Option<Rc<Node>> {
     None
 }
 
-fn construct_dependency_graph(step_constraints: &[StepConstraint]) -> Rc<Node> {
+fn construct_dependency_graph(step_constraints: &[StepConstraint]) -> GraphWalker {
     // Make a map of step -> [steps that depend on this step].
     let mut step_parents = HashMap::new();
     for constraint in step_constraints {
@@ -106,7 +106,7 @@ fn construct_dependency_graph(step_constraints: &[StepConstraint]) -> Rc<Node> {
         }
     }
 
-    root_node
+    GraphWalker::new(root_node)
 }
 
 struct GraphWalker {
@@ -151,9 +151,8 @@ impl GraphWalker {
     }
 }
 
-fn dependency_graph_resolution_order(root_node: Rc<Node>) -> String {
+fn dependency_graph_resolution_order(mut walker: GraphWalker) -> String {
     let mut ret = String::new();
-    let mut walker = GraphWalker::new(root_node);
 
     while !walker.buffer.is_empty() {
         let step = walker.peek();
@@ -171,9 +170,8 @@ fn dependency_graph_resolution_order(root_node: Rc<Node>) -> String {
 pub fn seven_a() -> String {
     let contents = fs::read_to_string("src/inputs/7.txt").unwrap();
     let steps: Vec<StepConstraint> = contents.lines().map(StepConstraint::new).collect();
-    let graph = construct_dependency_graph(&steps);
-
-    dependency_graph_resolution_order(graph)
+    let walker = construct_dependency_graph(&steps);
+    dependency_graph_resolution_order(walker)
 }
 
 /// Each step takes 60 seconds plus an amount corresponding to its letter: A=1, B=2, C=3,
@@ -240,10 +238,9 @@ impl ElfPool {
 pub fn seven_b() -> i32 {
     let contents = fs::read_to_string("src/inputs/7.txt").unwrap();
     let steps: Vec<StepConstraint> = contents.lines().map(StepConstraint::new).collect();
-    let graph = construct_dependency_graph(&steps);
+    let mut walker = construct_dependency_graph(&steps);
 
     let mut pool = ElfPool::new(5);
-    let mut walker = GraphWalker::new(graph);
     let mut seconds = 0;
 
     // While the sleigh is not yet put together:
