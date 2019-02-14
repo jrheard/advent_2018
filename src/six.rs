@@ -5,7 +5,7 @@ use std::fs;
 use hashbrown::HashSet;
 use serde_scan::scan;
 
-use super::util;
+use crate::util;
 
 const SENTINEL_LOCATION_ID: i32 = -1;
 

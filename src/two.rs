@@ -2,7 +2,7 @@ use std::fs;
 
 use itertools::Itertools;
 
-use super::util;
+use crate::util;
 
 // To make sure you didn't miss any, you scan the likely candidate boxes again,
 // counting the number that have an ID containing exactly two of any letter and
