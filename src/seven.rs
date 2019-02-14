@@ -234,18 +234,13 @@ pub fn seven_b() -> i32 {
     let steps: Vec<StepConstraint> = contents.lines().map(StepConstraint::new).collect();
     let graph = construct_dependency_graph(&steps);
 
-    const MAX_NUM_ELVES: usize = 2;
-
-    let mut pool = ElfPool::new(MAX_NUM_ELVES);
+    let mut pool = ElfPool::new(5);
     let mut walker = GraphWalker::new(graph);
 
     let mut seconds = 0;
 
     while !walker.buffer.is_empty() || !pool.jobs.is_empty() {
-        dbg!(seconds);
-        dbg!(&pool);
         let steps_in_progress = pool.jobs.iter().map(|job| job.step).collect::<Vec<char>>();
-        dbg!(&steps_in_progress);
 
         let available_steps = walker
             .buffer
@@ -254,19 +249,15 @@ pub fn seven_b() -> i32 {
             .filter(|step| !steps_in_progress.contains(step))
             .collect::<Vec<char>>();
 
-        dbg!(&available_steps);
-
         // Add jobs until all of the elves are busy or we can't add more jobs.
         for step in available_steps {
             if pool.jobs.len() < pool.num_elves {
-                println!("adding job {}", step);
                 pool.add_job(step);
             }
         }
 
         // Advance time one second and see if any jobs are done.
         let done_steps = pool.advance_time();
-        dbg!(&done_steps);
         for step in done_steps {
             walker.pop_node(step);
         }
@@ -284,6 +275,7 @@ mod test {
     #[test]
     fn test_solution() {
         assert_eq!(seven_a(), "ABGKCMVWYDEHFOPQUILSTNZRJX");
+        assert_eq!(seven_b(), 898);
     }
 
     #[test]
