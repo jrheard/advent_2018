@@ -564,3 +564,95 @@ that fixed everything
 except so it turns out that in the actual puzzle input, there isn't a single root node, there are instead four
 and that breaks an assumption i made when writing this solution
 so i need to return to the drawing board and figure out how to adapt this solution to handle four top-level nodes
+(i did)
+
+====
+
+2/12/19
+
+https://tratt.net/laurie/blog/entries/a_quick_look_at_trait_objects_in_rust.html
+"static dispatch leads to faster performance" ->
+"Static dispatch makes inlining trivial. In my opinion, inlining is the mother of all optimisations:
+the more of it you can do, the faster your program will run. Note that inlining doesn’t have to be done statically
+(though it’s easier that way), but doing it dynamically tends to cause noticeable warmup."
+"the type parameter means that monomorphisation kicks in: a specialised version of f is generated for every
+distinct type we pass to X, allowing Rust to make everything statically dispatched."
+
+apparently this:
+
+fn f(x: &T) {
+  println!("{}", x.m())
+}
+
+gives you dynamic dispatch - i thought Box<T> was required, but &T apparently works too
+
+"That such an implicit coercion is possible is, in my experience, very surprising to those new to Rust.
+If it’s any consolation, even experienced Rust programmers can fail to spot these coercions:
+nothing in f's signature tells you that such a coercion will happen, unless you happen
+to know that T is a trait, and not a struct. To that end, recent versions of Rust let you
+add a syntactic signpost to make it clear:"
+
+__interesting!!!__
+
+
+fn f(x: &dyn T) {
+  println!("{}", x.m())
+}
+
+"The extra dyn keyword has no semantic effect, but you might feel it makes it a little more obvious
+that a coercion to a trait object is about to happen. Unfortunately, because the use of that keyword
+is currently a bit haphazard, one can never take its absence as a guarantee that dynamic dispatch won’t occur."
+
+"while it's true that all references to an object of our trait type T are of the same size,
+it's not necessarily true that references to objects of different types are the same size."
+
+====
+
+2/13/19
+
+(cont'd)
+
+the article goes on to explain fat pointers and vtables
+"that object’s vtable (which, itself, is a list of pointers to a struct’s dynamically dispatched functions)."
+
+in the comment thread on reddit, steveklabnik says that there's an idiom lint you can turn on
+to enforce adding &dyn notation for trait objects - another user says that it's #![warn(bare_trait_objects)]
+
+so: i finished the book!
+time to read a bunch of other stuff!
+for starters, steve says that the macros appendix has been moved to be part of a chapter, so let's read that:
+https://doc.rust-lang.org/book/ch19-06-macros.html
+
+it refers to "the little book of macros",
+https://danielkeep.github.io/tlborm/book/index.html
+which i will not read for now
+
+"There are some strange corners with macro_rules!. In the future, there will be a second kind of
+declarative macro with the macro keyword that will work in a similar fashion but fix some of these edge cases.
+After that is done, macro_rules! will be effectively deprecated. With this in mind, as well as the fact that
+most Rust programmers will use macros more than write macros, we won’t discuss macro_rules! any further."
+
+interesting!
+
+procedural macros "must reside in their own crate with a special crate type.
+This is for complex technical reasons that we hope to eliminate in the future."
+
+main differences in proc macros since the book:
+derive macros have a lot less boilerplate
+and there are two other kinds of proc macros:
+
+attribute-like macros, which let you decorate functions as well as structs/enums
+the example they give is:
+
+```
+#[route(GET, "/")]
+fn index() {
+```
+
+and function-like macros, which look a lot like an alternative version of declarative macros
+
+followup piece: https://blog.rust-lang.org/2018/12/21/Procedural-Macros-in-Rust-2018.html
+"macros are now integrated with the module system in Rust. This mainly means that
+you no longer need the clunky #[macro_use] attribute when importing macros!"
+
+hm, is that true?

@@ -1,12 +1,8 @@
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
 
 extern crate serde;
-
-#[macro_use]
-extern crate serde_scan;
-
-#[macro_use]
 extern crate serde_derive;
+extern crate serde_scan;
 
 // Rustfmt doesn't let me alphabetize these, oh well!
 mod five;

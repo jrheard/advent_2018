@@ -2,6 +2,7 @@ use std::fs;
 
 use chrono::prelude::{DateTime, TimeZone, Timelike, Utc};
 use hashbrown::HashMap;
+use serde_scan::scan;
 
 use super::util;
 

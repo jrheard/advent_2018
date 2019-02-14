@@ -3,6 +3,7 @@
 use std::fs;
 
 use hashbrown::HashSet;
+use serde_scan::scan;
 
 use super::util;
 

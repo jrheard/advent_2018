@@ -6,6 +6,7 @@ use std::rc::Rc;
 
 use hashbrown::HashMap;
 use hashbrown::HashSet;
+use serde_scan::scan;
 
 const SENTINEL_ROOT_NODE_VALUE: char = '☃';
 

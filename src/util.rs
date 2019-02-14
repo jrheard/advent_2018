@@ -28,8 +28,7 @@ where
 mod test {
     use super::*;
 
-    // XXX I don't know anything about Rust macros yet, I'm copy-pasting this from
-    // https://stackoverflow.com/questions/27582739/how-do-i-create-a-hashmap-literal for now.
+    // via https://stackoverflow.com/questions/27582739/how-do-i-create-a-hashmap-literal
     macro_rules! map(
         { $($key:expr => $value:expr),+ } => {
             {

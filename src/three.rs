@@ -1,5 +1,8 @@
 use std::fs;
 
+use serde::Deserialize;
+use serde_scan::scan;
+
 #[derive(Deserialize, Debug, PartialEq)]
 struct Claim {
     id: i32,
