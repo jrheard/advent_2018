@@ -699,3 +699,39 @@ function with use, as Listing 7-16 does, makes it clear that the function isn’
 while still minimizing repetition of the full path."
 
 you can also rename your imports with the `as` keyword
+
+nested path imports is neat, you can do
+
+use std::{cmp::Ordering, io};
+
+instead of
+
+use std::cmp::Ordering;
+use std::io;
+
+also you can do
+
+use std::io::{self, Write};
+
+instead of
+
+use std::io;
+use std::io::Write;
+
+hm, this new version of the chapter doesn't mention mod.rs!
+https://github.com/rust-lang-nursery/edition-guide/issues/104
+
+ok now let's read the edition guide
+
+TODO read https://doc.rust-lang.org/std/
+
+"In Rust 2018, it's considered idiomatic to use the dyn keyword for trait objects."
+
+man there's a lotta stuff in the edition guide
+
+`loop` can now break with a value! that's interesting
+associated constants are interesting, i guess that's how std::i32::MAX works
+you can match on slices, neat
+
+https://rust-lang-nursery.github.io/edition-guide/rust-2018/rustup-for-managing-rust-versions.html
+talks about how you can specify version toolchain per-command or per-directory, neat!

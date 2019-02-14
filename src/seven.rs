@@ -109,24 +109,55 @@ fn construct_dependency_graph(step_constraints: &[StepConstraint]) -> Rc<Node> {
     root_node
 }
 
-fn dependency_graph_resolution_order(root_node: Rc<Node>) -> String {
-    let mut ret = String::new();
-    let mut buffer = vec![root_node];
+struct GraphWalker {
+    buffer: Vec<Rc<Node>>,
+}
 
-    while let Some(node) = buffer.pop() {
-        if node.step != SENTINEL_ROOT_NODE_VALUE {
-            ret.push(node.step);
-        }
+impl GraphWalker {
+    fn new(root_node: Rc<Node>) -> GraphWalker {
+        let mut walker = GraphWalker {
+            buffer: vec![root_node],
+        };
+        walker.pop_node(SENTINEL_ROOT_NODE_VALUE);
+
+        walker
+    }
+
+    fn peek(&self) -> char {
+        self.buffer[0].step
+    }
+
+    fn pop_node(&mut self, step: char) {
+        let index = self
+            .buffer
+            .iter()
+            .position(|node| node.step == step)
+            .unwrap();
+        let node = self.buffer.remove(index);
 
         for child in node.children.borrow().iter() {
+            // If a node's parents have all been processed, then that node's step is ready to go!
             if Rc::strong_count(child) == 1 {
-                buffer.push(Rc::clone(child));
+                self.buffer.push(Rc::clone(child));
             }
         }
 
         // "If more than one step is ready, choose the step which is first alphabetically."
-        buffer.sort_by_key(|node| node.step);
-        buffer.reverse();
+        self.buffer.sort_by_key(|node| node.step);
+    }
+}
+
+fn dependency_graph_resolution_order(root_node: Rc<Node>) -> String {
+    let mut ret = String::new();
+    let mut walker = GraphWalker::new(root_node);
+
+    while !walker.buffer.is_empty() {
+        let step = walker.peek();
+        if step != SENTINEL_ROOT_NODE_VALUE {
+            ret.push(step);
+        }
+
+        walker.pop_node(step);
     }
 
     ret
@@ -142,6 +173,108 @@ pub fn seven_a() -> String {
     let graph = construct_dependency_graph(&steps);
 
     dependency_graph_resolution_order(graph)
+}
+
+/// Each step takes 60 seconds plus an amount corresponding to its letter: A=1, B=2, C=3,
+/// and so on. So, step A takes 60+1=61 seconds, while step Z takes 60+26=86 seconds.
+fn step_duration(step: char) -> u32 {
+    61 + u32::from((step as u8) - b'A')
+}
+
+#[derive(Debug)]
+struct Job {
+    step: char,
+    time_left: u32,
+}
+
+#[derive(Debug)]
+struct ElfPool {
+    num_elves: usize,
+    jobs: Vec<Job>,
+}
+
+impl ElfPool {
+    fn new(num_elves: usize) -> ElfPool {
+        ElfPool {
+            num_elves,
+            jobs: vec![],
+        }
+    }
+
+    fn advance_time(&mut self) -> Vec<char> {
+        let mut ret = vec![];
+
+        for job in &mut self.jobs {
+            job.time_left -= 1;
+
+            if job.time_left == 0 {
+                ret.push(job.step);
+            }
+        }
+
+        self.jobs.retain(|job| job.time_left > 0);
+
+        ret
+    }
+
+    fn add_job(&mut self, step: char) {
+        assert_ne!(self.jobs.len(), self.num_elves);
+
+        self.jobs.push(Job {
+            step,
+            time_left: step_duration(step),
+        });
+    }
+}
+
+/// Now, you need to account for multiple people working on steps simultaneously.
+/// If multiple steps are available, workers should still begin them in alphabetical order.
+pub fn seven_b() -> i32 {
+    let contents = fs::read_to_string("src/inputs/7.txt").unwrap();
+    let steps: Vec<StepConstraint> = contents.lines().map(StepConstraint::new).collect();
+    let graph = construct_dependency_graph(&steps);
+
+    const MAX_NUM_ELVES: usize = 2;
+
+    let mut pool = ElfPool::new(MAX_NUM_ELVES);
+    let mut walker = GraphWalker::new(graph);
+
+    let mut seconds = 0;
+
+    while !walker.buffer.is_empty() || !pool.jobs.is_empty() {
+        dbg!(seconds);
+        dbg!(&pool);
+        let steps_in_progress = pool.jobs.iter().map(|job| job.step).collect::<Vec<char>>();
+        dbg!(&steps_in_progress);
+
+        let available_steps = walker
+            .buffer
+            .iter()
+            .map(|node| node.step)
+            .filter(|step| !steps_in_progress.contains(step))
+            .collect::<Vec<char>>();
+
+        dbg!(&available_steps);
+
+        // Add jobs until all of the elves are busy or we can't add more jobs.
+        for step in available_steps {
+            if pool.jobs.len() < pool.num_elves {
+                println!("adding job {}", step);
+                pool.add_job(step);
+            }
+        }
+
+        // Advance time one second and see if any jobs are done.
+        let done_steps = pool.advance_time();
+        dbg!(&done_steps);
+        for step in done_steps {
+            walker.pop_node(step);
+        }
+
+        seconds += 1;
+    }
+
+    seconds
 }
 
 #[cfg(test)]
@@ -163,4 +296,10 @@ mod test {
             }
         )
     }
+    #[test]
+    fn test_step_duration() {
+        assert_eq!(step_duration('A'), 61);
+        assert_eq!(step_duration('Z'), 86);
+    }
+
 }

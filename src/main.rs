@@ -24,4 +24,5 @@ fn main() {
     println!("6a: {}", six::six_a());
     println!("6b: {}", six::six_b());
     println!("7a: {}", seven::seven_a());
+    println!("7b: {}", seven::seven_b());
 }
