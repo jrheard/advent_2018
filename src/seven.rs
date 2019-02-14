@@ -153,10 +153,7 @@ fn dependency_graph_resolution_order(root_node: Rc<Node>) -> String {
 
     while !walker.buffer.is_empty() {
         let step = walker.peek();
-        if step != SENTINEL_ROOT_NODE_VALUE {
-            ret.push(step);
-        }
-
+        ret.push(step);
         walker.pop_node(step);
     }
 
@@ -193,6 +190,7 @@ struct ElfPool {
     jobs: Vec<Job>,
 }
 
+/// A pool of helpful elves.
 impl ElfPool {
     fn new(num_elves: usize) -> ElfPool {
         ElfPool {
@@ -201,6 +199,7 @@ impl ElfPool {
         }
     }
 
+    /// Advance time one second. Return a vector of any steps that were completed during this second.
     fn advance_time(&mut self) -> Vec<char> {
         let mut ret = vec![];
 
@@ -217,6 +216,7 @@ impl ElfPool {
         ret
     }
 
+    /// Start an elf working on a given step of the sleigh's assembly.
     fn add_job(&mut self, step: char) {
         assert_ne!(self.jobs.len(), self.num_elves);
 
@@ -240,17 +240,14 @@ pub fn seven_b() -> i32 {
     let mut seconds = 0;
 
     while !walker.buffer.is_empty() || !pool.jobs.is_empty() {
-        let steps_in_progress = pool.jobs.iter().map(|job| job.step).collect::<Vec<char>>();
-
-        let available_steps = walker
-            .buffer
-            .iter()
-            .map(|node| node.step)
-            .filter(|step| !steps_in_progress.contains(step))
-            .collect::<Vec<char>>();
+        // Figure out which steps are available but aren't yet being worked on.
+        let all_available_steps: HashSet<char> =
+            HashSet::from_iter(walker.buffer.iter().map(|node| node.step));
+        let steps_being_worked_on = HashSet::from_iter(pool.jobs.iter().map(|job| job.step));
+        let steps_not_being_worked_on = all_available_steps.difference(&steps_being_worked_on);
 
         // Add jobs until all of the elves are busy or we can't add more jobs.
-        for step in available_steps {
+        for &step in steps_not_being_worked_on {
             if pool.jobs.len() < pool.num_elves {
                 pool.add_job(step);
             }
