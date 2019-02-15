@@ -27,4 +27,5 @@ fn main() {
     println!("7a: {}", seven::seven_a());
     println!("7b: {}", seven::seven_b());
     println!("8a: {}", eight::eight_a());
+    println!("8b: {}", eight::eight_b());
 }
