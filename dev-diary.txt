@@ -797,3 +797,139 @@ ok let's figure out how to use vs code debug mode on a rust program
 it works ok but not great, you can't really see values in the sidebar
 details: https://github.com/vadimcn/vscode-lldb/blob/master/MANUAL.md#rust-language-support
 https://code.visualstudio.com/docs/editor/debugging
+
+ok let's try day 8
+
+ok so 8 is tricky
+
+at first it seems like it'd be perfect for a recursive solution,
+but you can't know the length of the vec of numbers to pass to the recursive call
+without having processed the whole input first
+
+so anyway this has to be done in one pass
+
+right now i'm mulling over some sort of, like, stack of stacks
+where each sub-stack represents the children of the rightmost entry in the parent stack
+so like
+
+2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2
+
+becomes
+
+[ 
+    Node {num_c: 2 num_m: 3}
+    [
+        Node {num_c 0 num_m 3}
+        // at this point we see we're not processing any children
+        // so we push the next 3 entries into the most recent node's metadata vec
+
+        // at this point we see that the current substack has 1 item in it,
+        // and the parent node has num_c 2, so we still have more children to process
+
+        Node {num_c: 1 num_m: 1}
+        // so basically if we instantiate a new node and its num_c is > 0,
+        // then it becomes the new parent node and we start a new substack
+        [
+            Node {num_c: 0 num_m: 1}
+            // we're not processing any children
+            // so we push the next 1 entry as metadata
+
+            // at this point we see that the current substack has 1 item in it,
+            // and the parent node has num_c 1,
+            // so we set the parent's children to the current substack
+
+        ]
+
+        // at this point we see that the current node has 1 metadata to process, so we add that
+
+        // at this point we see that the current substack has 2 items in it,
+        // and the parent node (TODO: how do we get back tot he parent node? separate stack of parent nodes?)
+        // has num_c 2, so we set the parent's children to the current substack
+    ]
+
+    // and now we process the next 3 entries as metadata
+]
+
+so it's looking to me like actually we have two stacks:
+one stack of parent nodes,
+one stack of child vectors
+that doesn't make sense when written downb ut let's look at the example done that way
+
+input:
+2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2
+
+original state:
+parent_stack []
+children_vec_stack []
+
+read 2 entries to make node:
+A {num_c: 2, num_m 3}
+
+set it as parent
+num_c is > 0, so start a new children_vec
+
+parent_stack []
+children_vec_stack []
+parent A {num_c: 2, num_m 3}
+children_vec []
+
+read 2 entries to make node:
+B {num_c: 0, num_m: 3}
+
+num_c is 0, so:
+    read 3 entires, put them in B's metadata vec
+    add B to children_vec
+
+parent_stack []
+children_vec_stack []
+parent A {num_c: 2, num_m 3}
+children_vec [B {num_c: 0, num_m: 3, metadata: [10, 11, 12]}]
+
+read 2 entries to make node:
+C {num_c: 1, num_m: 1}
+
+num_c is > 0, so
+    push parent on parent_stack
+    set parent to C
+    push children_vec on children_vec stack
+    start a new children_vec
+
+parent_stack [A {num_c: 2, num_m 3}]
+children_vec_stack [[B {num_c: 0, num_m: 3, metadata: [10, 11, 12]}]]
+parent C {num_c: 1, num_m: 1}
+children_vec []
+
+read 2 entries to make node:
+D {num_c: 0, num_m: 1}
+
+num_c is 0, so:
+    read 1 entry, put it in D's metadata vec
+    add D to children_vec
+
+parent_stack [A {num_c: 2, num_m 3}]
+children_vec_stack [[B {num_c: 0, num_m: 3, metadata: [10, 11, 12]}]]
+parent C {num_c: 1, num_m: 1}
+children_vec [D {num_c: 0, num_m: 1, metadata: [99]}]
+
+children_vec has len 1 and parent has num_c 1, so we're done with parent's children
+    read parent.num_m entries and put them in parent.metadata
+    set parent.children to children_vec
+    set children_vec to children_vec_stack.pop()
+    add parent to children_vec
+    set parent to parent_stack.pop()
+
+parent_stack []
+children_vec_stack []
+parent A {num_c: 2, num_m 3}
+children_vec [
+    B {num_c: 0, num_m: 3, metadata: [10, 11, 12]}
+    C {num_c: 1, num_m: 1, children: [D {num_c: 0, num_m: 1, metadata: [99]}], metadata: [2]}
+]
+
+children_vec has len 2 and parent has num_c 2, so we're done with parent's children
+    read parent.num_m entries and put them in parent.metadata
+    set parent.children to children_vec
+    children_vec_stack is empty, so we're done! return parent
+
+so i think that algorithm makes sense, and the two-stack approach makes sense!
+TODO: how do we actually program that?
