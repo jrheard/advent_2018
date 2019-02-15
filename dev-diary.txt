@@ -943,3 +943,14 @@ i'm just so used to having recursive functions be pure
 the idea of having a recursive function that operates on a mutable buffer input
 and only consumes some small number of items off of its front just never occurred to me!
 totally worked first try tho once i banged the code out!
+
+TODO profiling links at https://www.reddit.com/r/rust/comments/aqqr0z/what_are_best_resources_on_profiling_and/
+
+===
+
+2/15/19
+
+starting 9
+seems pretty straightforward?
+
+TODO try debugging again with optimizations enabled!!!

@@ -4,6 +4,7 @@
 mod eight;
 mod five;
 mod four;
+mod nine;
 mod one;
 mod seven;
 mod six;
@@ -28,4 +29,5 @@ fn main() {
     println!("7b: {}", seven::seven_b());
     println!("8a: {}", eight::eight_a());
     println!("8b: {}", eight::eight_b());
+    println!("9a: {}", nine::nine_a());
 }
