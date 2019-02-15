@@ -250,7 +250,6 @@ https://stackoverflow.com/questions/38832753/how-to-disable-intellisense-in-vs-c
 USEFUL KEYBOARD SHORTCUTS I WILL NEED TO MEMORIZE
 gd - go to definition
 gh - "equivalent to hovering your mouse over wherever the cursor is. Handy for seeing types and error messages without reaching for the mouse!"
-Cmd-K Cmd-Z - zen mode (fullscreen)
 Cmd-shift-, - go one tab to the left
 Cmd-shift-. - go one tab to the right
 Cmd-t - open terminal pane
@@ -269,11 +268,11 @@ full list at https://code.visualstudio.com/shortcuts/keyboard-shortcuts-macos.pd
 TODO consider learning about vim-easymotion, https://github.com/easymotion/vim-easymotion
 vs code vim bindings plugin has support for it
 
-TODO use dbg!() instead of println for inspecting data
+DONE use dbg!() instead of println for inspecting data
 
-TODO read the edition guide after the book: https://rust-lang-nursery.github.io/edition-guide/introduction.html
+DONE read the edition guide after the book: https://rust-lang-nursery.github.io/edition-guide/introduction.html
 
-TODO read https://blog.burntsushi.net/rust-error-handling/
+DONE read https://blog.burntsushi.net/rust-error-handling/
 
 https://www.ragona.com/posts/learning_rust_2019 talks about Box, i'm sure i'll understand this more
 once i've gotten to that part of the book
@@ -375,7 +374,7 @@ with rayon's .reduce(), the types of acc and x have to be the same, whereas with
 
 ok yeah just gonna watch vids all day and then come back to rayon once i've closed all these youtube tabs
 
-TODO for 5b: maybe split the string up into two sets of pairs (so we don't miss should-react letters on the pair boundary), like
+NVM for 5b: maybe split the string up into two sets of pairs (so we don't miss should-react letters on the pair boundary), like
 
 "aBbAcdeaFf" gets turned into
 "aB", "bA", "cd", "ea", "Ff" and
@@ -428,7 +427,7 @@ https://www.youtube.com/watch?v=grU-4u0Okto - traits in rust
 trait objects bit in the third segment seems to mainly be about Box?
 i need to learn more about what trait objects are, this is a good intro tho
 
-TODO: took another peek at forrest's day5 - instead of having his buffer be a string,
+DONE: took another peek at forrest's day5 - instead of having his buffer be a string,
 he does:
 let mut new_polymer = Vec::<u8>::with_capacity(source_polymer.len());
 
@@ -735,3 +734,66 @@ you can match on slices, neat
 
 https://rust-lang-nursery.github.io/edition-guide/rust-2018/rustup-for-managing-rust-versions.html
 talks about how you can specify version toolchain per-command or per-directory, neat!
+
+====
+
+2/14/19
+
+https://hacks.mozilla.org/2018/03/making-webassembly-better-for-rust-for-all-languages/
+seems like the main push (at least at the time?) is to have the ability to drop into rust
+for the most perf-sensitive parts of your js app
+
+https://rustwasm.github.io/2018/06/25/vision-for-rust-and-wasm.html
+
+"Surgically inserting Rust compiled to WebAssembly should be the best choice for speeding
+up the most performance-sensitive JavaScript code paths. Do not throw away your existing code base,
+because Rust plays well with others. Regardless of whether you are a Rust or Web developer,
+your natural workflow shouldn’t change because Rust compiled to wasm integrates seamlessly into your preferred tools."
+
+"We can publish .wasm packages to npm, and you can depend on them in package.json
+just like you normally would any other JavaScript library."
+
+"If you are a Rust hacker and want to compile your crate to .wasm and share it on npm,
+you shouldn’t have to change your workflow either. In fact, you shouldn’t even need to install npm,
+Node.js, and a whole JavaScript development environment. wasm-pack will compile, optimize,
+and generate JavaScript bindings for your crate. And then it will publish it to npm for you too!"
+
+cool stuff!
+
+looks like in the interim, several crates have been published that give you all the necessary
+extern bindings so you can access eg window.requestAnimationFrame etc without having to define their
+signature in rust, which is super rad (js-sys and web-sys)
+
+https://rustwasm.github.io/2018/12/06/reflecting-on-rust-and-wasm-in-2018.html
+
+note the bit where they have these four different application templates, looks useful
+```
+wasm-pack-template for creating NPM libraries with Rust and Wasm.
+create-wasm-app for creating Web applications built on top of Rust-generated wasm NPM libraries.
+rust-webpack-template for creating whole Web applications with Rust, WebAssembly, and the Webpack bundler.
+rust-parcel-template for creating whole Web applications with Rust, WebAssembly, and the Parcel bundler.
+```
+
+https://doc.rust-lang.org/std/convert/trait.From.html
+
+https://blog.burntsushi.net/rust-error-handling/
+
+"the key to ergonomic error handling is reducing the amount of explicit
+case analysis the programmer has to do while keeping code composable."
+
+this is way too long.
+
+https://speice.io/2019/02/understanding-allocations-in-rust.html
+
+unrelated TODO: been thinking about what program i want to write post-aoc.
+so far main contenders are an irc bot and a profiling library.
+irc bot would be easy, profiling library would be hard.
+evan's written some stuff about sampling profilers, not sure if it applies to rust,
+i have the vague idea that since rust doesn't have reflection it's a lot harder to profile,
+could be super wrong!
+
+ok let's figure out how to use vs code debug mode on a rust program
+
+it works ok but not great, you can't really see values in the sidebar
+details: https://github.com/vadimcn/vscode-lldb/blob/master/MANUAL.md#rust-language-support
+https://code.visualstudio.com/docs/editor/debugging

@@ -8,7 +8,6 @@ use crate::util;
 
 type GuardID = u32;
 
-// TODO - is this deriving all sane?
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum LogEntryKind {
     BeginsShift(GuardID),
@@ -93,7 +92,6 @@ fn get_guard_sleep_log() -> HashMap<GuardID, Vec<u32>> {
 pub fn four_a() -> u32 {
     let guard_sleep_log = get_guard_sleep_log();
 
-    // TODO - better understand when+how+why i have to dereference things in the lines below
     let (sleepiest_guard_id, sleep_minutes) = guard_sleep_log
         .iter()
         .max_by_key(|(_, sleep_minutes)| sleep_minutes.len())
