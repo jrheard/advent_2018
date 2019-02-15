@@ -1,6 +1,7 @@
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
 
 // Rustfmt doesn't let me alphabetize these, oh well!
+mod eight;
 mod five;
 mod four;
 mod one;
@@ -25,4 +26,5 @@ fn main() {
     println!("6b: {}", six::six_b());
     println!("7a: {}", seven::seven_a());
     println!("7b: {}", seven::seven_b());
+    println!("8a: {}", eight::eight_a());
 }

@@ -932,4 +932,14 @@ children_vec has len 2 and parent has num_c 2, so we're done with parent's child
     children_vec_stack is empty, so we're done! return parent
 
 so i think that algorithm makes sense, and the two-stack approach makes sense!
-TODO: how do we actually program that?
+DONE: how do we actually program that?
+
+ok nvm i think we can use recursion after all
+just with a mutable buffer input
+
+ok yeah it was recursion after all lol
+i'm just so used to having recursive functions be pure
+
+the idea of having a recursive function that operates on a mutable buffer input
+and only consumes some small number of items off of its front just never occurred to me!
+totally worked first try tho once i banged the code out!
