@@ -17,9 +17,8 @@ fn next_marble_position(current_marble_index: usize, circle: &[u32]) -> usize {
 }
 
 pub fn nine_a() -> u32 {
+    let last_marble = 1618;
     let num_players = 10;
-    let last_marble = 25;
-    //let last_marble = 1618;
 
     let mut current_player = 0;
     let mut current_marble_index: usize = 0;
@@ -31,17 +30,13 @@ pub fn nine_a() -> u32 {
         if i % 23 == 0 {
             scores[current_player] += i;
 
-            dbg!(current_marble_index);
             let mut index_to_remove = (current_marble_index as i32 - 7) % circle.len() as i32;
             if index_to_remove < 0 {
-                // xxxxx
-                index_to_remove += circle.len() as i32 - 1;
+                index_to_remove += circle.len() as i32;
             }
 
-            current_marble_index = (index_to_remove as usize + 1) % circle.len();
-            dbg!(index_to_remove);
-            dbg!(current_marble_index);
             scores[current_player] += circle.remove(index_to_remove as usize);
+            current_marble_index = index_to_remove as usize;
         } else {
             current_marble_index = next_marble_position(current_marble_index, &circle);
             circle.insert(current_marble_index, i);
