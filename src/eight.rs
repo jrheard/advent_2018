@@ -6,6 +6,18 @@ struct Node {
     children: Vec<Node>,
 }
 
+fn parse_license_text() -> Vec<u32> {
+    let contents = fs::read_to_string("src/inputs/8.txt").unwrap();
+    let mut license_data_buffer: Vec<u32> = contents
+        .trim()
+        .split(' ')
+        .map(|x| x.parse::<u32>().unwrap())
+        .collect();
+
+    license_data_buffer.reverse();
+    license_data_buffer
+}
+
 fn parse_node(license_data_buffer: &mut Vec<u32>) -> Node {
     // Specifically, a node consists of:
     // * A header, which is always exactly two numbers:
@@ -44,15 +56,7 @@ fn metadata_values(node: Node) -> Vec<u32> {
 
 /// The first check done on the license file is to simply add up all of the metadata entries.
 pub fn eight_a() -> u32 {
-    let contents = fs::read_to_string("src/inputs/8.txt").unwrap();
-    let mut license_data_buffer: Vec<u32> = contents
-        .trim()
-        .split(' ')
-        .map(|x| x.parse::<u32>().unwrap())
-        .collect();
-
-    license_data_buffer.reverse();
-
+    let mut license_data_buffer = parse_license_text();
     let node = parse_node(&mut license_data_buffer);
 
     metadata_values(node).iter().sum()
@@ -88,15 +92,7 @@ fn node_value(node: &Node) -> u32 {
 
 /// What is the value of the root node?
 pub fn eight_b() -> u32 {
-    let contents = fs::read_to_string("src/inputs/8.txt").unwrap();
-    let mut license_data_buffer: Vec<u32> = contents
-        .trim()
-        .split(' ')
-        .map(|x| x.parse::<u32>().unwrap())
-        .collect();
-
-    license_data_buffer.reverse();
-
+    let mut license_data_buffer = parse_license_text();
     let node = parse_node(&mut license_data_buffer);
 
     node_value(&node)
