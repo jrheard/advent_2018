@@ -22,6 +22,7 @@ mod game {
             }
         }
 
+        // TODO document
         pub fn add_marble(&mut self) -> Option<(usize, usize)> {
             // xxx clean up if possible
             if self.next_marble_id <= 1 {
@@ -84,7 +85,7 @@ fn marble_game_outcome(num_players: usize, last_marble: usize) -> usize {
     let mut marble_game = game::MarbleGame::new(num_players, last_marble);
     let mut scores = vec![0; num_players];
 
-    for _ in 0..last_marble {
+    for _ in 0..=last_marble {
         if let Some((player_index, score)) = marble_game.add_marble() {
             scores[player_index] += score;
         }
@@ -94,15 +95,11 @@ fn marble_game_outcome(num_players: usize, last_marble: usize) -> usize {
 }
 
 pub fn nine_a() -> usize {
-    //marble_game_outcome(413, 71082)
-    // marble_game_outcome(10, 1618)
-    marble_game_outcome(17, 1104)
-    //marble_game_outcome(9, 25)
+    marble_game_outcome(413, 71082)
 }
 
-pub fn nine_b() -> u32 {
-    //marble_game_outcome(413, 7108200)
-    5
+pub fn nine_b() -> usize {
+    marble_game_outcome(413, 7108200)
 }
 
 #[cfg(test)]
@@ -110,7 +107,10 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_solution() {}
+    fn test_solution() {
+        assert_eq!(nine_a(), 416424);
+        assert_eq!(nine_b(), 3498287922);
+    }
 
     #[test]
     fn test_marble_game() {
