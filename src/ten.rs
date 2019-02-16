@@ -47,11 +47,17 @@ struct Grid {
 }
 
 impl Grid {
+    fn bounds(points: &[Point]) -> (i32, i32, i32, i32) {
+        (
+            points.iter().map(|point| point.x).min().unwrap(),
+            points.iter().map(|point| point.x).max().unwrap(),
+            points.iter().map(|point| point.y).min().unwrap(),
+            points.iter().map(|point| point.y).max().unwrap(),
+        )
+    }
+
     fn new(points: Vec<Point>) -> Self {
-        let min_x = points.iter().map(|point| point.x).min().unwrap();
-        let max_x = points.iter().map(|point| point.x).max().unwrap();
-        let min_y = points.iter().map(|point| point.y).min().unwrap();
-        let max_y = points.iter().map(|point| point.y).max().unwrap();
+        let (min_x, max_x, min_y, max_y) = Grid::bounds(&points);
 
         Grid {
             min_x,
@@ -60,6 +66,19 @@ impl Grid {
             max_y,
             points,
         }
+    }
+
+    fn advance(&mut self) {
+        for point in &mut self.points {
+            point.x += point.dx;
+            point.y += point.dy;
+        }
+
+        let (min_x, max_x, min_y, max_y) = Grid::bounds(&self.points);
+        self.min_x = min_x;
+        self.max_x = max_x;
+        self.min_y = min_y;
+        self.max_y = max_y;
     }
 
     fn print(&self) {
@@ -90,6 +109,12 @@ pub fn ten_a() -> u32 {
 
     let mut grid = Grid::new(points);
     grid.print();
+
+    for _ in 0..4 {
+        println!("***");
+        grid.advance();
+        grid.print();
+    }
 
     5
 }
