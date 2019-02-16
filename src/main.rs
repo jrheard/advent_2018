@@ -32,5 +32,7 @@ fn main() {
     println!("8b: {}", eight::eight_b());
     println!("9a: {}", nine::nine_a());
     println!("9b: {}", nine::nine_b());
-    println!("10a: {}", ten::ten_a());
+    println!("10a:");
+    let tenb = ten::ten();
+    println!("10b: {}", tenb);
 }

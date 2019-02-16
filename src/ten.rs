@@ -78,7 +78,7 @@ impl Grid {
         self.max_y = max_y;
     }
 
-    fn print(&self) {
+    fn to_vec(&self) -> Vec<Vec<bool>> {
         let mut grid = vec![
             vec![false; (self.max_y - self.min_y) as usize + 1];
             (self.max_x - self.min_x) as usize + 1
@@ -88,11 +88,17 @@ impl Grid {
             grid[(point.x - self.min_x) as usize][(point.y - self.min_y) as usize] = true;
         }
 
+        grid
+    }
+
+    fn print(&self) {
+        let grid = self.to_vec();
+
         for y in 0..grid[0].len() {
             let mut row = String::new();
 
-            for x in 0..grid.len() {
-                row.push(if grid[x][y] { 'X' } else { '.' });
+            for column in grid.iter() {
+                row.push(if column[y] { 'X' } else { '.' });
             }
 
             println!("{}", row);
@@ -100,20 +106,66 @@ impl Grid {
     }
 }
 
-pub fn ten_a() -> u32 {
-    let contents = fs::read_to_string("src/inputs/10_sample.txt").unwrap();
+const LONG_LINE_THRESHOLD: u32 = 5;
+
+fn num_lines(grid: Vec<Vec<bool>>) -> usize {
+    fn has_a_contiguous_line(line: &[bool]) -> bool {
+        line.iter().fold(0, |acc, value| {
+            if acc >= LONG_LINE_THRESHOLD || *value {
+                acc + 1
+            } else {
+                0
+            }
+        }) >= LONG_LINE_THRESHOLD
+    }
+
+    let mut all_lines = vec![];
+
+    all_lines.extend(grid.iter().cloned());
+
+    for y in 0..grid[0].len() {
+        let mut row = vec![];
+
+        for column in grid.iter() {
+            row.push(column[y]);
+        }
+
+        all_lines.push(row);
+    }
+
+    all_lines
+        .iter()
+        .filter(|line| has_a_contiguous_line(line))
+        .count()
+}
+
+const TOO_LARGE_WIDTH: i32 = 100;
+const TOO_LARGE_HEIGHT: i32 = 100;
+
+pub fn ten() -> u32 {
+    let contents = fs::read_to_string("src/inputs/10.txt").unwrap();
     let points: Vec<Point> = contents.lines().map(Point::new).collect();
 
     let mut grid = Grid::new(points);
-    grid.print();
 
-    for _ in 0..4 {
-        println!("***");
+    let mut i = 0;
+
+    loop {
         grid.advance();
-        grid.print();
+        i += 1;
+
+        if (grid.max_x - grid.min_x) > TOO_LARGE_WIDTH
+            || (grid.max_y - grid.min_y) > TOO_LARGE_HEIGHT
+        {
+            continue;
+        } else if num_lines(grid.to_vec()) > 8 {
+            break;
+        }
     }
 
-    5
+    grid.print();
+
+    i
 }
 
 #[cfg(test)]
@@ -122,7 +174,7 @@ mod test {
 
     #[test]
     fn test_solution() {
-        assert_eq!(ten_a(), 5);
+        assert_eq!(ten(), 10355);
     }
 
     #[test]
