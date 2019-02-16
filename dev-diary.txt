@@ -5,7 +5,13 @@ useful libraries:
 
 useful data structures i hadn't touched in a while:
 * deque
-* linked list
+
+TODOs:
+* read nomicon
+* read rust by example
+* implement a doubly linked list that lets you insert in the middle and pop off the middle with unsafe
+* really experiment with debugging
+* really experiment with profiling
 
 ideas for a program to write after this:
 * irc bot
@@ -988,33 +994,33 @@ let's try thinking about a version of this game except where scoring happens eve
 and you move 2 to the left instead of 7 to to the left.
 
 
-plan so far: (this is several plans at once mixed together, TODO distill)
+plan so far: (this is several plans at once mixed together, DONE distill)
 {
 allocate a bitfield of max_marble bits, all set to 0, representing whether or not an index into the list is valid
     this bitfield only gains valid indexes from left to right -
     once an index has become invalid midway between the first bit and the currently rightmost bit, it never becomes re-valid
 
 allocate a vector of max_marble ints, initialized to 0 although that shouldn't matter
-TODO: hide the vector behind a struct that uses the bitfield in order to ensure that you never
+DONE: hide the vector behind a struct that uses the bitfield in order to ensure that you never
 access an invalid index?
 the struct should also keep track of the length
-TODO: MarbleGame struct. what is its api? add_marble() returns an Option<(player, turn_score)> maybe?
+DONE: MarbleGame struct. what is its api? add_marble() returns an Option<(player, turn_score)> maybe?
 
 whenever we put a new marble into the vector, flip the index's corresponding bit to 1
 
-TODO but how do we handle looping back from the end of the vector to the start of the vector?
-TODO what's the relationship between the list of indexes and the vector of marble ids?
-TODO how do we handle putting a new marble in midway through the circle of marbles?
+DONE but how do we handle looping back from the end of the vector to the start of the vector?
+DONE what's the relationship between the list of indexes and the vector of marble ids?
+DONE how do we handle putting a new marble in midway through the circle of marbles?
 
-TODO what if the vector is a vec that maps {marble_id: current_index} ?
+DONE what if the vector is a vec that maps {marble_id: current_index} ?
 and every time we do a midway-through-the-vector insertion, we update the index of all of the marbles to the right of that insertion?
 still sounds like a whole lot of work!
-TODO this is the best idea i've had so far, but it still seems suboptimal! in fact i think it might be way worse
+DONE this is the best idea i've had so far, but it still seems suboptimal! in fact i think it might be way worse
     than the naive approach! in particular, getting "all the marbles to the right of that insertion" is a lot of work!
 
 iterate i from 0 to max_marble
 keep track of length in a variable
-generate a list of insertion indexes like [1, 1, 3, 1, 3, 5, 7, 1], etc // TODO why though? how is this useful?
+generate a list of insertion indexes like [1, 1, 3, 1, 3, 5, 7, 1], etc // DONE IT'S NOT why though? how is this useful?
 if i % 23 is 0, do scoring somehow
 and i really do think a bitmask of 
 }
@@ -1045,7 +1051,7 @@ impl MarbleaGame {
             self.current_marble = self.next_marble_id;
 
         } else {
-            // TODO what does scoring look like?
+            // DONE what does scoring look like?
         }
 
         self.next_marble_id += 1;
@@ -1125,7 +1131,7 @@ i think that we should just say that the marble that's at the far back end of se
 
 done!
 looks like forrest implemented it using a linked list - that actually makes way more sense
-TODO let's try that
+DONE NO THANKS let's try that
 way way way way way more sense
 like so much sense that i'm ashamed of not having thought of it but oh well
 
@@ -1147,3 +1153,10 @@ i'm not super into this book because it seems out of date
 and i tried using the techniques in https://play.rust-lang.org/?gist=71c6bc45ff92452d5a4397ddb2dbb3de&version=stable
 but did not find them easy to adapt to this program
 so i think having two deques is fine.
+
+10a looks interesting
+the first part looks relatively straightforward
+but detecting when letters have been spelled out? how do you do that?
+TODO heuristic: look for straight lines!!!!
+have a function that looks at the grid and counts the number of straight lines with length >5
+and if it's high (unclear atm what "high" means), that's the one!
