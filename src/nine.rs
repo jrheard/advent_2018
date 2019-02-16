@@ -45,6 +45,8 @@ mod game {
                     self.current_player,
                     self.next_marble_id + self.left.pop_back().unwrap(),
                 ));
+
+                self.move_right();
             } else {
                 self.move_right();
                 self.left.push_back(self.next_marble_id);
@@ -93,8 +95,9 @@ fn marble_game_outcome(num_players: usize, last_marble: usize) -> usize {
 
 pub fn nine_a() -> usize {
     //marble_game_outcome(413, 71082)
-    //marble_game_outcome(10, 1618)
-    marble_game_outcome(9, 25)
+    // marble_game_outcome(10, 1618)
+    marble_game_outcome(17, 1104)
+    //marble_game_outcome(9, 25)
 }
 
 pub fn nine_b() -> u32 {
@@ -108,18 +111,6 @@ mod test {
 
     #[test]
     fn test_solution() {}
-
-    #[test]
-    fn test_next_marble_position() {
-        assert_eq!(next_marble_position(0, &[0]), 1);
-        assert_eq!(next_marble_position(1, &[0, 1]), 1);
-        assert_eq!(next_marble_position(1, &[0, 2, 1]), 3);
-        assert_eq!(next_marble_position(3, &[0, 2, 1, 3]), 1);
-        assert_eq!(next_marble_position(1, &[0, 4, 2, 1, 3]), 3);
-        assert_eq!(next_marble_position(3, &[0, 4, 2, 5, 1, 3]), 5);
-        assert_eq!(next_marble_position(5, &[0, 4, 2, 5, 1, 6, 3]), 7);
-        assert_eq!(next_marble_position(7, &[0, 4, 2, 5, 1, 6, 3, 7]), 1);
-    }
 
     #[test]
     fn test_marble_game() {
