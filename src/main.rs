@@ -30,4 +30,5 @@ fn main() {
     println!("8a: {}", eight::eight_a());
     println!("8b: {}", eight::eight_b());
     println!("9a: {}", nine::nine_a());
+    println!("9b: {}", nine::nine_b());
 }
