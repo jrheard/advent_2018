@@ -14,8 +14,6 @@ struct Point {
 impl Point {
     fn new(input_line: &str) -> Self {
         lazy_static! {
-            //#static ref pattern: Regex = Regex::new(r"(?x)
-                //.*\<[ ]?(?P<x>-?[0-9]+),  ?(?P<y>-?[0-9]+)> velocity=< ?(?P<dx>-?[0-9]+),  ?(?P<dy>-?[0-9]+)>$").unwrap();
             static ref pattern: Regex = Regex::new(r".*< ?(?P<x>-?[0-9]+),  ?(?P<y>-?[0-9]+)>.*< ?(?P<dx>-?[0-9]+),  ?(?P<dy>-?[0-9]+)>").unwrap();
         }
 
@@ -39,7 +37,6 @@ impl Point {
 
 struct Grid {
     points: Vec<Point>,
-    // TODO update these each turn
     min_x: i32,
     min_y: i32,
     max_x: i32,
