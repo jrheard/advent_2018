@@ -1103,3 +1103,6 @@ you don't just do one or the other, you have to do _both_ in a wraparound case
 k!
 
 ok cool i think i'm on the right track, going afk, hopefully i remember my state of mind
+
+ok i think that having a current_marble field is confusing things.
+i think that we should just say that the marble that's at the far back end of self.left is the current marble.
