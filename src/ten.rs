@@ -38,30 +38,49 @@ impl Point {
 }
 
 struct Grid {
-    width: usize,
-    height: usize,
-    buffer: Vec<Vec<bool>>,
+    points: Vec<Point>,
+    // TODO update these each turn
+    min_x: i32,
+    min_y: i32,
+    max_x: i32,
+    max_y: i32,
 }
 
 impl Grid {
-    fn new(width: usize, height: usize) -> Self {
+    fn new(points: Vec<Point>) -> Self {
+        let min_x = points.iter().map(|point| point.x).min().unwrap();
+        let max_x = points.iter().map(|point| point.x).max().unwrap();
+        let min_y = points.iter().map(|point| point.y).min().unwrap();
+        let max_y = points.iter().map(|point| point.y).max().unwrap();
+
         Grid {
-            width,
-            height,
-            buffer: vec![vec![false; height]; width],
+            min_x,
+            max_x,
+            min_y,
+            max_y,
+            points,
         }
     }
 
-    fn get(&self, x: i32, y: i32) -> bool {
-        //println!("get {} {}", x, y);
-        self.buffer[(x + (self.width as i32 / 2 + 1)) as usize]
-            [(y + (self.height as i32 / 2 + 1)) as usize]
-    }
+    fn print(&self) {
+        let mut grid = vec![
+            vec![false; (self.max_y - self.min_y) as usize + 1];
+            (self.max_x - self.min_x) as usize + 1
+        ];
 
-    fn set(&mut self, x: i32, y: i32, value: bool) {
-        //println!("set {} {}", x, y);
-        self.buffer[(x + (self.width as i32 / 2 + 1)) as usize]
-            [(y + (self.height as i32 / 2 + 1)) as usize] = value;
+        for point in &self.points {
+            grid[(point.x - self.min_x) as usize][(point.y - self.min_y) as usize] = true;
+        }
+
+        for y in 0..grid[0].len() {
+            let mut row = String::new();
+
+            for x in 0..grid.len() {
+                row.push(if grid[x][y] { 'X' } else { '.' });
+            }
+
+            println!("{}", row);
+        }
     }
 }
 
@@ -69,21 +88,8 @@ pub fn ten_a() -> u32 {
     let contents = fs::read_to_string("src/inputs/10_sample.txt").unwrap();
     let points: Vec<Point> = contents.lines().map(Point::new).collect();
 
-    let mut grid = Grid::new(51, 51);
-
-    for point in &points {
-        grid.set(point.x, point.y, true);
-    }
-
-    for y in -12..=12 {
-        let mut row = String::new();
-
-        for x in -12..=12 {
-            row.push(if grid.get(x, y) { 'X' } else { '.' });
-        }
-
-        println!("{}", row);
-    }
+    let mut grid = Grid::new(points);
+    grid.print();
 
     5
 }
