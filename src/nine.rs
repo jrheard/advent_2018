@@ -1,6 +1,13 @@
 mod game {
     use std::collections::VecDeque;
 
+    /// An implementation of day 9's weird circle-of-marbles game.
+    /// Uses two deques, `left` and `right`, to represent the circle.
+    /// The marble on the back of `left` is the "current marble" in the game's terminology.
+    /// The game slides through the circle, move items from self.right to self.left as it moves right,
+    /// and from self.left to self.right as it moves left.
+    /// If it reaches the end of `self.left` or `self.right`, it swaps them.
+    /// It's a circle!
     pub struct MarbleGame {
         left: VecDeque<usize>,
         right: VecDeque<usize>,
@@ -22,10 +29,12 @@ mod game {
             }
         }
 
-        // TODO document
+        /// Adds a marble to the circle.
+        ///
+        /// Returns Some((player_id, points)) if a player scored this round.
+        /// Returns None if nobody scored this round.
         pub fn add_marble(&mut self) -> Option<(usize, usize)> {
-            // xxx clean up if possible
-            if self.next_marble_id <= 1 {
+            if self.next_marble_id == 0 {
                 self.left.push_back(self.next_marble_id);
                 self.next_marble_id += 1;
                 return None;
@@ -34,6 +43,7 @@ mod game {
             let mut ret = None;
 
             if self.next_marble_id % 23 == 0 {
+                // The current player scored some points!
                 for _ in 0..7 {
                     self.move_left();
                 }
@@ -47,8 +57,10 @@ mod game {
                     self.next_marble_id + self.left.pop_back().unwrap(),
                 ));
 
+                // "The marble located immediately clockwise of the marble that was removed becomes the new current marble."
                 self.move_right();
             } else {
+                // This isn't a score-getting turn, so just place a marble normally.
                 self.move_right();
                 self.left.push_back(self.next_marble_id);
             }
