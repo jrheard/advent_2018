@@ -1,3 +1,19 @@
+running recap
+
+useful libraries:
+* serde_scan
+
+useful data structures i hadn't touched in a while:
+* deque
+* linked list
+
+ideas for a program to write after this:
+* irc bot
+* profiler (????)
+* flocking simulator (?)
+
+===
+
 2/4/19
 
 at long last, chapter 13 is behind me and i'm about ready to start
@@ -1106,3 +1122,28 @@ ok cool i think i'm on the right track, going afk, hopefully i remember my state
 
 ok i think that having a current_marble field is confusing things.
 i think that we should just say that the marble that's at the far back end of self.left is the current marble.
+
+done!
+looks like forrest implemented it using a linked list - that actually makes way more sense
+TODO let's try that
+way way way way way more sense
+like so much sense that i'm ashamed of not having thought of it but oh well
+
+====
+
+2/16/19
+
+https://cglab.ca/~abeinges/blah/too-many-lists/book/
+
+ok well on the bright side https://cglab.ca/~abeinges/blah/too-many-lists/book/#an-obligatory-public-service-announcement
+kind of exonerates me re: not having thought of using a linked list here
+i remember learning linked lists in college and being told that you'd never actually use them in real life
+
+https://cglab.ca/~abeinges/blah/too-many-lists/book/first-push.html
+he uses std::mem::replace(), neat
+
+ok uh
+i'm not super into this book because it seems out of date
+and i tried using the techniques in https://play.rust-lang.org/?gist=71c6bc45ff92452d5a4397ddb2dbb3de&version=stable
+but did not find them easy to adapt to this program
+so i think having two deques is fine.

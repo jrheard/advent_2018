@@ -228,8 +228,8 @@ impl ElfPool {
         });
     }
 
-    fn steps_in_progress(&self) -> HashSet<char> {
-        HashSet::from_iter(self.jobs.iter().map(|job| job.step))
+    fn steps_in_progress(&self) -> Vec<char> {
+        self.jobs.iter().map(|job| job.step).collect()
     }
 }
 
@@ -247,7 +247,7 @@ pub fn seven_b() -> i32 {
     while !walker.buffer.is_empty() || !pool.jobs.is_empty() {
         // Figure out which steps are available but aren't yet being worked on.
         let all_available_steps: HashSet<char> = HashSet::from_iter(walker.available_steps());
-        let steps_in_progress = pool.steps_in_progress();
+        let steps_in_progress = HashSet::from_iter(pool.steps_in_progress());
         let steps_not_being_worked_on = all_available_steps.difference(&steps_in_progress);
 
         // Add jobs until all of the elves are busy or we can't add more jobs.
