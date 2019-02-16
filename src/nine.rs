@@ -20,13 +20,16 @@ mod game {
 
     impl MarbleGame {
         pub fn new(num_players: usize, last_marble: usize) -> MarbleGame {
-            MarbleGame {
+            let mut game = MarbleGame {
                 left: VecDeque::with_capacity(last_marble),
                 right: VecDeque::with_capacity(last_marble),
                 num_players: num_players,
                 current_player: 0,
-                next_marble_id: 0,
-            }
+                next_marble_id: 1,
+            };
+            game.left.push_back(0);
+
+            game
         }
 
         /// Adds a marble to the circle.
@@ -34,12 +37,6 @@ mod game {
         /// Returns Some((player_id, points)) if a player scored this round.
         /// Returns None if nobody scored this round.
         pub fn add_marble(&mut self) -> Option<(usize, usize)> {
-            if self.next_marble_id == 0 {
-                self.left.push_back(self.next_marble_id);
-                self.next_marble_id += 1;
-                return None;
-            }
-
             let mut ret = None;
 
             if self.next_marble_id % 23 == 0 {
@@ -97,7 +94,7 @@ fn marble_game_outcome(num_players: usize, last_marble: usize) -> usize {
     let mut marble_game = game::MarbleGame::new(num_players, last_marble);
     let mut scores = vec![0; num_players];
 
-    for _ in 0..=last_marble {
+    for _ in 0..last_marble {
         if let Some((player_index, score)) = marble_game.add_marble() {
             scores[player_index] += score;
         }
