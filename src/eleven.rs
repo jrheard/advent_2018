@@ -61,6 +61,11 @@ mod test {
     use super::*;
 
     #[test]
+    fn test_solution() {
+        assert_eq!(eleven_a(), (243, 27));
+    }
+
+    #[test]
     fn test_power_level() {
         assert_eq!(power_level(3, 5, 8), 4);
         assert_eq!(power_level(122, 79, 57), -5);

@@ -1,4 +1,3 @@
-// TODO cleanup
 use std::fs;
 
 use lazy_static::lazy_static;
@@ -46,11 +45,13 @@ struct Grid {
 
 impl Grid {
     fn bounds(points: &[Point]) -> (i32, i32, i32, i32) {
+        let xs = points.iter().map(|point| point.x);
+        let ys = points.iter().map(|point| point.y);
         (
-            points.iter().map(|point| point.x).min().unwrap(),
-            points.iter().map(|point| point.x).max().unwrap(),
-            points.iter().map(|point| point.y).min().unwrap(),
-            points.iter().map(|point| point.y).max().unwrap(),
+            xs.clone().min().unwrap(),
+            xs.max().unwrap(),
+            ys.clone().min().unwrap(),
+            ys.max().unwrap(),
         )
     }
 
@@ -110,7 +111,7 @@ impl Grid {
 const LONG_LINE_THRESHOLD: u32 = 5;
 
 fn num_lines(grid: Vec<Vec<bool>>) -> usize {
-    fn has_a_contiguous_line(line: &[bool]) -> bool {
+    fn longest_contiguous_line(line: &[bool]) -> bool {
         line.iter().fold(0, |acc, value| {
             if acc >= LONG_LINE_THRESHOLD || *value {
                 acc + 1
@@ -136,7 +137,7 @@ fn num_lines(grid: Vec<Vec<bool>>) -> usize {
 
     all_lines
         .iter()
-        .filter(|line| has_a_contiguous_line(line))
+        .filter(|line| longest_contiguous_line(line))
         .count()
 }
 
@@ -149,11 +150,11 @@ pub fn ten() -> u32 {
 
     let mut grid = Grid::new(points);
 
-    let mut i = 0;
+    let mut seconds = 0;
 
     loop {
         grid.advance();
-        i += 1;
+        seconds += 1;
 
         if (grid.max_x - grid.min_x) > TOO_LARGE_WIDTH
             || (grid.max_y - grid.min_y) > TOO_LARGE_HEIGHT
@@ -166,7 +167,7 @@ pub fn ten() -> u32 {
 
     grid.print();
 
-    i
+    seconds
 }
 
 #[cfg(test)]
