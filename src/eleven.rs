@@ -20,36 +20,51 @@ fn power_level(x: u32, y: u32, serial: u32) -> i32 {
 }
 
 const SERIAL: u32 = 6303;
+const GRID_WIDTH: usize = 300;
+const GRID_HEIGHT: usize = 300;
 
-pub fn eleven_a() -> (usize, usize) {
-    let mut grid = [[0; 300]; 300];
+fn coordinates() -> Vec<(usize, usize)> {
+    (0..GRID_WIDTH)
+        .flat_map(|x| (0..GRID_HEIGHT).map(move |y| (x, y)))
+        .collect::<Vec<(usize, usize)>>()
+}
 
-    let coordinates = (0..300)
-        .flat_map(|x| (0..300).map(move |y| (x, y)))
-        .collect::<Vec<(usize, usize)>>();
+fn make_grid() -> Vec<Vec<i32>> {
+    let mut grid = vec![vec![0; 300]; 300];
 
-    for &(x, y) in &coordinates {
+    for (x, y) in coordinates() {
         grid[x][y] = power_level(x as u32 + 1, y as u32 + 1, SERIAL);
     }
 
-    let mut square_powers = [[0; 300]; 300];
+    grid
+}
 
-    for x in 0..298 {
-        for y in 0..298 {
+fn square_powers(grid: &Vec<Vec<i32>>, square_side_len: u32) -> Vec<Vec<i32>> {
+    let mut summed_grid = vec![vec![0; 300]; 300];
+
+    for x in 0..=(300 - square_side_len) {
+        for y in 0..=(300 - square_side_len) {
             let mut square_power = 0;
-            for i in 0..3 {
-                for j in 0..3 {
-                    square_power += grid[x + i][y + j];
+            for i in 0..square_side_len {
+                for j in 0..square_side_len {
+                    square_power += grid[(x + i) as usize][(y + j) as usize];
                 }
             }
 
-            square_powers[x][y] = square_power;
+            summed_grid[x as usize][y as usize] = square_power;
         }
     }
 
-    let (x, y, _) = coordinates
+    summed_grid
+}
+
+pub fn eleven_a() -> (usize, usize) {
+    let grid = make_grid();
+    let summed_grid = square_powers(&grid, 3);
+
+    let (x, y, _) = coordinates()
         .iter()
-        .map(|&(x, y)| (x, y, square_powers[x][y]))
+        .map(|&(x, y)| (x, y, summed_grid[x][y]))
         .max_by_key(|&(_, _, square_power)| square_power)
         .unwrap();
 

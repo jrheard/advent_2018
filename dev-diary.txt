@@ -1160,3 +1160,31 @@ but detecting when letters have been spelled out? how do you do that?
 TODO heuristic: look for straight lines!!!!
 have a function that looks at the grid and counts the number of straight lines with length >5
 and if it's high (unclear atm what "high" means), that's the one!
+
+====
+
+2/17/19
+
+11a was easy
+11b is also easy but runs slow
+there's clearly a way to speed it up
+
+first approach that jumps out at me:
+
+for larger size lenses, you can save a lot of lookups by just doing math around the edges
+
+like let's say we have this grid (i'll be using regular coordinates for this example, not their weird (1,1) origin coordinates)
+
+-3   4   2   2   2
+-4   4   3   3   4
+-5   3   3   4  -4
+ 4   3   3   4  -3
+ 3   3   3  -5  -1
+
+and let's say we're looking at 4x4 sizes
+so we start in the bottom right
+which means that the lowest-right 4x4 square we can look at starts at [1, 1] with the number 4 in its top left
+
+and that square has a power of 27.
+now we move left one position to look at the 4x4 square whose top-left point is [0, 1], the -4
+and to find its power we take 27, subtract (4 - 4 - 3 -1), and add (-4 -5 + 4 +3)
