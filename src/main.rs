@@ -2,6 +2,7 @@
 
 // Rustfmt doesn't let me alphabetize these, oh well!
 mod eight;
+mod eleven;
 mod five;
 mod four;
 mod nine;
@@ -32,7 +33,9 @@ fn main() {
     println!("8b: {}", eight::eight_b());
     println!("9a: {}", nine::nine_a());
     println!("9b: {}", nine::nine_b());
+    // ten::ten() prints out 10a as a side effect and returns 10b.
     println!("10a:");
-    let tenb = ten::ten();
-    println!("10b: {}", tenb);
+    let ten_b = ten::ten();
+    println!("10b: {}", ten_b);
+    println!("11a: {:?}", eleven::eleven_a());
 }
