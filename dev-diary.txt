@@ -1232,3 +1232,6 @@ ok so something's definitely going wrong with my translating back and forth betw
 that's because i wrote this index stuff in a really brittle fiddly way that i was hoping wouldn't come crashing down
 but it has
 soooo
+
+so i looked around on the subreddit and people say that after a bit you end up gaining exactly X plants every generation
+so let's write code to detect that

@@ -50,7 +50,7 @@ fn print_generation(pots: &Vec<bool>) {
 
 const BUF_WIDTH: usize = 1000000;
 
-pub fn twelve_a() -> i32 {
+pub fn twelve_a() -> u64 {
     let contents = fs::read_to_string("src/inputs/12.txt").unwrap();
     let lines = contents.lines().collect::<Vec<&str>>();
 
@@ -85,12 +85,16 @@ pub fn twelve_a() -> i32 {
     let mut first_plant_index = BUF_WIDTH / 2;
     let mut last_plant_index = BUF_WIDTH / 2 + initial_state.len();
 
-    /*
+    let mut previous_sum = 0;
+    let mut previous_sum_increase = 0;
+    let mut num_times_saw_same_sum_increase_in_a_row = 0;
+
     for i in 0u64..50000000000 {
         if i % 1000 == 0 {
             dbg!(i);
-        }*/
-    for _ in 0..20 {
+        }
+
+        //for _ in 0..20 {
         //dbg!(first_plant_index);
         //dbg!(last_plant_index);
         let mut new_generation = vec![];
@@ -153,16 +157,31 @@ pub fn twelve_a() -> i32 {
             .map(|&x| if x { '#' } else { '.' })
             .collect::<String>();
         dbg!(generation_string);*/
+
+        let indexes = buf
+            .iter()
+            .enumerate()
+            .filter(|(_, &value)| value)
+            .map(|(index, _)| index as i32 - (BUF_WIDTH / 2) as i32)
+            .collect::<Vec<i32>>();
+
+        let sum: i32 = indexes.iter().sum();
+
+        if (sum - previous_sum) == previous_sum_increase {
+            num_times_saw_same_sum_increase_in_a_row += 1;
+
+            if num_times_saw_same_sum_increase_in_a_row > 10 {
+                return previous_sum as u64
+                    + ((50000000000 - i) * (sum as u64 - previous_sum as u64));
+            }
+        } else {
+            num_times_saw_same_sum_increase_in_a_row = 0;
+        }
+        previous_sum_increase = sum - previous_sum;
+        previous_sum = sum;
     }
 
-    let indexes = buf
-        .iter()
-        .enumerate()
-        .filter(|(_, &value)| value)
-        .map(|(index, _)| index as i32 - (BUF_WIDTH / 2) as i32)
-        .collect::<Vec<i32>>();
-
-    indexes.iter().sum()
+    0
 }
 
 #[cfg(test)]
