@@ -39,77 +39,91 @@ fn make_grid() -> Vec<Vec<i32>> {
     grid
 }
 
-fn square_powers(grid: &Vec<Vec<i32>>, square_side_len: usize) -> Vec<Vec<i32>> {
-    let mut summed_grid = vec![vec![0; GRID_HEIGHT]; GRID_WIDTH];
+/// See https://en.wikipedia.org/wiki/Summed-area_table
+/// TODO newtype?
+fn make_summed_area_table(grid: &Vec<Vec<i32>>) -> Vec<Vec<i32>> {
+    let mut table = vec![vec![0; GRID_HEIGHT]; GRID_WIDTH];
 
-    for y in 0..=(GRID_HEIGHT - square_side_len) {
-        // Start by filling in the far left square.
+    for y in 0..GRID_HEIGHT {
+        for x in 0..GRID_WIDTH {
+            let above = if y > 0 { table[x][y - 1] } else { 0 };
 
-        let mut square_power = 0;
+            let left = if x > 0 { table[x - 1][y] } else { 0 };
 
-        if y == 0 {
-            // Do it from scratch, because there's no previously-filled-in row above us.
-            for i in 0..square_side_len {
-                for j in 0..square_side_len {
-                    square_power += grid[i][y + j];
-                }
-            }
-        } else {
-            // Cheat by peeking at the row above us.
-            square_power = summed_grid[0][y - 1];
+            let above_left = if x > 0 && y > 0 {
+                table[x - 1][y - 1]
+            } else {
+                0
+            };
 
-            for x in 0..square_side_len {
-                square_power -= grid[x][y - 1];
-                square_power += grid[x][y + square_side_len - 1];
-            }
-        }
-
-        summed_grid[0][y] = square_power;
-
-        // Then fill in the rest of the row.
-        for x in 1..=(GRID_WIDTH - square_side_len) {
-            let mut square_power = summed_grid[x - 1][y];
-
-            for i in 0..square_side_len {
-                square_power -= grid[x - 1][y + i];
-                square_power += grid[x + square_side_len - 1][y + i];
-            }
-
-            summed_grid[x][y] = square_power;
+            table[x][y] = grid[x][y] + above + left - above_left;
         }
     }
 
-    summed_grid
+    table
+}
+
+// XXXX buggy, returns stuff in the bottom righth every time
+fn square_with_most_power(table: &Vec<Vec<i32>>, square_side_len: usize) -> (usize, usize, i32) {
+    let mut ret_x = 0;
+    let mut ret_y = 0;
+    let mut most_power = std::i32::MIN;
+
+    for x in square_side_len - 1..GRID_WIDTH {
+        for y in square_side_len - 1..GRID_HEIGHT {
+            let above = if y > square_side_len - 1 {
+                table[x][y - square_side_len]
+            } else {
+                0
+            };
+
+            let left = if x > square_side_len - 1 {
+                table[x - square_side_len][y]
+            } else {
+                0
+            };
+
+            let above_left = if x > square_side_len - 1 && y > square_side_len - 1 {
+                table[x - (square_side_len - 1)][y - (square_side_len - 1)]
+            } else {
+                0
+            };
+
+            let square_power = table[x][y] - above - left + above_left;
+
+            if square_power > most_power {
+                most_power = square_power;
+                ret_x = x;
+                ret_y = y;
+            }
+        }
+    }
+
+    (
+        ret_x - (square_side_len - 1),
+        ret_y - (square_side_len - 1),
+        most_power,
+    )
 }
 
 pub fn eleven_a() -> (usize, usize) {
     let grid = make_grid();
-    let summed_grid = square_powers(&grid, 3);
-
-    let (x, y, _) = coordinates()
-        .iter()
-        .map(|&(x, y)| (x, y, summed_grid[x][y]))
-        .max_by_key(|&(_, _, square_power)| square_power)
-        .unwrap();
+    let table = make_summed_area_table(&grid);
+    let (x, y, _) = square_with_most_power(&table, 3);
 
     (x + 1, y + 1)
 }
 
 pub fn eleven_b() -> (usize, usize, usize) {
     let grid = make_grid();
+    let table = make_summed_area_table(&grid);
     let mut max_power = 0;
     let mut x = 0;
     let mut y = 0;
     let mut square_side_len = 0;
 
     for size in 1..=300 {
-        let summed_grid = square_powers(&grid, size);
-
-        let (xx, yy, square_power) = coordinates()
-            .iter()
-            .map(|&(x, y)| (x, y, summed_grid[x][y]))
-            .max_by_key(|&(_, _, square_power)| square_power)
-            .unwrap();
+        let (xx, yy, square_power) = square_with_most_power(&table, size);
 
         if square_power > max_power {
             x = xx;

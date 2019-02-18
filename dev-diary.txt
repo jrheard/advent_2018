@@ -1191,4 +1191,6 @@ and to find its power we take 27, subtract (4 - 4 - 3 -1), and add (-4 -5 + 4 +3
 or i mean i guess conversely we could start in the top left and move down right, that doesn't change anything
 cool
 
-TODO put a print_grid() function in util
+DONE put a print_grid() function in util, DONE optional min/max x/y args
+
+TODO forrest suggests a https://en.wikipedia.org/wiki/Summed-area_table for 11b, take a look

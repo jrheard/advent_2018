@@ -24,6 +24,29 @@ where
     *(freqs.iter().max_by_key(|(_, count)| *count).unwrap().0)
 }
 
+pub fn print_grid_with_bounds<T: std::fmt::Display>(
+    grid: &Vec<Vec<T>>,
+    min_x: usize,
+    max_x: usize,
+    min_y: usize,
+    max_y: usize,
+) {
+    for y in min_y..=max_y {
+        let mut row = String::new();
+
+        for x in min_x..=max_x {
+            row.push_str(&format!(" {} ", grid[x][y]));
+        }
+
+        println!("{}", row);
+    }
+}
+
+#[allow(dead_code)]
+pub fn print_grid<T: std::fmt::Display>(grid: &Vec<Vec<T>>) {
+    print_grid_with_bounds(grid, 0, grid.len() - 1, 0, grid[0].len() - 1);
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
