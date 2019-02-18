@@ -71,20 +71,20 @@ fn square_with_most_power(table: &Vec<Vec<i32>>, square_side_len: usize) -> (usi
 
     for x in square_side_len - 1..GRID_WIDTH {
         for y in square_side_len - 1..GRID_HEIGHT {
-            let above = if y > square_side_len - 1 {
+            let above = if y >= square_side_len {
                 table[x][y - square_side_len]
             } else {
                 0
             };
 
-            let left = if x > square_side_len - 1 {
+            let left = if x >= square_side_len {
                 table[x - square_side_len][y]
             } else {
                 0
             };
 
-            let above_left = if x > square_side_len - 1 && y > square_side_len - 1 {
-                table[x - (square_side_len - 1)][y - (square_side_len - 1)]
+            let above_left = if x >= square_side_len && y >= square_side_len {
+                table[x - square_side_len][y - square_side_len]
             } else {
                 0
             };
