@@ -85,6 +85,11 @@ pub fn twelve_a() -> i32 {
     let mut first_plant_index = BUF_WIDTH / 2;
     let mut last_plant_index = BUF_WIDTH / 2 + initial_state.len();
 
+    /*
+    for i in 0u64..50000000000 {
+        if i % 1000 == 0 {
+            dbg!(i);
+        }*/
     for _ in 0..20 {
         //dbg!(first_plant_index);
         //dbg!(last_plant_index);
