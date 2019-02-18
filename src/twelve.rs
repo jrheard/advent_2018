@@ -51,7 +51,7 @@ fn print_generation(pots: &Vec<bool>) {
 const BUF_WIDTH: usize = 1000000;
 
 pub fn twelve_a() -> i32 {
-    let contents = fs::read_to_string("src/inputs/12.txt").unwrap();
+    let contents = fs::read_to_string("src/inputs/12_sample.txt").unwrap();
     let lines = contents.lines().collect::<Vec<&str>>();
 
     let rules: Vec<GenerationRule> = lines
@@ -61,6 +61,12 @@ pub fn twelve_a() -> i32 {
         .collect();
 
     let initial_state = parse_initial_state(lines[0]);
+
+    let initial_state_string = initial_state
+        .iter()
+        .map(|&x| if x { '#' } else { '.' })
+        .collect::<String>();
+    dbg!(initial_state_string);
 
     let mut buf = vec![false; BUF_WIDTH];
 
@@ -86,19 +92,29 @@ pub fn twelve_a() -> i32 {
         //dbg!(pots.len());
 
         for window in pots.windows(5) {
+            let mut has_plant = false;
             for rule in &rules {
+                /* PROD CODE
                 if rule.pattern == window {
                     new_generation.push(rule.result);
                     break;
                 }
+                */
+                if rule.pattern == window {
+                    has_plant = rule.result;
+                    break;
+                }
             }
+            new_generation.push(has_plant);
         }
 
+        /*
         let generation_string = new_generation
             .iter()
             .map(|&x| if x { '#' } else { '.' })
             .collect::<String>();
-        //dbg!(generation_string);
+        dbg!(generation_string);
+        */
 
         for (i, &value) in new_generation.iter().enumerate() {
             let translated_index = i + first_plant_index - 3;
@@ -113,6 +129,14 @@ pub fn twelve_a() -> i32 {
 
             buf[translated_index] = value;
         }
+
+        let generation_string = buf
+            .iter()
+            .skip(BUF_WIDTH / 2 - 15)
+            .take(60)
+            .map(|&x| if x { '#' } else { '.' })
+            .collect::<String>();
+        dbg!(generation_string);
     }
 
     let indexes = buf
