@@ -63,7 +63,6 @@ fn make_summed_area_table(grid: &Vec<Vec<i32>>) -> Vec<Vec<i32>> {
     table
 }
 
-// XXXX buggy, returns stuff in the bottom righth every time
 fn square_with_most_power(table: &Vec<Vec<i32>>, square_side_len: usize) -> (usize, usize, i32) {
     let mut ret_x = 0;
     let mut ret_y = 0;
