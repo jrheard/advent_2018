@@ -1221,3 +1221,9 @@ and minmax!
 
 ok 12a done
 12b looks pretty nuts, definitely going to need to adjust my approach to get this to work
+
+ok so wow
+state of mind
+so we can't just immediately make the vector of pots 1MB wide because checking all those overlapping chunks would be a pain
+although actually we could just track min_index and max_index and update them each generation
+to slowly widen the area that we look through
