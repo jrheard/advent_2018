@@ -44,10 +44,23 @@ fn square_powers(grid: &Vec<Vec<i32>>, square_side_len: usize) -> Vec<Vec<i32>> 
 
     for y in 0..=(GRID_HEIGHT - square_side_len) {
         // Start by filling in the far left square.
+
         let mut square_power = 0;
-        for i in 0..square_side_len {
-            for j in 0..square_side_len {
-                square_power += grid[i as usize][y + j as usize];
+
+        if y == 0 {
+            // Do it from scratch, because there's no previously-filled-in row above us.
+            for i in 0..square_side_len {
+                for j in 0..square_side_len {
+                    square_power += grid[i][y + j];
+                }
+            }
+        } else {
+            // Cheat by peeking at the row above us.
+            square_power = summed_grid[0][y - 1];
+
+            for x in 0..square_side_len {
+                square_power -= grid[x][y - 1];
+                square_power += grid[x][y + square_side_len - 1];
             }
         }
 
@@ -58,8 +71,8 @@ fn square_powers(grid: &Vec<Vec<i32>>, square_side_len: usize) -> Vec<Vec<i32>> 
             let mut square_power = summed_grid[x - 1][y];
 
             for i in 0..square_side_len {
-                square_power -= grid[(x - 1) as usize][(y + i) as usize];
-                square_power += grid[(x + square_side_len - 1) as usize][(y + i) as usize];
+                square_power -= grid[x - 1][y + i];
+                square_power += grid[x + square_side_len - 1][y + i];
             }
 
             summed_grid[x][y] = square_power;
@@ -90,7 +103,6 @@ pub fn eleven_b() -> (usize, usize, usize) {
     let mut square_side_len = 0;
 
     for size in 1..=300 {
-        dbg!(size);
         let summed_grid = square_powers(&grid, size);
 
         let (xx, yy, square_power) = coordinates()
