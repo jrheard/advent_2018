@@ -40,7 +40,6 @@ fn make_grid() -> Vec<Vec<i32>> {
 }
 
 /// See https://en.wikipedia.org/wiki/Summed-area_table
-/// TODO newtype?
 fn make_summed_area_table(grid: &Vec<Vec<i32>>) -> Vec<Vec<i32>> {
     let mut table = vec![vec![0; GRID_HEIGHT]; GRID_WIDTH];
 
