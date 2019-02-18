@@ -72,14 +72,18 @@ pub fn twelve_a() -> i32 {
     let mut last_plant_index = BUF_WIDTH / 2 + initial_state.len();
 
     for _ in 0..20 {
+        //dbg!(first_plant_index);
+        //dbg!(last_plant_index);
         let mut new_generation = vec![];
 
         let pots = buf
             .iter()
             .skip(first_plant_index - 3)
-            .take(last_plant_index + 3)
+            .take((last_plant_index - first_plant_index) + 3)
             .cloned()
             .collect::<Vec<bool>>();
+
+        //dbg!(pots.len());
 
         for window in pots.windows(5) {
             for rule in &rules {
@@ -89,6 +93,12 @@ pub fn twelve_a() -> i32 {
                 }
             }
         }
+
+        let generation_string = new_generation
+            .iter()
+            .map(|&x| if x { '#' } else { '.' })
+            .collect::<String>();
+        //dbg!(generation_string);
 
         for (i, &value) in new_generation.iter().enumerate() {
             let translated_index = i + first_plant_index - 3;
