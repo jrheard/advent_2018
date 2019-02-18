@@ -1235,3 +1235,8 @@ soooo
 
 so i looked around on the subreddit and people say that after a bit you end up gaining exactly X plants every generation
 so let's write code to detect that
+
+ok cool done
+so the code right now is just totally atrocious
+TODO: tomorrow go back and tidy up
+and write a test for 12b, answer was 3750000001113
