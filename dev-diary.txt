@@ -1216,3 +1216,8 @@ for (key, group) in &data.into_iter().group_by(|elt| *elt >= 0) {
 tuple_windows seems relevant, is there some non-tuple version?
 
 into_group_map also looks really useful
+and sorted!
+and minmax!
+
+ok 12a done
+12b looks pretty nuts, definitely going to need to adjust my approach to get this to work

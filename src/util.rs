@@ -1,5 +1,4 @@
 use hashbrown::HashMap;
-use itertools::Itertools;
 
 pub fn frequencies<I, T>(x: I) -> HashMap<T, u32>
 where
