@@ -1188,3 +1188,7 @@ which means that the lowest-right 4x4 square we can look at starts at [1, 1] wit
 and that square has a power of 27.
 now we move left one position to look at the 4x4 square whose top-left point is [0, 1], the -4
 and to find its power we take 27, subtract (4 - 4 - 3 -1), and add (-4 -5 + 4 +3)
+or i mean i guess conversely we could start in the top left and move down right, that doesn't change anything
+cool
+
+TODO put a print_grid() function in util

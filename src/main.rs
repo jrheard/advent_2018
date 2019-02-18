@@ -38,4 +38,5 @@ fn main() {
     let ten_b = ten::ten();
     println!("10b: {}", ten_b);
     println!("11a: {:?}", eleven::eleven_a());
+    println!("11b: {:?}", eleven::eleven_b());
 }

@@ -30,7 +30,7 @@ fn coordinates() -> Vec<(usize, usize)> {
 }
 
 fn make_grid() -> Vec<Vec<i32>> {
-    let mut grid = vec![vec![0; 300]; 300];
+    let mut grid = vec![vec![0; GRID_HEIGHT]; GRID_WIDTH];
 
     for (x, y) in coordinates() {
         grid[x][y] = power_level(x as u32 + 1, y as u32 + 1, SERIAL);
@@ -39,19 +39,30 @@ fn make_grid() -> Vec<Vec<i32>> {
     grid
 }
 
-fn square_powers(grid: &Vec<Vec<i32>>, square_side_len: u32) -> Vec<Vec<i32>> {
-    let mut summed_grid = vec![vec![0; 300]; 300];
+fn square_powers(grid: &Vec<Vec<i32>>, square_side_len: usize) -> Vec<Vec<i32>> {
+    let mut summed_grid = vec![vec![0; GRID_HEIGHT]; GRID_WIDTH];
 
-    for x in 0..=(300 - square_side_len) {
-        for y in 0..=(300 - square_side_len) {
-            let mut square_power = 0;
+    for y in 0..=(GRID_HEIGHT - square_side_len) {
+        // Start by filling in the far left square.
+        let mut square_power = 0;
+        for i in 0..square_side_len {
+            for j in 0..square_side_len {
+                square_power += grid[i as usize][y + j as usize];
+            }
+        }
+
+        summed_grid[0][y] = square_power;
+
+        // Then fill in the rest of the row.
+        for x in 1..=(GRID_WIDTH - square_side_len) {
+            let mut square_power = summed_grid[x - 1][y];
+
             for i in 0..square_side_len {
-                for j in 0..square_side_len {
-                    square_power += grid[(x + i) as usize][(y + j) as usize];
-                }
+                square_power -= grid[(x - 1) as usize][(y + i) as usize];
+                square_power += grid[(x + square_side_len - 1) as usize][(y + i) as usize];
             }
 
-            summed_grid[x as usize][y as usize] = square_power;
+            summed_grid[x][y] = square_power;
         }
     }
 
@@ -71,6 +82,34 @@ pub fn eleven_a() -> (usize, usize) {
     (x + 1, y + 1)
 }
 
+pub fn eleven_b() -> (usize, usize, usize) {
+    let grid = make_grid();
+    let mut max_power = 0;
+    let mut x = 0;
+    let mut y = 0;
+    let mut square_side_len = 0;
+
+    for size in 1..=300 {
+        dbg!(size);
+        let summed_grid = square_powers(&grid, size);
+
+        let (xx, yy, square_power) = coordinates()
+            .iter()
+            .map(|&(x, y)| (x, y, summed_grid[x][y]))
+            .max_by_key(|&(_, _, square_power)| square_power)
+            .unwrap();
+
+        if square_power > max_power {
+            x = xx;
+            y = yy;
+            max_power = square_power;
+            square_side_len = size;
+        }
+    }
+
+    (x + 1, y + 1, square_side_len)
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -78,6 +117,7 @@ mod test {
     #[test]
     fn test_solution() {
         assert_eq!(eleven_a(), (243, 27));
+        assert_eq!(eleven_b(), (284, 172, 12));
     }
 
     #[test]
