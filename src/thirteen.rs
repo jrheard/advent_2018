@@ -152,20 +152,26 @@ impl Mine {
 
             let space = self.grid[cart.x][cart.y];
             match space {
-                MineSpace::CurveLeft => {
-                    println!("cart {:?} turning left!", cart);
-                    cart.direction = if cart.direction == East { South } else { West };
-                }
                 MineSpace::CurveRight => {
-                    println!("cart {:?} turning right!", cart);
-                    cart.direction = if cart.direction == West { South } else { East };
+                    cart.direction = match cart.direction {
+                        North => East,
+                        East => North,
+                        South => West,
+                        West => South,
+                    }
+                }
+                MineSpace::CurveLeft => {
+                    cart.direction = match cart.direction {
+                        North => West,
+                        East => South,
+                        South => East,
+                        West => North,
+                    }
                 }
                 MineSpace::Intersection => {
                     if cart.turn_counter == 0 {
-                        println!("cart {:?} turning left!", cart);
                         cart.direction = cart.direction.left();
                     } else if cart.turn_counter == 2 {
-                        println!("cart {:?} turning right!", cart);
                         cart.direction = cart.direction.right();
                     }
 
