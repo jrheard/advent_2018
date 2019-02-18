@@ -136,6 +136,8 @@ impl Mine {
         let carts = self.carts.iter_mut().sorted_by_key(|cart| (cart.y, cart.x));
 
         for cart in carts {
+            cart_positions.retain(|&position| (cart.x, cart.y, cart.direction) != position);
+
             match cart.direction {
                 North => cart.y -= 1,
                 East => cart.x += 1,
@@ -190,7 +192,7 @@ impl Mine {
 }
 
 pub fn thirteen_a() -> (usize, usize) {
-    let mut mine = Mine::new("src/inputs/13_sample.txt");
+    let mut mine = Mine::new("src/inputs/13.txt");
 
     loop {
         if let Err((x, y)) = mine.tick() {
@@ -204,5 +206,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_solutions() {}
+    fn test_solutions() {
+        assert_eq!(thirteen_a(), (113, 136));
+    }
 }
