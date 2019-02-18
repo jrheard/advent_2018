@@ -44,4 +44,5 @@ fn main() {
     println!("12a: {}", twelve::twelve_a());
     println!("12b: {}", twelve::twelve_b());
     println!("13a: {:?}", thirteen::thirteen_a());
+    println!("13b: {:?}", thirteen::thirteen_b());
 }

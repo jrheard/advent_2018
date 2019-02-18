@@ -1,7 +1,5 @@
 use std::fs;
 
-use itertools::Itertools;
-
 #[derive(Clone, Copy, Debug)]
 enum MineSpace {
     StraightVertical,   // |
@@ -126,17 +124,23 @@ impl Mine {
     }
 
     /// Advances time one tick. Returns Ok(()) if there were no crashes, Err((x, y)) if there was a crash.
-    fn tick(&mut self) -> Result<(), (usize, usize)> {
+    fn tick(&mut self) -> Vec<(usize, usize)> {
+        self.carts.sort_by_key(|cart| (cart.y, cart.x));
+
         let mut cart_positions = self
             .carts
             .iter()
             .map(|cart| (cart.x, cart.y, cart.direction))
             .collect::<Vec<(usize, usize, Direction)>>();
 
-        let carts = self.carts.iter_mut().sorted_by_key(|cart| (cart.y, cart.x));
+        let mut crash_sites = vec![];
 
-        for cart in carts {
+        for cart in &mut self.carts {
             cart_positions.retain(|&position| (cart.x, cart.y, cart.direction) != position);
+
+            if crash_sites.contains(&(cart.x, cart.y)) {
+                continue;
+            }
 
             match cart.direction {
                 North => cart.y -= 1,
@@ -148,7 +152,7 @@ impl Mine {
             // Check for crashes!
             for (x, y, direction) in &cart_positions {
                 if *x == cart.x && *y == cart.y && *direction != cart.direction {
-                    return Err((*x, *y));
+                    crash_sites.push((*x, *y));
                 }
             }
 
@@ -187,7 +191,21 @@ impl Mine {
             cart_positions.push((cart.x, cart.y, cart.direction));
         }
 
-        Ok(())
+        self.carts
+            .retain(|cart| !crash_sites.contains(&(cart.x, cart.y)));
+
+        crash_sites
+    }
+}
+
+pub fn thirteen_b() -> (usize, usize) {
+    let mut mine = Mine::new("src/inputs/13.txt");
+
+    loop {
+        let _ = mine.tick();
+        if mine.carts.len() == 1 {
+            return (mine.carts[0].x, mine.carts[0].y);
+        }
     }
 }
 
@@ -195,8 +213,9 @@ pub fn thirteen_a() -> (usize, usize) {
     let mut mine = Mine::new("src/inputs/13.txt");
 
     loop {
-        if let Err((x, y)) = mine.tick() {
-            return (x, y);
+        let crashes = mine.tick();
+        if !crashes.is_empty() {
+            return crashes[0];
         }
     }
 }
@@ -208,5 +227,6 @@ mod test {
     #[test]
     fn test_solutions() {
         assert_eq!(thirteen_a(), (113, 136));
+        assert_eq!(thirteen_b(), (114, 136));
     }
 }
