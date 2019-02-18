@@ -3,18 +3,12 @@ use std::fs;
 use lazy_static::lazy_static;
 use regex::Regex;
 
-const NUM_PADDING_POTS: usize = 30;
-
 fn parse_initial_state(input: &str) -> Vec<bool> {
-    // Slap 15 empty pots on either side of the initial state to handle spillover as the generations proceed.
-    let mut result = vec![false; NUM_PADDING_POTS];
-
-    let input = input.replace("initial state: ", "");
-    result.append(&mut input.chars().map(|c| c == '#').collect());
-
-    result.append(&mut vec![false; NUM_PADDING_POTS]);
-
-    result
+    input
+        .replace("initial state: ", "")
+        .chars()
+        .map(|c| c == '#')
+        .collect()
 }
 
 #[derive(PartialEq, Debug)]
@@ -54,6 +48,8 @@ fn print_generation(pots: &Vec<bool>) {
     println!("{}", generation);
 }
 
+const BUF_WIDTH: usize = 1000000;
+
 pub fn twelve_a() -> i32 {
     let contents = fs::read_to_string("src/inputs/12.txt").unwrap();
     let lines = contents.lines().collect::<Vec<&str>>();
@@ -64,29 +60,56 @@ pub fn twelve_a() -> i32 {
         .map(|line| GenerationRule::new(line))
         .collect();
 
-    let mut generation = parse_initial_state(lines[0]);
+    let initial_state = parse_initial_state(lines[0]);
+
+    let mut buf = vec![false; BUF_WIDTH];
+
+    for i in 0..initial_state.len() {
+        buf[BUF_WIDTH / 2 + i] = initial_state[i];
+    }
+
+    let mut first_plant_index = BUF_WIDTH / 2;
+    let mut last_plant_index = BUF_WIDTH / 2 + initial_state.len();
 
     for _ in 0..20 {
-        let mut new_generation = generation.clone();
+        let mut new_generation = vec![];
 
-        let windows = generation.windows(5).enumerate();
-        for (i, window) in windows {
+        let pots = buf
+            .iter()
+            .skip(first_plant_index - 3)
+            .take(last_plant_index + 3)
+            .cloned()
+            .collect::<Vec<bool>>();
+
+        for window in pots.windows(5) {
             for rule in &rules {
                 if rule.pattern == window {
-                    new_generation[i + 2] = rule.result;
+                    new_generation.push(rule.result);
                     break;
                 }
             }
         }
 
-        generation = new_generation;
+        for (i, &value) in new_generation.iter().enumerate() {
+            let translated_index = i + first_plant_index - 3;
+
+            if value {
+                if translated_index < first_plant_index {
+                    first_plant_index = translated_index;
+                } else if translated_index > last_plant_index {
+                    last_plant_index = translated_index;
+                }
+            }
+
+            buf[translated_index] = value;
+        }
     }
 
-    let indexes = generation
+    let indexes = buf
         .iter()
         .enumerate()
         .filter(|(_, &value)| value)
-        .map(|(index, _)| index as i32 - NUM_PADDING_POTS as i32)
+        .map(|(index, _)| index as i32 - (BUF_WIDTH / 2) as i32)
         .collect::<Vec<i32>>();
 
     indexes.iter().sum()
@@ -103,13 +126,10 @@ mod test {
 
     #[test]
     fn test_parse_initial_state() {
-        let mut expected = vec![false; NUM_PADDING_POTS];
-        expected.append(&mut vec![
-            true, false, false, true, true, false, false, false, false,
-        ]);
-        expected.append(&mut vec![false; NUM_PADDING_POTS]);
-
-        assert_eq!(parse_initial_state("initial state: #..##...."), expected);
+        assert_eq!(
+            parse_initial_state("initial state: #..##...."),
+            vec![true, false, false, true, true, false, false, false, false,]
+        );
     }
 
     #[test]
