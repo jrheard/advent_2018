@@ -74,6 +74,12 @@ pub fn twelve_a() -> i32 {
         buf[BUF_WIDTH / 2 + i] = initial_state[i];
     }
 
+    println!(
+        "placed initial buffer from {} to {}",
+        BUF_WIDTH / 2,
+        BUF_WIDTH / 2 + initial_state.len() - 1
+    );
+
     let mut first_plant_index = BUF_WIDTH / 2;
     let mut last_plant_index = BUF_WIDTH / 2 + initial_state.len();
 
@@ -85,7 +91,7 @@ pub fn twelve_a() -> i32 {
         let pots = buf
             .iter()
             .skip(first_plant_index - 3)
-            .take((last_plant_index - first_plant_index) + 3)
+            .take((last_plant_index - first_plant_index) + 6)
             .cloned()
             .collect::<Vec<bool>>();
 
@@ -116,8 +122,10 @@ pub fn twelve_a() -> i32 {
         dbg!(generation_string);
         */
 
+        let original_first_plant_index = first_plant_index;
+
         for (i, &value) in new_generation.iter().enumerate() {
-            let translated_index = i + first_plant_index - 3;
+            let translated_index = i + original_first_plant_index - 3;
 
             if value {
                 if translated_index < first_plant_index {
