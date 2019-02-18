@@ -67,8 +67,17 @@ fn square_with_most_power(table: &Vec<Vec<i32>>, square_side_len: usize) -> (usi
     let mut ret_y = 0;
     let mut most_power = std::i32::MIN;
 
+    // Use the summed-area-table algorithm to calculate the total power
+    // for each square.
+
     for x in square_side_len - 1..GRID_WIDTH {
         for y in square_side_len - 1..GRID_HEIGHT {
+            // The square's power is:
+            // * The value of the summed-area-table's entry for the bottom-right coordinate of the square
+            // * minus the value of the summed-area-table's entry for the coordinate `square_side_len` due north
+            // * minus the value of the summed-area-table's entry for the coordinate `square_side_len` due west
+            // * plus the value of the summed-area-table's entry for the coordinate `square_side_len` due northwest
+
             let above = if y >= square_side_len {
                 table[x][y - square_side_len]
             } else {
@@ -104,6 +113,12 @@ fn square_with_most_power(table: &Vec<Vec<i32>>, square_side_len: usize) -> (usi
     )
 }
 
+/// Each fuel cell has a coordinate ranging from 1 to 300 in both the X (horizontal)
+/// and Y (vertical) direction. In X,Y notation, the top-left cell is 1,1,
+/// and the top-right cell is 300,1.
+
+/// Your goal is to find the 3x3 square which has the largest total power.
+/// What is the X,Y coordinate of the top-left fuel cell of the 3x3 square with the largest total power?
 pub fn eleven_a() -> (usize, usize) {
     let grid = make_grid();
     let table = make_summed_area_table(&grid);
@@ -112,6 +127,10 @@ pub fn eleven_a() -> (usize, usize) {
     (x + 1, y + 1)
 }
 
+/// You now must find the square of any size with the largest total power. Identify this
+/// square by including its size as a third parameter after the top-left coordinate:
+/// a 9x9 square with a top-left corner of 3,5 is identified as 3,5,9.
+/// What is the X,Y,size identifier of the square with the largest total power?
 pub fn eleven_b() -> (usize, usize, usize) {
     let grid = make_grid();
     let table = make_summed_area_table(&grid);
