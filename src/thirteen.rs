@@ -12,7 +12,7 @@ enum MineSpace {
     Empty,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 enum Direction {
     North,
     East,
@@ -125,11 +125,17 @@ impl Mine {
         parse_input(filename)
     }
 
-    // xxx return value
-    fn tick(&mut self) {
-        let carts = self.carts.iter().sorted_by_key(|cart| (cart.y, cart.x));
+    /// Advances time one tick. Returns Ok(()) if there were no crashes, Err((x, y)) if there was a crash.
+    fn tick(&mut self) -> Result<(), (usize, usize)> {
+        let mut cart_positions = self
+            .carts
+            .iter()
+            .map(|cart| (cart.x, cart.y, cart.direction))
+            .collect::<Vec<(usize, usize, Direction)>>();
 
-        for cart in &mut self.carts {
+        let carts = self.carts.iter_mut().sorted_by_key(|cart| (cart.y, cart.x));
+
+        for cart in carts {
             match cart.direction {
                 North => cart.y -= 1,
                 East => cart.x += 1,
@@ -137,20 +143,29 @@ impl Mine {
                 West => cart.x -= 1,
             }
 
-            // TODO collision checking
+            // Check for crashes!
+            for (x, y, direction) in &cart_positions {
+                if *x == cart.x && *y == cart.y && *direction != cart.direction {
+                    return Err((*x, *y));
+                }
+            }
 
             let space = self.grid[cart.x][cart.y];
             match space {
                 MineSpace::CurveLeft => {
+                    println!("cart {:?} turning left!", cart);
                     cart.direction = if cart.direction == East { South } else { West };
                 }
                 MineSpace::CurveRight => {
+                    println!("cart {:?} turning right!", cart);
                     cart.direction = if cart.direction == West { South } else { East };
                 }
                 MineSpace::Intersection => {
                     if cart.turn_counter == 0 {
+                        println!("cart {:?} turning left!", cart);
                         cart.direction = cart.direction.left();
                     } else if cart.turn_counter == 2 {
+                        println!("cart {:?} turning right!", cart);
                         cart.direction = cart.direction.right();
                     }
 
@@ -160,14 +175,22 @@ impl Mine {
                 MineSpace::Empty => panic!("a cart fell off the map: {:?}", cart),
                 _ => (),
             }
+
+            cart_positions.push((cart.x, cart.y, cart.direction));
         }
+
+        Ok(())
     }
 }
 
-pub fn thirteen_a() -> i32 {
-    let mine = Mine::new("src/inputs/13_sample.txt");
+pub fn thirteen_a() -> (usize, usize) {
+    let mut mine = Mine::new("src/inputs/13_sample.txt");
 
-    5
+    loop {
+        if let Err((x, y)) = mine.tick() {
+            return (x, y);
+        }
+    }
 }
 
 #[cfg(test)]

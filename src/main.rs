@@ -5,12 +5,12 @@ mod eight;
 mod eleven;
 mod five;
 mod four;
-mod thirteen;
 mod nine;
 mod one;
 mod seven;
 mod six;
 mod ten;
+mod thirteen;
 mod three;
 mod twelve;
 mod two;
@@ -43,5 +43,5 @@ fn main() {
     println!("11b: {:?}", eleven::eleven_b());
     println!("12a: {}", twelve::twelve_a());
     println!("12b: {}", twelve::twelve_b());
-    println!("13a: {}", thirteen::thirteen_a());
+    println!("13a: {:?}", thirteen::thirteen_a());
 }
