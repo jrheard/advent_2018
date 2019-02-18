@@ -1227,3 +1227,8 @@ state of mind
 so we can't just immediately make the vector of pots 1MB wide because checking all those overlapping chunks would be a pain
 although actually we could just track min_index and max_index and update them each generation
 to slowly widen the area that we look through
+
+ok so something's definitely going wrong with my translating back and forth between indexes
+that's because i wrote this index stuff in a really brittle fiddly way that i was hoping wouldn't come crashing down
+but it has
+soooo
