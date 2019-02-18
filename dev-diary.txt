@@ -1277,3 +1277,7 @@ Direction is an enum with variants North, East, South, West
 ok, getting 13a working on the sample input was fun
 but i come up with the answer (63, 31) , which is apparently wrong :(
 oh right it was because cart_positions wasn't being cleared of old positions mid-turn
+
+looking at 14a
+
+how much d'you want to bet that 14b involves drastically bumping up the number of elves?
