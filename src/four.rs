@@ -2,6 +2,7 @@ use std::fs;
 
 use chrono::prelude::{DateTime, TimeZone, Timelike, Utc};
 use hashbrown::HashMap;
+use itertools::Itertools;
 use serde_scan::scan;
 
 use crate::util;
@@ -57,10 +58,7 @@ fn parse_log_entry_datetime(log_entry_str: &str) -> DateTime<Utc> {
 
 fn get_guard_sleep_log() -> HashMap<GuardID, Vec<u32>> {
     let contents = fs::read_to_string("src/inputs/4.txt").unwrap();
-    let mut entries: Vec<LogEntry> = contents.lines().map(LogEntry::new).collect();
-
-    // Your entries are in the order you found them. You'll need to organize them before they can be analyzed.
-    entries.sort();
+    let entries: Vec<LogEntry> = contents.lines().map(LogEntry::new).sorted().collect();
 
     // Because all asleep/awake times are during the midnight hour (00:00 - 00:59),
     // only the minute portion (00 - 59) is relevant for those events.

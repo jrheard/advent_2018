@@ -1,5 +1,6 @@
 use std::fs;
 
+use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -45,14 +46,20 @@ struct Grid {
 
 impl Grid {
     fn bounds(points: &[Point]) -> (i32, i32, i32, i32) {
-        let xs = points.iter().map(|point| point.x);
-        let ys = points.iter().map(|point| point.y);
-        (
-            xs.clone().min().unwrap(),
-            xs.max().unwrap(),
-            ys.clone().min().unwrap(),
-            ys.max().unwrap(),
-        )
+        let (min_x, max_x) = points
+            .iter()
+            .map(|point| point.x)
+            .minmax()
+            .into_option()
+            .unwrap();
+        let (min_y, max_y) = points
+            .iter()
+            .map(|point| point.y)
+            .minmax()
+            .into_option()
+            .unwrap();
+
+        (min_x, max_x, min_y, max_y)
     }
 
     fn new(points: Vec<Point>) -> Self {

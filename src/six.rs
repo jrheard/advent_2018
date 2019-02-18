@@ -3,6 +3,7 @@
 use std::fs;
 
 use hashbrown::HashSet;
+use itertools::Itertools;
 use serde_scan::scan;
 
 use crate::util;
@@ -50,19 +51,18 @@ struct LocationGrid {
 
 /// Returns a LocationGrid whose values are all SENTINEL_LOCATION_ID.
 fn initialize_grid(locations: &[Location]) -> LocationGrid {
-    let mut xs = locations
+    let (min_x, max_x) = locations
         .iter()
         .map(|location| location.x)
-        .collect::<Vec<_>>();
-    let mut ys = locations
+        .minmax()
+        .into_option()
+        .unwrap();
+    let (min_y, max_y) = locations
         .iter()
         .map(|location| location.y)
-        .collect::<Vec<_>>();
-    xs.sort();
-    ys.sort();
-
-    let (min_x, max_x) = (xs[0], *xs.last().unwrap());
-    let (min_y, max_y) = (ys[0], *ys.last().unwrap());
+        .minmax()
+        .into_option()
+        .unwrap();
 
     let grid = vec![vec![SENTINEL_LOCATION_ID; max_y as usize]; max_x as usize];
 
