@@ -4,7 +4,7 @@ mod game {
     /// An implementation of day 9's weird circle-of-marbles game.
     /// Uses two deques, `left` and `right`, to represent the circle.
     /// The marble on the back of `left` is the "current marble" in the game's terminology.
-    /// The game slides through the circle, move items from self.right to self.left as it moves right,
+    /// The game slides through the circle, moving values from self.right to self.left as it moves right,
     /// and from self.left to self.right as it moves left.
     /// If it reaches the end of `self.left` or `self.right`, it swaps them.
     /// It's a circle!

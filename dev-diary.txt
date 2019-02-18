@@ -9,12 +9,13 @@ useful data structures i hadn't touched in a while:
 TODOs:
 * read nomicon
 * read rust by example
+* read source code for a rust web server
 * implement a doubly linked list that lets you insert in the middle and pop off the middle with unsafe
 * really experiment with debugging
 * really experiment with profiling
 
 ideas for a program to write after this:
-* irc bot
+* irc bot (good excuse to try out tokio)
 * profiler (????)
 * flocking simulator (?)
 
@@ -1240,3 +1241,35 @@ ok cool done
 so the code right now is just totally atrocious
 TODO: tomorrow go back and tidy up
 and write a test for 12b, answer was 3750000001113
+
+===
+
+2/18/19
+
+ok, day 13 looks fun!
+initial state of mind:
+store the grid as a 2d vector of MineSpace enums
+
+the enum has these variants:
+
+StraightVertical // |
+StraightHorizontal // -
+CurveRight // \
+CurveLeft // /
+Intersection // +
+Empty
+
+also need to parse out carts' starting points (and detect what the space underneath them looks like?)
+<
+>
+^
+v
+
+"On your initial map, the track under each cart is a straight path matching the direction the cart is facing."
+
+carts have these fields:
+x: usize
+y: usize
+direction: Direction
+
+Direction is an enum with variants North, East, South, West
