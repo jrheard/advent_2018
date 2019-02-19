@@ -1,10 +1,8 @@
 use std::char;
 use std::collections::VecDeque;
-use std::iter::FromIterator;
 
 struct ElfCooks {
     scores: Vec<u8>,
-    window: VecDeque<u8>,
     elf_1_index: usize,
     elf_2_index: usize,
 }
@@ -13,33 +11,29 @@ impl ElfCooks {
     fn new() -> Self {
         ElfCooks {
             scores: vec![3, 7],
-            window: VecDeque::from_iter(vec![3, 7]),
             elf_1_index: 0,
             elf_2_index: 1,
         }
     }
 
-    fn tick(&mut self) -> Vec<u8> {
+    fn tick(&mut self, ret: &mut Vec<u8>) {
         let mut new_recipe = self.scores[self.elf_1_index] + self.scores[self.elf_2_index];
-        // XXXXX let's get rid of these vector allocations
-        // both this score_digits vec and the ret vec
-        // xxxx what if not vecs
         let mut score_digits = [10; 3];
 
         if new_recipe == 0 {
             score_digits[0] = 0;
         } else {
             let mut i = 0;
+
             while new_recipe > 0 {
                 score_digits[i] = new_recipe % 10;
                 new_recipe /= 10;
+
                 i += 1;
             }
         }
 
         score_digits.reverse();
-
-        let mut ret = vec![];
 
         for &digit in score_digits.iter() {
             if digit == 10 {
@@ -47,6 +41,7 @@ impl ElfCooks {
             }
 
             self.scores.push(digit);
+
             ret.push(digit);
         }
 
@@ -55,22 +50,21 @@ impl ElfCooks {
 
         self.elf_2_index += 1 + self.scores[self.elf_2_index] as usize;
         self.elf_2_index %= self.scores.len();
-
-        ret
     }
 }
 
 fn ten_recipes_after(num_recipes: usize) -> String {
     let mut elves = ElfCooks::new();
 
+    let mut ret = vec![];
     while elves.scores.len() < num_recipes + 10 {
-        let _ = elves.tick();
+        elves.tick(&mut ret);
+        ret.clear();
     }
 
     let mut ret = String::new();
 
     for &score in elves.scores.iter().skip(num_recipes).take(10) {
-        //for score in elves.scores {
         ret.push(char::from_digit(score as u32, 10).unwrap());
     }
 
@@ -93,10 +87,12 @@ pub fn fourteen_b() -> usize {
 
     let mut num_scores_seen = 2;
 
-    loop {
-        let new_scores = elves.tick();
+    let mut new_scores = vec![];
 
-        for score in new_scores {
+    loop {
+        elves.tick(&mut new_scores);
+
+        for &score in &new_scores {
             num_scores_seen += 1;
 
             window.push_back(score);
@@ -109,6 +105,8 @@ pub fn fourteen_b() -> usize {
                 window.pop_front();
             }
         }
+
+        new_scores.clear();
     }
 }
 
@@ -118,8 +116,8 @@ mod test {
 
     #[test]
     fn test_solution() {
-        //assert_eq!(fourteen_a(), "6126491027");
-        //assert_eq!(fourteen_b(), 20191616);
+        assert_eq!(fourteen_a(), "6126491027");
+        assert_eq!(fourteen_b(), 20191616);
     }
 
     #[test]
