@@ -18,7 +18,7 @@ impl ElfCooks {
 
     fn tick(&mut self, ret: &mut Vec<u8>) {
         let mut new_recipe = self.scores[self.elf_1_index] + self.scores[self.elf_2_index];
-        let mut score_digits = [10; 3];
+        let mut score_digits = [10; 2];
 
         if new_recipe == 0 {
             score_digits[0] = 0;
@@ -56,10 +56,10 @@ impl ElfCooks {
 fn ten_recipes_after(num_recipes: usize) -> String {
     let mut elves = ElfCooks::new();
 
-    let mut ret = vec![];
+    let mut v = vec![];
     while elves.scores.len() < num_recipes + 10 {
-        elves.tick(&mut ret);
-        ret.clear();
+        elves.tick(&mut v);
+        v.clear();
     }
 
     let mut ret = String::new();
@@ -81,7 +81,7 @@ pub fn fourteen_b() -> usize {
 
     let mut elves = ElfCooks::new();
 
-    let mut window = VecDeque::new();
+    let mut window = VecDeque::with_capacity(21000000);
     window.push_back(3);
     window.push_back(7);
 
