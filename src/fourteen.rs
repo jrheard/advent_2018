@@ -9,9 +9,13 @@ fn ten_recipes_after(num_recipes: usize) -> String {
         let mut new_recipe = scores[elf_1_index] + scores[elf_2_index];
         let mut score_digits = vec![];
 
-        while new_recipe > 0 {
-            score_digits.push(new_recipe % 10);
-            new_recipe /= 10;
+        if new_recipe == 0 {
+            score_digits.push(0);
+        } else {
+            while new_recipe > 0 {
+                score_digits.push(new_recipe % 10);
+                new_recipe /= 10;
+            }
         }
 
         score_digits.reverse();
@@ -34,7 +38,7 @@ fn ten_recipes_after(num_recipes: usize) -> String {
 }
 
 pub fn fourteen_a() -> String {
-    ten_recipes_after(2018)
+    ten_recipes_after(209231)
 }
 
 #[cfg(test)]
@@ -42,13 +46,15 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_solution() {}
+    fn test_solution() {
+        assert_eq!(fourteen_a(), "6126491027");
+    }
 
     #[test]
     fn test_examples_from_writeup() {
         assert_eq!(ten_recipes_after(5), "0124515891".to_string());
         assert_eq!(ten_recipes_after(9), "5158916779".to_string());
         assert_eq!(ten_recipes_after(18), "9251071085".to_string());
-        // assert_eq!(ten_recipes_after(2018), "5941429882".to_string()); xxxx failing
+        assert_eq!(ten_recipes_after(2018), "5941429882".to_string());
     }
 }

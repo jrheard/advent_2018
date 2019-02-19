@@ -1281,3 +1281,5 @@ oh right it was because cart_positions wasn't being cleared of old positions mid
 looking at 14a
 
 how much d'you want to bet that 14b involves drastically bumping up the number of elves?
+
+found the bug in 14a, i was dropping recipes on the ground if they were exactly equal to 0
