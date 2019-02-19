@@ -1285,3 +1285,6 @@ how much d'you want to bet that 14b involves drastically bumping up the number o
 found the bug in 14a, i was dropping recipes on the ground if they were exactly equal to 0
 
 ok 14b done! runs kinda slow, about 3 seconds, TODO optimize
+
+ok so yeah the trick is going to be to remove the allocations
+the original solution allocated two vectors every tick, let's kill them one at a time
