@@ -1,4 +1,5 @@
 use std::char;
+use std::collections::VecDeque;
 
 struct ElfCooks {
     scores: Vec<u8>,
@@ -64,6 +65,37 @@ pub fn fourteen_a() -> String {
     ten_recipes_after(209231)
 }
 
+pub fn fourteen_b() -> usize {
+    let input = [2, 0, 9, 2, 3, 1];
+    let input_length = input.len();
+
+    let mut elves = ElfCooks::new();
+
+    let mut window = VecDeque::new();
+    window.push_back(3);
+    window.push_back(7);
+
+    let mut num_scores_seen = 2;
+
+    loop {
+        let new_scores = elves.tick();
+
+        for score in new_scores {
+            num_scores_seen += 1;
+
+            window.push_back(score);
+
+            if window == input {
+                return num_scores_seen - window.len();
+            }
+
+            if window.len() >= input_length {
+                window.pop_front();
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -71,6 +103,7 @@ mod test {
     #[test]
     fn test_solution() {
         assert_eq!(fourteen_a(), "6126491027");
+        assert_eq!(fourteen_b(), 20191616);
     }
 
     #[test]
