@@ -1,8 +1,10 @@
 use std::char;
 use std::collections::VecDeque;
+use std::iter::FromIterator;
 
 struct ElfCooks {
     scores: Vec<u8>,
+    window: VecDeque<u8>,
     elf_1_index: usize,
     elf_2_index: usize,
 }
@@ -11,6 +13,7 @@ impl ElfCooks {
     fn new() -> Self {
         ElfCooks {
             scores: vec![3, 7],
+            window: VecDeque::from_iter(vec![3, 7]),
             elf_1_index: 0,
             elf_2_index: 1,
         }
@@ -18,22 +21,32 @@ impl ElfCooks {
 
     fn tick(&mut self) -> Vec<u8> {
         let mut new_recipe = self.scores[self.elf_1_index] + self.scores[self.elf_2_index];
-        let mut score_digits = vec![];
+        // XXXXX let's get rid of these vector allocations
+        // both this score_digits vec and the ret vec
+        // xxxx what if not vecs
+        let mut score_digits = [10; 5];
 
         if new_recipe == 0 {
-            score_digits.push(0);
+            score_digits[0] = 0;
         } else {
+            let mut i = 0;
             while new_recipe > 0 {
-                score_digits.push(new_recipe % 10);
+                score_digits[i] = new_recipe % 10;
                 new_recipe /= 10;
+                i += 1;
             }
         }
 
-        score_digits.reverse();
+        let mut ret = vec![];
 
-        let ret = score_digits.clone();
+        for &digit in score_digits.iter() {
+            if digit == 10 {
+                break;
+            }
 
-        self.scores.append(&mut score_digits);
+            self.scores.push(digit);
+            ret.push(digit);
+        }
 
         self.elf_1_index += 1 + self.scores[self.elf_1_index] as usize;
         self.elf_1_index %= self.scores.len();
@@ -62,10 +75,12 @@ fn ten_recipes_after(num_recipes: usize) -> String {
 }
 
 pub fn fourteen_a() -> String {
+    // XXXX returns wrong answer
     ten_recipes_after(209231)
 }
 
 pub fn fourteen_b() -> usize {
+    return 3;
     let input = [2, 0, 9, 2, 3, 1];
     let input_length = input.len();
 
