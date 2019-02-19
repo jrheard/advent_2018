@@ -2,6 +2,8 @@ use std::char;
 use std::collections::VecDeque;
 
 struct ElfCooks {
+    /// "The Elves are trying to come up with the ultimate hot chocolate recipe;
+    /// they're even maintaining a scoreboard which tracks the quality score (0-9) of each recipe."
     scores: Vec<u8>,
     elf_1_index: usize,
     elf_2_index: usize,
@@ -12,13 +14,19 @@ const SENTINEL_DIGIT_VALUE: u8 = 99;
 impl ElfCooks {
     fn new() -> Self {
         ElfCooks {
+            // "Only two recipes are on the board: the first recipe got a score of 3, the second, 7.""
             scores: vec![3, 7],
+
+            // "Each of the two Elves has a current recipe: the first Elf starts with the first recipe,
+            // and the second Elf starts with the second recipe."
             elf_1_index: 0,
             elf_2_index: 1,
         }
     }
 
     fn tick(&mut self, ret: &mut Vec<u8>) {
+        // "To create new recipes, the two Elves combine their current recipes. This creates
+        // new recipes from the digits of the sum of the current recipes' scores."
         let mut new_recipe = self.scores[self.elf_1_index] + self.scores[self.elf_2_index];
 
         let mut score_digits = [SENTINEL_DIGIT_VALUE; 2];
@@ -39,11 +47,15 @@ impl ElfCooks {
             ret.push(score_digits[1]);
         }
 
-        if score_digits[0] != 99 {
+        if score_digits[0] != SENTINEL_DIGIT_VALUE {
             self.scores.push(score_digits[0]);
             ret.push(score_digits[0]);
         }
 
+        // "After all new recipes are added to the scoreboard, each Elf picks a new current recipe.
+        // To do this, the Elf steps forward through the scoreboard a number of recipes equal to
+        // 1 plus the score of their current recipe. If they run out of recipes, they
+        // loop back around to the beginning."
         self.elf_1_index += 1 + self.scores[self.elf_1_index] as usize;
         self.elf_1_index %= self.scores.len();
 
@@ -70,10 +82,12 @@ fn ten_recipes_after(num_recipes: usize) -> String {
     ret
 }
 
+/// What are the scores of the ten recipes immediately after the number of recipes in your puzzle input?
 pub fn fourteen_a() -> String {
     ten_recipes_after(209231)
 }
 
+/// How many recipes appear on the scoreboard to the left of the score sequence in your puzzle input?
 pub fn fourteen_b() -> usize {
     let input = [2, 0, 9, 2, 3, 1];
     let input_length = input.len();
