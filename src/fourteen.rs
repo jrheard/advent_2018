@@ -1,12 +1,22 @@
 use std::char;
 
-fn ten_recipes_after(num_recipes: usize) -> String {
-    let mut scores = vec![3, 7];
-    let mut elf_1_index = 0;
-    let mut elf_2_index = 1;
+struct ElfCooks {
+    scores: Vec<u8>,
+    elf_1_index: usize,
+    elf_2_index: usize,
+}
 
-    while scores.len() < num_recipes + 10 {
-        let mut new_recipe = scores[elf_1_index] + scores[elf_2_index];
+impl ElfCooks {
+    fn new() -> Self {
+        ElfCooks {
+            scores: vec![3, 7],
+            elf_1_index: 0,
+            elf_2_index: 1,
+        }
+    }
+
+    fn tick(&mut self) -> Vec<u8> {
+        let mut new_recipe = self.scores[self.elf_1_index] + self.scores[self.elf_2_index];
         let mut score_digits = vec![];
 
         if new_recipe == 0 {
@@ -19,18 +29,31 @@ fn ten_recipes_after(num_recipes: usize) -> String {
         }
 
         score_digits.reverse();
-        scores.append(&mut score_digits);
 
-        elf_1_index += 1 + scores[elf_1_index];
-        elf_1_index %= scores.len();
+        let ret = score_digits.clone();
 
-        elf_2_index += 1 + scores[elf_2_index];
-        elf_2_index %= scores.len();
+        self.scores.append(&mut score_digits);
+
+        self.elf_1_index += 1 + self.scores[self.elf_1_index] as usize;
+        self.elf_1_index %= self.scores.len();
+
+        self.elf_2_index += 1 + self.scores[self.elf_2_index] as usize;
+        self.elf_2_index %= self.scores.len();
+
+        ret
+    }
+}
+
+fn ten_recipes_after(num_recipes: usize) -> String {
+    let mut elves = ElfCooks::new();
+
+    while elves.scores.len() < num_recipes + 10 {
+        let _ = elves.tick();
     }
 
     let mut ret = String::new();
 
-    for &score in scores.iter().skip(num_recipes).take(10) {
+    for &score in elves.scores.iter().skip(num_recipes).take(10) {
         ret.push(char::from_digit(score as u32, 10).unwrap());
     }
 
