@@ -7,6 +7,8 @@ struct ElfCooks {
     elf_2_index: usize,
 }
 
+const SENTINEL_DIGIT_VALUE: u8 = 99;
+
 impl ElfCooks {
     fn new() -> Self {
         ElfCooks {
@@ -18,31 +20,28 @@ impl ElfCooks {
 
     fn tick(&mut self, ret: &mut Vec<u8>) {
         let mut new_recipe = self.scores[self.elf_1_index] + self.scores[self.elf_2_index];
-        let mut score_digits = [10; 2];
+
+        let mut score_digits = [SENTINEL_DIGIT_VALUE; 2];
 
         if new_recipe == 0 {
             score_digits[0] = 0;
         } else {
-            let mut i = 0;
+            score_digits[0] = new_recipe % 10;
+            new_recipe /= 10;
 
-            while new_recipe > 0 {
-                score_digits[i] = new_recipe % 10;
-                new_recipe /= 10;
-
-                i += 1;
+            if new_recipe > 0 {
+                score_digits[1] = new_recipe;
             }
         }
 
-        score_digits.reverse();
+        if score_digits[1] != SENTINEL_DIGIT_VALUE {
+            self.scores.push(score_digits[1]);
+            ret.push(score_digits[1]);
+        }
 
-        for &digit in score_digits.iter() {
-            if digit == 10 {
-                continue;
-            }
-
-            self.scores.push(digit);
-
-            ret.push(digit);
+        if score_digits[0] != 99 {
+            self.scores.push(score_digits[0]);
+            ret.push(score_digits[0]);
         }
 
         self.elf_1_index += 1 + self.scores[self.elf_1_index] as usize;
