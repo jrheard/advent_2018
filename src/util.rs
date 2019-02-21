@@ -35,7 +35,7 @@ pub fn print_grid_with_bounds<T: std::fmt::Display>(
         let mut row = String::new();
 
         for x in min_x..=max_x {
-            row.push_str(&format!(" {} ", grid[x][y]));
+            row.push_str(&format!("{}", grid[x][y]));
         }
 
         println!("{}", row);

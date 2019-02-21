@@ -1288,3 +1288,35 @@ ok 14b done! runs kinda slow, about 3 seconds, TODO optimize
 
 ok so yeah the trick is going to be to remove the allocations
 the original solution allocated two vectors every tick, let's kill them one at a time
+that fixed it :)
+
+===
+
+2/20/19
+
+day 15
+
+"For instance, the order in which units take their turns within a round is the reading
+order of their starting positions in that round, regardless of the type of unit or
+whether other units have moved after the round started."
+
+reading order being (y, x) position tuples - compute these at the start of the round to make
+an ordered list of turns
+
+unit turn:
+1. identify all enemy units; if none exist, turn is over (and so is the game?)
+2. attack an enemy if you're adjacent to one
+3. otherwise identify all open squares adjacent to a target
+    * if none exist and the unit isn't already adjacent to a target, end turn
+4. figure out which open space is closest and make one step toward it.
+    * if there's no open path to any target, end turn
+    * if multiple open spaces are closest, pick the first by key (y, x)
+    * TODO: how to represent this?
+        * each path is a list of positions, you pick the path with the shortest length, if there are multiple you sort by the (y, x) of the last space in each path
+    * TODO note that a space can have multiple paths to it! so once a space is chosen, you choose the path whose _first_ space is first in (y, x) order
+
+TODO min heap will be relevant here perhaps
+
+writeup strongly hints that you should start with movement and only move on to attacking once you've gotten movement solidly down
+
+TODO print_grid() function (one in utils already, right?)
