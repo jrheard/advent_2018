@@ -18,9 +18,37 @@ impl Position {
         ((self.x as i32 - other_position.x as i32).abs()
             + (self.y as i32 - other_position.y as i32).abs()) as usize
     }
+
+    fn adjacent_positions(
+        &self,
+        grid_width: usize,
+        grid_height: usize,
+        open_positions: &HashSet<Position>,
+    ) -> Vec<Position> {
+        let deltas = [(0, 1), (0, -1), (-1, 0), (1, 0)];
+
+        deltas
+            .iter()
+            .map(|(delta_x, delta_y)| (self.x as i32 + delta_x, self.y as i32 + delta_y))
+            .filter(|&(x, y)| {
+                x >= 0
+                    && x < grid_width as i32
+                    && y >= 0
+                    && y < grid_height as i32
+                    && open_positions.contains(&Position {
+                        x: x as usize,
+                        y: y as usize,
+                    })
+            })
+            .map(|(x, y)| Position {
+                x: x as usize,
+                y: y as usize,
+            })
+            .collect()
+    }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 enum MonsterTeam {
     Goblin,
     Elf,
@@ -28,7 +56,7 @@ enum MonsterTeam {
 
 use MonsterTeam::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Monster {
     attack_power: u32,
     hp: u32,
@@ -36,36 +64,63 @@ struct Monster {
     position: Position,
 }
 
-impl Monster {
-    fn adjacent_positions(&self, grid_width: usize, grid_height: usize) -> Vec<Position> {
-        [(0, 1), (0, -1), (-1, 0), (1, 0)]
-            .iter()
-            .map(|(delta_x, delta_y)| {
-                (
-                    self.position.x as i32 + delta_x,
-                    self.position.y as i32 + delta_y,
-                )
-            })
-            .filter(|&(x, y)| x >= 0 && x < grid_width as i32 && y >= 0 && y < grid_height as i32)
-            .map(|(x, y)| Position {
-                x: x as usize,
-                y: y as usize,
-            })
-            .collect()
-    }
+#[derive(Debug)]
+enum MonsterAction {
+    MoveTo(Position),
+    Attack(Monster),
+    Blocked,
+}
 
+impl Monster {
     // XXXX implement a*?
     fn find_path_to(
         &self,
         destination: Position,
-        open_spaces: &HashSet<Position>,
+        open_positions: &HashSet<Position>,
     ) -> Vec<Vec<Position>> {
         vec![]
+    }
+
+    fn choose_action(
+        &self,
+        enemies: &Vec<Monster>,
+        open_positions: &HashSet<Position>,
+        grid_width: usize,
+        grid_height: usize,
+    ) -> MonsterAction {
+        let mut targets_and_positions = vec![];
+
+        for enemy in enemies {
+            for position in
+                enemy
+                    .position
+                    .adjacent_positions(grid_width, grid_height, open_positions)
+            {
+                targets_and_positions.push((enemy, position));
+            }
+        }
+
+        if targets_and_positions.is_empty() {
+            return MonsterAction::Blocked;
+        }
+
+        dbg!(self);
+        //dbg!(targets_and_positions);
+
+        // XXXX pathfind to each position
+        // XXX filter out blocked destinations
+
+        dbg!(targets_and_positions
+            .iter()
+            .min_by_key(|(_, position)| self.position.distance_to(&position))
+            .unwrap());
+
+        MonsterAction::Blocked
     }
 }
 
 struct Game {
-    open_spaces: HashSet<Position>,
+    open_positions: HashSet<Position>,
     monsters: Vec<Monster>,
     width: usize,
     height: usize,
@@ -75,7 +130,7 @@ impl Game {
     fn new() -> Game {
         let contents = fs::read_to_string("src/inputs/15_sample.txt").unwrap();
 
-        let mut open_spaces = HashSet::new();
+        let mut open_positions = HashSet::new();
         let mut monsters = vec![];
 
         for (y, line) in contents.lines().enumerate() {
@@ -83,10 +138,11 @@ impl Game {
                 match character {
                     '#' => continue,
                     '.' => {
-                        open_spaces.insert(Position { x, y });
+                        open_positions.insert(Position { x, y });
                     }
                     'G' | 'E' => {
-                        open_spaces.insert(Position { x, y });
+                        // XXXXX put this in blocked_positionns instead
+                        open_positions.insert(Position { x, y });
 
                         monsters.push(Monster {
                             attack_power: 3,
@@ -104,7 +160,7 @@ impl Game {
         let width = contents.lines().nth(0).unwrap().chars().count();
 
         Game {
-            open_spaces,
+            open_positions,
             monsters,
             width,
             height,
@@ -115,7 +171,7 @@ impl Game {
     fn to_grid(&self) -> Vec<Vec<char>> {
         let mut grid = vec![vec!['#'; self.height]; self.width];
 
-        for position in &self.open_spaces {
+        for position in &self.open_positions {
             grid[position.x][position.y] = '.';
         }
 
@@ -129,8 +185,7 @@ impl Game {
 
     fn tick(&mut self) {
         let mut new_monsters: Vec<Monster> = vec![];
-
-        // XXXXX handle open_spaces
+        // XXXXX handle open_positions
         // XXXX do we have a separate occupied_spaces vec?
 
         for monster in self
@@ -138,37 +193,22 @@ impl Game {
             .iter()
             .sorted_by_key(|monster| (monster.position.y, monster.position.x))
         {
-            let mut targets_and_positions = vec![];
-
             let enemy_team = if monster.team == Elf { Goblin } else { Elf };
-            // XXXX handle bailing from combat if there are no enemy targets
-
-            for other_monster in self
+            let enemies = self
                 .monsters
                 .iter()
                 .filter(|&monster| monster.team == enemy_team)
-            {
-                for position in other_monster.adjacent_positions(self.width, self.height) {
-                    if self.open_spaces.contains(&position) {
-                        targets_and_positions.push((other_monster, position));
-                    }
-                }
+                .cloned()
+                .collect::<Vec<Monster>>();
+
+            if enemies.is_empty() {
+                panic!("combat's over! TODO implement me");
+                break;
             }
 
-            if targets_and_positions.is_empty() {
-                continue;
-            }
-
-            dbg!(monster);
-            //dbg!(targets_and_positions);
-
-            // XXXX pathfind to each position
-            // XXX filter out blocked destinations
-
-            dbg!(targets_and_positions
-                .iter()
-                .min_by_key(|(_, position)| monster.position.distance_to(&position))
-                .unwrap());
+            let action =
+                monster.choose_action(&enemies, &self.open_positions, self.width, self.height);
+            dbg!(action);
         }
     }
 }
