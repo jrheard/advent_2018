@@ -1,3 +1,5 @@
+use hashbrown::HashMap;
+use std::collections::VecDeque;
 use std::fs;
 
 use hashbrown::HashSet;
@@ -5,25 +7,19 @@ use itertools::Itertools;
 
 use crate::util;
 
-// TODO implement partialeq by y, x
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, PartialOrd)]
 struct Position {
-    x: usize,
     y: usize,
+    x: usize,
 }
 
 impl Position {
     // TODO will we actually need this? no, right?
-    fn distance_to(&self, other_position: &Position) -> usize {
-        ((self.x as i32 - other_position.x as i32).abs()
-            + (self.y as i32 - other_position.y as i32).abs()) as usize
-    }
-
-    fn adjacent_positions(
+    fn neighbors(
         &self,
+        open_positions: &HashSet<Position>,
         grid_width: usize,
         grid_height: usize,
-        open_positions: &HashSet<Position>,
     ) -> Vec<Position> {
         let deltas = [(0, 1), (0, -1), (-1, 0), (1, 0)];
 
@@ -72,13 +68,75 @@ enum MonsterAction {
 }
 
 impl Monster {
-    // XXXX implement a*?
-    fn find_path_to(
+    fn choose_move(
         &self,
-        destination: Position,
+        destinations: &HashSet<Position>,
         open_positions: &HashSet<Position>,
-    ) -> Vec<Vec<Position>> {
-        vec![]
+        grid_width: usize,
+        grid_height: usize,
+    ) -> Option<Position> {
+        // BFS as described in https://www.redblobgames.com/pathfinding/a-star/introduction.html .
+        // Build up a `came_from` map that we'll use later for calculating path costs.
+        let mut frontier = VecDeque::new();
+        frontier.push_back(self.position);
+
+        let mut came_from = HashMap::new();
+
+        while !frontier.is_empty() {
+            let current = frontier.pop_front().unwrap();
+
+            // TODO early exit once we've seen all of the destinations?
+            for neighbor in current.neighbors(open_positions, grid_width, grid_height) {
+                // TODO do we need do anything special if came_from contains neighbor and came_from[neighbor] is > current?
+                if !came_from.contains_key(&neighbor) && current != self.position {
+                    frontier.push_back(neighbor);
+                    came_from.insert(neighbor, current);
+                }
+            }
+        }
+
+        let neighbors = self
+            .position
+            .neighbors(open_positions, grid_width, grid_height);
+
+        let mut smallest_cost = std::usize::MAX;
+        let mut chosen_move = None;
+
+        for &destination in destinations {
+            if !came_from.contains_key(&destination) {
+                continue;
+            }
+
+            for &neighbor in &neighbors {
+                // Walk the path from `destination` to `neighbor` and count its length.
+                let mut path_cost = 0;
+                let mut current_position = destination;
+
+                while current_position != neighbor {
+                    path_cost += 1;
+                    current_position = came_from[&current_position];
+                }
+
+                // If this is the shortest path we've seen so far, record it.
+
+                if path_cost < smallest_cost {
+                    smallest_cost = path_cost;
+                    chosen_move = Some(neighbor);
+                }
+                // "If multiple steps would put the unit equally closer to its destination,
+                // the unit chooses the step which is first in reading order."
+                else if path_cost == smallest_cost {
+                    match chosen_move {
+                        Some(position) if neighbor < position => {
+                            chosen_move = Some(neighbor);
+                        }
+                        _ => (),
+                    };
+                }
+            }
+        }
+
+        chosen_move
     }
 
     fn choose_action(
@@ -88,34 +146,26 @@ impl Monster {
         grid_width: usize,
         grid_height: usize,
     ) -> MonsterAction {
-        let mut targets_and_positions = vec![];
+        let mut destinations = HashSet::new();
 
+        // todo iterator-ize
         for enemy in enemies {
-            for position in
-                enemy
-                    .position
-                    .adjacent_positions(grid_width, grid_height, open_positions)
+            for position in enemy
+                .position
+                .neighbors(open_positions, grid_width, grid_height)
             {
-                targets_and_positions.push((enemy, position));
+                destinations.insert(position);
             }
         }
 
-        if targets_and_positions.is_empty() {
+        if destinations.is_empty() {
             return MonsterAction::Blocked;
         }
 
-        dbg!(self);
-        //dbg!(targets_and_positions);
-
-        // XXXX pathfind to each position
-        // XXX filter out blocked destinations
-
-        dbg!(targets_and_positions
-            .iter()
-            .min_by_key(|(_, position)| self.position.distance_to(&position))
-            .unwrap());
-
-        MonsterAction::Blocked
+        match self.choose_move(&destinations, &open_positions, grid_width, grid_height) {
+            Some(position) => MonsterAction::MoveTo(position),
+            None => MonsterAction::Blocked,
+        }
     }
 }
 
@@ -206,6 +256,7 @@ impl Game {
                 break;
             }
 
+            dbg!(monster);
             let action =
                 monster.choose_action(&enemies, &self.open_positions, self.width, self.height);
             dbg!(action);
