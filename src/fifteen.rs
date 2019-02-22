@@ -1,10 +1,10 @@
+// don't look at this yet it's hideous
 use std::collections::VecDeque;
 use std::fs;
 use std::iter::FromIterator;
 
 use hashbrown::HashMap;
 use hashbrown::HashSet;
-use itertools::Itertools;
 
 use crate::util;
 
@@ -15,6 +15,8 @@ struct Position {
 }
 
 impl Position {
+    /// Returns a vector of the Positions immediately north, south, east, and west of `self`.
+    /// Only includes Positions that actually fit on the specified grid.
     fn all_neighbors(&self, grid_width: usize, grid_height: usize) -> Vec<Position> {
         let deltas = [(0, 1), (0, -1), (-1, 0), (1, 0)];
 
@@ -29,6 +31,7 @@ impl Position {
             .collect()
     }
 
+    /// Returns a vector of Positions that represent the unoccupied neighboring spaces around `self`.
     fn filtered_neighbors(
         &self,
         open_positions: &HashSet<Position>,
@@ -41,13 +44,41 @@ impl Position {
     }
 }
 
+/// BFS as described in https://www.redblobgames.com/pathfinding/a-star/introduction.html .
+/// Returns a `came_from` map that can be used to calculate path costs.
+fn compute_came_from_map(
+    origin: Position,
+    open_positions: &HashSet<Position>,
+    grid_width: usize,
+    grid_height: usize,
+) -> HashMap<Position, Position> {
+    let mut frontier = VecDeque::new();
+    frontier.push_back(origin);
+
+    let mut came_from = HashMap::new();
+    came_from.insert(origin, origin);
+
+    while !frontier.is_empty() {
+        let current = frontier.pop_front().unwrap();
+
+        // TODO early exit once we've seen all of the destinations?
+        for neighbor in current.filtered_neighbors(open_positions, grid_width, grid_height) {
+            // TODO do we need do anything special if came_from contains neighbor and came_from[neighbor] is > current?
+            if !came_from.contains_key(&neighbor) {
+                frontier.push_back(neighbor);
+                came_from.insert(neighbor, current);
+            }
+        }
+    }
+
+    came_from
+}
+
 #[derive(Debug, PartialEq, Clone)]
 enum MonsterTeam {
     Goblin,
     Elf,
 }
-
-use MonsterTeam::*;
 
 #[derive(Debug, Clone)]
 struct Monster {
@@ -65,6 +96,8 @@ enum MonsterAction<'a> {
 }
 
 impl Monster {
+    /// Returns Some(position) representing the neighboring position that this monster should move to
+    /// in order to pursue an enemy. Returns None if there are no unblocked paths to the monster's enemies.
     fn choose_move(
         &self,
         destinations: &HashSet<Position>,
@@ -72,37 +105,6 @@ impl Monster {
         grid_width: usize,
         grid_height: usize,
     ) -> Option<Position> {
-        /// BFS as described in https://www.redblobgames.com/pathfinding/a-star/introduction.html .
-        /// Returns a `came_from` map that can be used to calculate path costs.
-        fn compute_came_from_map(
-            origin: Position,
-            open_positions: &HashSet<Position>,
-            grid_width: usize,
-            grid_height: usize,
-        ) -> HashMap<Position, Position> {
-            let mut frontier = VecDeque::new();
-            frontier.push_back(origin);
-
-            let mut came_from = HashMap::new();
-            came_from.insert(origin, origin);
-
-            while !frontier.is_empty() {
-                let current = frontier.pop_front().unwrap();
-
-                // TODO early exit once we've seen all of the destinations?
-                for neighbor in current.filtered_neighbors(open_positions, grid_width, grid_height)
-                {
-                    // TODO do we need do anything special if came_from contains neighbor and came_from[neighbor] is > current?
-                    if !came_from.contains_key(&neighbor) {
-                        frontier.push_back(neighbor);
-                        came_from.insert(neighbor, current);
-                    }
-                }
-            }
-
-            came_from
-        }
-
         let neighbors = self
             .position
             .filtered_neighbors(open_positions, grid_width, grid_height);
@@ -158,10 +160,7 @@ impl Monster {
         grid_height: usize,
     ) -> MonsterAction<'a> {
         // See if we're next to someone already.
-        let neighbors = self
-            .position
-            // xxxxxxxxxx
-            .all_neighbors(grid_width, grid_height);
+        let neighbors = self.position.all_neighbors(grid_width, grid_height);
 
         for enemy in enemies {
             for &neighbor in &neighbors {
@@ -171,18 +170,11 @@ impl Monster {
             }
         }
 
-        let mut destinations = HashSet::new();
-
-        // todo iterator-ize
-        for enemy in enemies {
-            for position in
-                enemy
-                    .position
-                    .filtered_neighbors(open_positions, grid_width, grid_height)
-            {
-                destinations.insert(position);
-            }
-        }
+        let destinations = HashSet::from_iter(enemies.iter().flat_map(|enemy| {
+            enemy
+                .position
+                .filtered_neighbors(open_positions, grid_width, grid_height)
+        }));
 
         if destinations.is_empty() {
             return MonsterAction::Blocked;
@@ -203,6 +195,7 @@ struct Game {
 }
 
 impl Game {
+    /// Parses the puzzle input file into a Game struct.
     fn new() -> Game {
         let contents = fs::read_to_string("src/inputs/15_sample.txt").unwrap();
 
@@ -217,13 +210,16 @@ impl Game {
                         open_positions.insert(Position { x, y });
                     }
                     'G' | 'E' => {
-                        // XXXXX put this in blocked_positionns instead
                         open_positions.insert(Position { x, y });
 
                         monsters.push(Monster {
                             attack_power: 3,
                             hp: 200,
-                            team: if character == 'G' { Goblin } else { Elf },
+                            team: if character == 'G' {
+                                MonsterTeam::Goblin
+                            } else {
+                                MonsterTeam::Elf
+                            },
                             position: Position { x, y },
                         });
                     }
@@ -252,13 +248,17 @@ impl Game {
         }
 
         for monster in &self.monsters {
-            grid[monster.position.x][monster.position.y] =
-                if monster.team == Goblin { 'G' } else { 'E' };
+            grid[monster.position.x][monster.position.y] = if monster.team == MonsterTeam::Goblin {
+                'G'
+            } else {
+                'E'
+            };
         }
 
         grid
     }
 
+    /// Performs a round of combat as specified in the day 15 writeup.
     fn tick(&mut self) {
         self.monsters
             .sort_by_key(|monster| (monster.position.y, monster.position.x));
@@ -270,9 +270,12 @@ impl Game {
             let (monster, right) = right.split_first_mut().unwrap();
             let other_monsters = left.iter().chain(right.iter());
 
-            let enemy_team = if monster.team == Elf { Goblin } else { Elf };
-            // XXX does this need to be a vec?
-            // XXX do we need to clone it?
+            let enemy_team = if monster.team == MonsterTeam::Elf {
+                MonsterTeam::Goblin
+            } else {
+                MonsterTeam::Elf
+            };
+
             let enemies = other_monsters
                 .filter(|&monster| monster.team == enemy_team)
                 .cloned()
