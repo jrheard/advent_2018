@@ -75,24 +75,34 @@ impl Monster {
         grid_width: usize,
         grid_height: usize,
     ) -> Option<Position> {
-        // BFS as described in https://www.redblobgames.com/pathfinding/a-star/introduction.html .
-        // Build up a `came_from` map that we'll use later for calculating path costs.
-        let mut frontier = VecDeque::new();
-        frontier.push_back(self.position);
+        fn compute_came_from_map(
+            origin: Position,
+            open_positions: &HashSet<Position>,
+            grid_width: usize,
+            grid_height: usize,
+        ) -> HashMap<Position, Position> {
+            // BFS as described in https://www.redblobgames.com/pathfinding/a-star/introduction.html .
+            // Build up a `came_from` map that we'll use later for calculating path costs.
+            let mut frontier = VecDeque::new();
+            frontier.push_back(origin);
 
-        let mut came_from = HashMap::new();
+            let mut came_from = HashMap::new();
+            came_from.insert(origin, origin);
 
-        while !frontier.is_empty() {
-            let current = frontier.pop_front().unwrap();
+            while !frontier.is_empty() {
+                let current = frontier.pop_front().unwrap();
 
-            // TODO early exit once we've seen all of the destinations?
-            for neighbor in current.neighbors(open_positions, grid_width, grid_height) {
-                // TODO do we need do anything special if came_from contains neighbor and came_from[neighbor] is > current?
-                if !came_from.contains_key(&neighbor) && current != self.position {
-                    frontier.push_back(neighbor);
-                    came_from.insert(neighbor, current);
+                // TODO early exit once we've seen all of the destinations?
+                for neighbor in current.neighbors(open_positions, grid_width, grid_height) {
+                    // TODO do we need do anything special if came_from contains neighbor and came_from[neighbor] is > current?
+                    if !came_from.contains_key(&neighbor) {
+                        frontier.push_back(neighbor);
+                        came_from.insert(neighbor, current);
+                    }
                 }
             }
+
+            came_from
         }
 
         let neighbors = self
@@ -102,12 +112,15 @@ impl Monster {
         let mut smallest_cost = std::usize::MAX;
         let mut chosen_move = None;
 
-        for &destination in destinations {
-            if !came_from.contains_key(&destination) {
-                continue;
-            }
+        for &neighbor in &neighbors {
+            let came_from =
+                compute_came_from_map(neighbor, open_positions, grid_width, grid_height);
 
-            for &neighbor in &neighbors {
+            for &destination in destinations {
+                if !came_from.contains_key(&destination) {
+                    continue;
+                }
+
                 // Walk the path from `destination` to `neighbor` and count its length.
                 let mut path_cost = 0;
                 let mut current_position = destination;
