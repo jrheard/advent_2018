@@ -1311,12 +1311,22 @@ unit turn:
 4. figure out which open space is closest and make one step toward it.
     * if there's no open path to any target, end turn
     * if multiple open spaces are closest, pick the first by key (y, x)
-    * TODO: how to represent this?
+    * DONE: how to represent this?
         * each path is a list of positions, you pick the path with the shortest length, if there are multiple you sort by the (y, x) of the last space in each path
-    * TODO note that a space can have multiple paths to it! so once a space is chosen, you choose the path whose _first_ space is first in (y, x) order
-
-TODO min heap will be relevant here perhaps
+    * DONE note that a space can have multiple paths to it! so once a space is chosen, you choose the path whose _first_ space is first in (y, x) order
 
 writeup strongly hints that you should start with movement and only move on to attacking once you've gotten movement solidly down
 
-TODO print_grid() function (one in utils already, right?)
+DONE print_grid() function (one in utils already, right?)
+
+=====
+
+2/22/19
+
+implemented bfs per avi's great tutorial
+
+having trouble figuring out the best way to iterate over the list of monsters while mutating it
+like, that's usually a bad thing
+so, what to do instead?
+
+https://www.reddit.com/r/rust/comments/7xl0o9/iterating_over_a_vec_mutably_while_already/ has some tips

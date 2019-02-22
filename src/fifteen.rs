@@ -14,7 +14,6 @@ struct Position {
 }
 
 impl Position {
-    // TODO will we actually need this? no, right?
     fn neighbors(
         &self,
         open_positions: &HashSet<Position>,
@@ -75,14 +74,14 @@ impl Monster {
         grid_width: usize,
         grid_height: usize,
     ) -> Option<Position> {
+        /// BFS as described in https://www.redblobgames.com/pathfinding/a-star/introduction.html .
+        /// Returns a `came_from` map that can be used to calculate path costs.
         fn compute_came_from_map(
             origin: Position,
             open_positions: &HashSet<Position>,
             grid_width: usize,
             grid_height: usize,
         ) -> HashMap<Position, Position> {
-            // BFS as described in https://www.redblobgames.com/pathfinding/a-star/introduction.html .
-            // Build up a `came_from` map that we'll use later for calculating path costs.
             let mut frontier = VecDeque::new();
             frontier.push_back(origin);
 
@@ -118,6 +117,7 @@ impl Monster {
 
             for &destination in destinations {
                 if !came_from.contains_key(&destination) {
+                    // This destination's unreachable, skip it!
                     continue;
                 }
 
@@ -131,7 +131,6 @@ impl Monster {
                 }
 
                 // If this is the shortest path we've seen so far, record it.
-
                 if path_cost < smallest_cost {
                     smallest_cost = path_cost;
                     chosen_move = Some(neighbor);
@@ -247,19 +246,19 @@ impl Game {
     }
 
     fn tick(&mut self) {
-        let mut new_monsters: Vec<Monster> = vec![];
         // XXXXX handle open_positions
         // XXXX do we have a separate occupied_spaces vec?
+        self.monsters
+            .sort_by_key(|monster| (monster.position.y, monster.position.x));
 
-        for monster in self
-            .monsters
-            .iter()
-            .sorted_by_key(|monster| (monster.position.y, monster.position.x))
-        {
+        // TODO while loop?
+        for i in 0..self.monsters.len() {
+            let (left, right) = self.monsters.split_at_mut(i);
+            let (monster, right) = right.split_first_mut().unwrap();
+            let other_monsters = left.iter().chain(right.iter());
+
             let enemy_team = if monster.team == Elf { Goblin } else { Elf };
-            let enemies = self
-                .monsters
-                .iter()
+            let enemies = other_monsters
                 .filter(|&monster| monster.team == enemy_team)
                 .cloned()
                 .collect::<Vec<Monster>>();
@@ -269,18 +268,33 @@ impl Game {
                 break;
             }
 
-            dbg!(monster);
+            //dbg!(&monster);
             let action =
                 monster.choose_action(&enemies, &self.open_positions, self.width, self.height);
-            dbg!(action);
+            //dbg!(&action);
+
+            match action {
+                MonsterAction::MoveTo(position) => {
+                    monster.position = position;
+                }
+                MonsterAction::Attack(monster) => panic!("eep"),
+                MonsterAction::Blocked => (),
+            }
         }
+
+        // TODO remove dead monsters
+        // TODO ignore dead monsters when pathfinding
     }
 }
 
 pub fn fifteen_a() {
     let mut game = Game::new();
     util::print_grid(&game.to_grid());
-    game.tick();
+
+    for _ in 0..3 {
+        game.tick();
+        util::print_grid(&game.to_grid());
+    }
 }
 
 #[cfg(test)]
