@@ -1,7 +1,8 @@
-use hashbrown::HashMap;
 use std::collections::VecDeque;
 use std::fs;
+use std::iter::FromIterator;
 
+use hashbrown::HashMap;
 use hashbrown::HashSet;
 use itertools::Itertools;
 
@@ -14,32 +15,29 @@ struct Position {
 }
 
 impl Position {
-    fn neighbors(
-        &self,
-        open_positions: &HashSet<Position>,
-        grid_width: usize,
-        grid_height: usize,
-    ) -> Vec<Position> {
+    fn all_neighbors(&self, grid_width: usize, grid_height: usize) -> Vec<Position> {
         let deltas = [(0, 1), (0, -1), (-1, 0), (1, 0)];
 
         deltas
             .iter()
             .map(|(delta_x, delta_y)| (self.x as i32 + delta_x, self.y as i32 + delta_y))
-            .filter(|&(x, y)| {
-                x >= 0
-                    && x < grid_width as i32
-                    && y >= 0
-                    && y < grid_height as i32
-                    && open_positions.contains(&Position {
-                        x: x as usize,
-                        y: y as usize,
-                    })
-            })
+            .filter(|&(x, y)| x >= 0 && x < grid_width as i32 && y >= 0 && y < grid_height as i32)
             .map(|(x, y)| Position {
                 x: x as usize,
                 y: y as usize,
             })
             .collect()
+    }
+
+    fn filtered_neighbors(
+        &self,
+        open_positions: &HashSet<Position>,
+        grid_width: usize,
+        grid_height: usize,
+    ) -> Vec<Position> {
+        let mut neighbors = self.all_neighbors(grid_width, grid_height);
+        neighbors.retain(|position| open_positions.contains(position));
+        neighbors
     }
 }
 
@@ -60,9 +58,9 @@ struct Monster {
 }
 
 #[derive(Debug)]
-enum MonsterAction {
+enum MonsterAction<'a> {
     MoveTo(Position),
-    Attack(Monster),
+    Attack(&'a Monster),
     Blocked,
 }
 
@@ -92,7 +90,8 @@ impl Monster {
                 let current = frontier.pop_front().unwrap();
 
                 // TODO early exit once we've seen all of the destinations?
-                for neighbor in current.neighbors(open_positions, grid_width, grid_height) {
+                for neighbor in current.filtered_neighbors(open_positions, grid_width, grid_height)
+                {
                     // TODO do we need do anything special if came_from contains neighbor and came_from[neighbor] is > current?
                     if !came_from.contains_key(&neighbor) {
                         frontier.push_back(neighbor);
@@ -106,7 +105,7 @@ impl Monster {
 
         let neighbors = self
             .position
-            .neighbors(open_positions, grid_width, grid_height);
+            .filtered_neighbors(open_positions, grid_width, grid_height);
 
         let mut smallest_cost = std::usize::MAX;
         let mut chosen_move = None;
@@ -151,20 +150,35 @@ impl Monster {
         chosen_move
     }
 
-    fn choose_action(
+    fn choose_action<'a>(
         &self,
-        enemies: &Vec<Monster>,
+        enemies: &'a [Monster],
         open_positions: &HashSet<Position>,
         grid_width: usize,
         grid_height: usize,
-    ) -> MonsterAction {
+    ) -> MonsterAction<'a> {
+        // See if we're next to someone already.
+        let neighbors = self
+            .position
+            // xxxxxxxxxx
+            .all_neighbors(grid_width, grid_height);
+
+        for enemy in enemies {
+            for &neighbor in &neighbors {
+                if enemy.position == neighbor {
+                    return MonsterAction::Attack(enemy);
+                }
+            }
+        }
+
         let mut destinations = HashSet::new();
 
         // todo iterator-ize
         for enemy in enemies {
-            for position in enemy
-                .position
-                .neighbors(open_positions, grid_width, grid_height)
+            for position in
+                enemy
+                    .position
+                    .filtered_neighbors(open_positions, grid_width, grid_height)
             {
                 destinations.insert(position);
             }
@@ -246,22 +260,31 @@ impl Game {
     }
 
     fn tick(&mut self) {
-        // XXXXX handle open_positions
-        // XXXX do we have a separate occupied_spaces vec?
         self.monsters
             .sort_by_key(|monster| (monster.position.y, monster.position.x));
 
         // TODO while loop?
         for i in 0..self.monsters.len() {
+            // (left, right) approach suggested by https://www.reddit.com/r/rust/comments/7xl0o9/iterating_over_a_vec_mutably_while_already/
             let (left, right) = self.monsters.split_at_mut(i);
             let (monster, right) = right.split_first_mut().unwrap();
             let other_monsters = left.iter().chain(right.iter());
 
             let enemy_team = if monster.team == Elf { Goblin } else { Elf };
+            // XXX does this need to be a vec?
+            // XXX do we need to clone it?
             let enemies = other_monsters
                 .filter(|&monster| monster.team == enemy_team)
                 .cloned()
                 .collect::<Vec<Monster>>();
+
+            let open_positions = self
+                .open_positions
+                .difference(&HashSet::from_iter(
+                    enemies.iter().map(|monster| monster.position),
+                ))
+                .cloned()
+                .collect();
 
             if enemies.is_empty() {
                 panic!("combat's over! TODO implement me");
@@ -269,15 +292,16 @@ impl Game {
             }
 
             //dbg!(&monster);
-            let action =
-                monster.choose_action(&enemies, &self.open_positions, self.width, self.height);
+            let action = monster.choose_action(&enemies, &open_positions, self.width, self.height);
             //dbg!(&action);
 
             match action {
                 MonsterAction::MoveTo(position) => {
                     monster.position = position;
                 }
-                MonsterAction::Attack(monster) => panic!("eep"),
+                MonsterAction::Attack(monster) => {
+                    println!("TODO implement attacking");
+                }
                 MonsterAction::Blocked => (),
             }
         }
