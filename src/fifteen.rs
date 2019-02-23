@@ -19,7 +19,7 @@ impl Position {
     /// Returns a vector of the Positions immediately north, south, east, and west of `self`.
     /// Only includes Positions that actually fit on the specified grid.
     fn all_neighbors(&self, grid_width: usize, grid_height: usize) -> Vec<Position> {
-        let deltas = [(0, 1), (0, -1), (-1, 0), (1, 0)];
+        let deltas = [(0, -1), (-1, 0), (1, 0), (0, 1)];
 
         deltas
             .iter()
@@ -451,5 +451,6 @@ mod test {
         assert_eq!(fifteen_a("src/inputs/15_sample_5.txt"), 28944);
         assert_eq!(fifteen_a("src/inputs/15_sample_6.txt"), 18740);
         assert_eq!(fifteen_a("src/inputs/15_sample_9.txt"), 27755);
+        assert_eq!(fifteen_a("src/inputs/15.txt"), 229798);
     }
 }
