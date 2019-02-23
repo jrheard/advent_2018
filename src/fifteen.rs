@@ -104,17 +104,19 @@ impl Monster {
         grid_width: usize,
         grid_height: usize,
     ) -> MonsterAction<'a> {
-        // See if we're next to someone already.
+        // Start by seeing if we're next to someone already.
         let neighbors = self.position.all_neighbors(grid_width, grid_height);
 
         for enemy in enemies {
             for &neighbor in &neighbors {
                 if enemy.position == neighbor {
+                    // We're next to an enemy! Attack them!
                     return MonsterAction::Attack(enemy);
                 }
             }
         }
 
+        // Otherwise, try to find an open enemy-adjacent space to move to.
         let destinations = HashSet::from_iter(enemies.iter().flat_map(|enemy| {
             enemy
                 .position
@@ -122,9 +124,12 @@ impl Monster {
         }));
 
         if destinations.is_empty() {
+            // There's nowhere to move!
             return MonsterAction::Blocked;
         }
 
+        // Open enemy-adjacent spaces exist. Pathfind to them and return the position that moves us closer
+        // to the closest one, or Blocked if there's no path to any of them.
         match self.choose_move(&destinations, &open_positions, grid_width, grid_height) {
             Some(position) => MonsterAction::MoveTo(position),
             None => MonsterAction::Blocked,
