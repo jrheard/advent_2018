@@ -331,7 +331,8 @@ impl Game {
 
         // Cull dead monsters.
         self.monsters.retain(|_, monster| monster.hp > 0);
-        return GameTurnOutcome::ContinueCombat;
+
+        GameTurnOutcome::ContinueCombat
     }
 
     /// Parses the puzzle input file into a Game struct.

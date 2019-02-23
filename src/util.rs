@@ -25,7 +25,7 @@ where
 }
 
 pub fn print_grid_with_bounds<T: std::fmt::Display>(
-    grid: &Vec<Vec<T>>,
+    grid: &[Vec<T>],
     min_x: usize,
     max_x: usize,
     min_y: usize,
@@ -34,8 +34,8 @@ pub fn print_grid_with_bounds<T: std::fmt::Display>(
     for y in min_y..=max_y {
         let mut row = String::new();
 
-        for x in min_x..=max_x {
-            row.push_str(&format!("{}", grid[x][y]));
+        for column in &grid[min_x..=max_x] {
+            row.push_str(&format!("{}", column[y]));
         }
 
         println!("{}", row);
@@ -43,7 +43,7 @@ pub fn print_grid_with_bounds<T: std::fmt::Display>(
 }
 
 #[allow(dead_code)]
-pub fn print_grid<T: std::fmt::Display>(grid: &Vec<Vec<T>>) {
+pub fn print_grid<T: std::fmt::Display>(grid: &[Vec<T>]) {
     print_grid_with_bounds(grid, 0, grid.len() - 1, 0, grid[0].len() - 1);
 }
 

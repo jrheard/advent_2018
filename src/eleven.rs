@@ -40,7 +40,7 @@ fn make_grid() -> Vec<Vec<i32>> {
 }
 
 /// See https://en.wikipedia.org/wiki/Summed-area_table
-fn make_summed_area_table(grid: &Vec<Vec<i32>>) -> Vec<Vec<i32>> {
+fn make_summed_area_table(grid: &[Vec<i32>]) -> Vec<Vec<i32>> {
     let mut table = vec![vec![0; GRID_HEIGHT]; GRID_WIDTH];
 
     for y in 0..GRID_HEIGHT {
@@ -62,7 +62,7 @@ fn make_summed_area_table(grid: &Vec<Vec<i32>>) -> Vec<Vec<i32>> {
     table
 }
 
-fn square_with_most_power(table: &Vec<Vec<i32>>, square_side_len: usize) -> (usize, usize, i32) {
+fn square_with_most_power(table: &[Vec<i32>], square_side_len: usize) -> (usize, usize, i32) {
     let mut ret_x = 0;
     let mut ret_y = 0;
     let mut most_power = std::i32::MIN;

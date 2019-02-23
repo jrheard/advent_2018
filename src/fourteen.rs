@@ -76,7 +76,7 @@ fn ten_recipes_after(num_recipes: usize) -> String {
     let mut ret = String::new();
 
     for &score in elves.scores.iter().skip(num_recipes).take(10) {
-        ret.push(char::from_digit(score as u32, 10).unwrap());
+        ret.push(char::from_digit(u32::from(score), 10).unwrap());
     }
 
     ret

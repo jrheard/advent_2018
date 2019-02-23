@@ -1,3 +1,4 @@
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::needless_range_loop))]
 use std::fs;
 
 #[derive(Clone, Copy, Debug)]
@@ -21,7 +22,7 @@ enum Direction {
 use Direction::*;
 
 impl Direction {
-    fn right(&self) -> Direction {
+    fn right(self) -> Direction {
         match self {
             North => East,
             East => South,
@@ -30,7 +31,7 @@ impl Direction {
         }
     }
 
-    fn left(&self) -> Direction {
+    fn left(self) -> Direction {
         match self {
             North => West,
             East => North,
