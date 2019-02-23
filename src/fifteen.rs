@@ -197,6 +197,7 @@ impl Monster {
     }
 }
 
+#[derive(Debug)]
 struct Game {
     open_positions: HashSet<Position>,
     monsters: HashMap<usize, Monster>,
@@ -241,6 +242,7 @@ impl Game {
                 .collect::<Vec<&Monster>>();
 
             if enemies.is_empty() {
+                self.monsters.retain(|_, monster| monster.hp > 0);
                 return;
             }
 
@@ -345,12 +347,10 @@ impl Game {
 
 pub fn fifteen_a() -> usize {
     let mut game = Game::new();
-    util::print_grid(&game.to_grid());
 
     let mut i = 0;
     loop {
         game.tick();
-        //util::print_grid(&game.to_grid());
 
         let alive_teams: HashSet<MonsterTeam> =
             HashSet::from_iter(game.monsters.values().map(|monster| monster.team.clone()));
