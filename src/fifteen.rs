@@ -274,7 +274,7 @@ impl Game {
 
     /// Parses the puzzle input file into a Game struct.
     fn new() -> Game {
-        let contents = fs::read_to_string("src/inputs/15_sample_2.txt").unwrap();
+        let contents = fs::read_to_string("src/inputs/15.txt").unwrap();
 
         let mut next_id = 0;
         let mut open_positions = HashSet::new();
@@ -350,13 +350,20 @@ pub fn fifteen_a() -> usize {
     let mut i = 0;
     loop {
         game.tick();
-        util::print_grid(&game.to_grid());
+        //util::print_grid(&game.to_grid());
 
         let alive_teams: HashSet<MonsterTeam> =
             HashSet::from_iter(game.monsters.values().map(|monster| monster.team.clone()));
 
         if alive_teams.len() < 2 {
-            return i;
+            let summed_health = game
+                .monsters
+                .values()
+                .map(|monster| monster.hp)
+                .filter(|&hp| hp > 0)
+                .sum::<i32>() as usize;
+
+            return i * summed_health;
         }
 
         i += 1;
