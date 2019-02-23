@@ -238,6 +238,12 @@ impl Monster {
     }
 }
 
+#[derive(PartialEq)]
+enum GameTurnOutcome {
+    GameOverMidCombat,
+    ContinueCombat,
+}
+
 #[derive(Debug)]
 struct Game {
     open_positions: HashSet<Position>,
@@ -248,7 +254,7 @@ struct Game {
 
 impl Game {
     /// Performs a round of combat as specified in the day 15 writeup.
-    fn tick(&mut self) {
+    fn tick(&mut self) -> GameTurnOutcome {
         let sorted_monster_ids = self
             .monsters
             .iter()
@@ -285,7 +291,7 @@ impl Game {
 
             if enemies.is_empty() {
                 self.monsters.retain(|_, monster| monster.hp > 0);
-                return;
+                return GameTurnOutcome::GameOverMidCombat;
             }
 
             let open_positions = self
@@ -326,6 +332,7 @@ impl Game {
         }
 
         self.monsters.retain(|_, monster| monster.hp > 0);
+        return GameTurnOutcome::ContinueCombat;
     }
 
     /// Parses the puzzle input file into a Game struct.
@@ -399,12 +406,12 @@ impl Game {
     }
 }
 
-pub fn fifteen_a() -> usize {
-    let mut game = Game::new("src/inputs/15.txt");
+pub fn fifteen_a(filename: &str) -> usize {
+    let mut game = Game::new(filename);
 
     let mut i = 0;
     loop {
-        game.tick();
+        let outcome = game.tick();
         util::print_grid(&game.to_grid());
 
         let alive_teams: HashSet<MonsterTeam> =
@@ -413,6 +420,11 @@ pub fn fifteen_a() -> usize {
         if alive_teams.len() < 2 {
             dbg!(i);
             dbg!(&game.monsters);
+
+            if outcome == GameTurnOutcome::ContinueCombat {
+                // Combat finished cleanly, so this turn counts toward the final score.
+                i += 1;
+            }
 
             let summed_health = game
                 .monsters
@@ -432,5 +444,12 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_solutions() {}
+    fn test_solutions() {
+        assert_eq!(fifteen_a("src/inputs/15_sample_2.txt"), 27730);
+        assert_eq!(fifteen_a("src/inputs/15_sample_3.txt"), 36334);
+        assert_eq!(fifteen_a("src/inputs/15_sample_4.txt"), 39514);
+        assert_eq!(fifteen_a("src/inputs/15_sample_5.txt"), 28944);
+        assert_eq!(fifteen_a("src/inputs/15_sample_6.txt"), 18740);
+        assert_eq!(fifteen_a("src/inputs/15_sample_9.txt"), 27755);
+    }
 }
