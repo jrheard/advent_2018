@@ -1,5 +1,6 @@
 // don't look at this yet it's hideous
 use std::collections::VecDeque;
+use std::fmt::Display;
 use std::fs;
 use std::iter::FromIterator;
 
@@ -108,16 +109,23 @@ impl Monster {
         grid_width: usize,
         grid_height: usize,
     ) -> MonsterAction {
+        // xx combat targets chosen incorrectly?
         // Start by seeing if we're next to someone already.
         let neighbors = self.position.all_neighbors(grid_width, grid_height);
 
+        let mut enemy_neighbors = vec![];
         for enemy in enemies {
             for &neighbor in &neighbors {
                 if enemy.position == neighbor {
-                    // We're next to an enemy! Attack them!
-                    return MonsterAction::Attack(enemy.id);
+                    // We're next to an enemy!
+                    enemy_neighbors.push(enemy);
                 }
             }
+        }
+
+        if !enemy_neighbors.is_empty() {
+            enemy_neighbors.sort_by_key(|monster| monster.hp);
+            return MonsterAction::Attack(enemy_neighbors[0].id);
         }
 
         // Otherwise, try to find an open enemy-adjacent space to move to.
@@ -238,6 +246,7 @@ impl Game {
             let enemies = other_monsters
                 .iter()
                 .filter(|&monster| monster.team == enemy_team)
+                .sorted_by_key(|monster| monster.position)
                 .cloned()
                 .collect::<Vec<&Monster>>();
 
@@ -263,9 +272,11 @@ impl Game {
                         .and_modify(|monster| monster.position = position);
                 }
                 MonsterAction::Attack(target_id) => {
+                    let attack_power = monster.attack_power;
                     self.monsters
                         .entry(target_id)
-                        .and_modify(|monster| monster.hp -= 3);
+                        .and_modify(|enemy| enemy.hp -= attack_power as i32);
+                    //println!("{:?} at {} attacks {:?} at {}, which now has hp {}", monster.team, monster.position, self.monsters[target_id].team, self.
                 }
                 MonsterAction::Blocked => (),
             }
@@ -275,8 +286,8 @@ impl Game {
     }
 
     /// Parses the puzzle input file into a Game struct.
-    fn new() -> Game {
-        let contents = fs::read_to_string("src/inputs/15.txt").unwrap();
+    fn new(filename: &str) -> Game {
+        let contents = fs::read_to_string(filename).unwrap();
 
         let mut next_id = 0;
         let mut open_positions = HashSet::new();
@@ -346,21 +357,24 @@ impl Game {
 }
 
 pub fn fifteen_a() -> usize {
-    let mut game = Game::new();
+    let mut game = Game::new("src/inputs/15_sample_3.txt");
 
     let mut i = 0;
     loop {
         game.tick();
+        util::print_grid(&game.to_grid());
 
         let alive_teams: HashSet<MonsterTeam> =
             HashSet::from_iter(game.monsters.values().map(|monster| monster.team.clone()));
 
         if alive_teams.len() < 2 {
+            dbg!(i);
+            dbg!(&game.monsters);
+
             let summed_health = game
                 .monsters
                 .values()
                 .map(|monster| monster.hp)
-                .filter(|&hp| hp > 0)
                 .sum::<i32>() as usize;
 
             return i * summed_health;
