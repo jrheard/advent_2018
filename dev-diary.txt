@@ -1331,15 +1331,23 @@ so, what to do instead?
 
 https://www.reddit.com/r/rust/comments/7xl0o9/iterating_over_a_vec_mutably_while_already/ has some tips
 
-TODO there's a bunch of `for enemy in enemy { for neighbor in neighbors { foo }}` code in here.
-once we've got a working implementation, try converting to a straightforward grid implementation
-and see if that code reads better / performs worse
-
-TODO would things be simpler if each monster had an id? probably yes, right? like, definitely majorly yes?
-
+DONE would things be simpler if each monster had an id? probably yes, right? like, definitely majorly yes?
 and game.monsters is a hashmap of id to monster?
 
 https://www.youtube.com/watch?v=aKLntZcp27M
 generational index allocator is interesting
 she says that vecs and indexes are the way to go and that this approach helps avoid dangling indexes
 there's a crate called slotmap, TODO investigate
+
+====
+
+2/23/19
+
+so right now we're pretty close to having correct results,
+except sometimes our number-of-full-turns-completed is off by 1,
+and we often have surviving monsters whose health total is incorrect by 3hp.
+which tells me that there's something wrong either with attacking or with removing dead monsters
+
+oops!
+"After moving (or if the unit began its turn in range of a target), the unit attacks."
+so it can move _and_ attack!

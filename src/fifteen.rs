@@ -1,6 +1,5 @@
 // don't look at this yet it's hideous
 use std::collections::VecDeque;
-use std::fmt::Display;
 use std::fs;
 use std::iter::FromIterator;
 
@@ -115,16 +114,16 @@ impl Monster {
 
         let mut enemy_neighbors = vec![];
         for enemy in enemies {
-            for &neighbor in &neighbors {
-                if enemy.position == neighbor {
-                    // We're next to an enemy!
-                    enemy_neighbors.push(enemy);
-                }
+            if neighbors.contains(&enemy.position) {
+                // We're next to an enemy!
+                enemy_neighbors.push(enemy);
             }
         }
 
         if !enemy_neighbors.is_empty() {
-            enemy_neighbors.sort_by_key(|monster| monster.hp);
+            // "The adjacent target with the fewest hit points is selected; in a tie,
+            // the adjacent target with the fewest hit points which is first in reading order is selected."
+            enemy_neighbors.sort_by_key(|monster| (monster.hp, monster.position));
             return MonsterAction::Attack(enemy_neighbors[0].id);
         }
 
