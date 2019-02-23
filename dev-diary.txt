@@ -1351,3 +1351,7 @@ which tells me that there's something wrong either with attacking or with removi
 oops!
 "After moving (or if the unit began its turn in range of a target), the unit attacks."
 so it can move _and_ attack!
+
+ok, implementing that fixed the first two extended combat examples, but when i tried to run
+the full input i got 227744, which the checker says is too low.
+so let's try the rest of the examples!

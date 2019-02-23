@@ -96,21 +96,18 @@ struct Monster {
 enum MonsterAction {
     MoveTo(Position),
     Attack(MonsterId),
+    MoveAndAttack(Position, MonsterId),
     Blocked,
 }
 
 impl Monster {
-    /// Returns a MonsterAction indicating what the monster wants to do with its turn.
-    fn choose_action(
-        &self,
+    fn calculate_attack_for_position(
+        position: &Position,
         enemies: &[&Monster],
-        open_positions: &HashSet<Position>,
         grid_width: usize,
         grid_height: usize,
-    ) -> MonsterAction {
-        // xx combat targets chosen incorrectly?
-        // Start by seeing if we're next to someone already.
-        let neighbors = self.position.all_neighbors(grid_width, grid_height);
+    ) -> Option<MonsterId> {
+        let neighbors = position.all_neighbors(grid_width, grid_height);
 
         let mut enemy_neighbors = vec![];
         for enemy in enemies {
@@ -124,7 +121,25 @@ impl Monster {
             // "The adjacent target with the fewest hit points is selected; in a tie,
             // the adjacent target with the fewest hit points which is first in reading order is selected."
             enemy_neighbors.sort_by_key(|monster| (monster.hp, monster.position));
-            return MonsterAction::Attack(enemy_neighbors[0].id);
+            Some(enemy_neighbors[0].id)
+        } else {
+            None
+        }
+    }
+
+    /// Returns a MonsterAction indicating what the monster wants to do with its turn.
+    fn choose_action(
+        &self,
+        enemies: &[&Monster],
+        open_positions: &HashSet<Position>,
+        grid_width: usize,
+        grid_height: usize,
+    ) -> MonsterAction {
+        // Start by seeing if we're next to someone already.
+        if let Some(enemy_id) =
+            Monster::calculate_attack_for_position(&self.position, enemies, grid_width, grid_height)
+        {
+            return MonsterAction::Attack(enemy_id);
         }
 
         // Otherwise, try to find an open enemy-adjacent space to move to.
@@ -135,15 +150,30 @@ impl Monster {
         }));
 
         if destinations.is_empty() {
-            // There's nowhere to move!
-            return MonsterAction::Blocked;
-        }
-
-        // Open enemy-adjacent spaces exist. Pathfind to them and return the position that moves us closer
-        // to the closest one, or Blocked if there's no path to any of them.
-        match self.choose_move(&destinations, &open_positions, grid_width, grid_height) {
-            Some(position) => MonsterAction::MoveTo(position),
-            None => MonsterAction::Blocked,
+            // There's nowhere to move, because all enemy-adjacent positions are occupied.
+            MonsterAction::Blocked
+        } else {
+            // Open enemy-adjacent spaces exist. Pathfind to them!
+            if let Some(position) =
+                self.choose_move(&destinations, &open_positions, grid_width, grid_height)
+            {
+                // We've found a path, and moving to `position` will get us closer to our destination...
+                if let Some(enemy_id) = Monster::calculate_attack_for_position(
+                    &position,
+                    enemies,
+                    grid_width,
+                    grid_height,
+                ) {
+                    // ...and we can attack someone once we get there!
+                    MonsterAction::MoveAndAttack(position, enemy_id)
+                } else {
+                    // ...but there aren't any enemies adjacent to that position, so we should just move there and that's our turn.
+                    MonsterAction::MoveTo(position)
+                }
+            } else {
+                // Open enemy-adjacent spaces exist, but all the paths to them are blocked. Stay put.
+                MonsterAction::Blocked
+            }
         }
     }
 
@@ -275,7 +305,17 @@ impl Game {
                     self.monsters
                         .entry(target_id)
                         .and_modify(|enemy| enemy.hp -= attack_power as i32);
-                    //println!("{:?} at {} attacks {:?} at {}, which now has hp {}", monster.team, monster.position, self.monsters[target_id].team, self.
+                }
+                MonsterAction::MoveAndAttack(position, target_id) => {
+                    let attack_power = monster.attack_power;
+
+                    self.monsters
+                        .entry(id)
+                        .and_modify(|monster| monster.position = position);
+
+                    self.monsters
+                        .entry(target_id)
+                        .and_modify(|enemy| enemy.hp -= attack_power as i32);
                 }
                 MonsterAction::Blocked => (),
             }
@@ -356,7 +396,7 @@ impl Game {
 }
 
 pub fn fifteen_a() -> usize {
-    let mut game = Game::new("src/inputs/15_sample_3.txt");
+    let mut game = Game::new("src/inputs/15.txt");
 
     let mut i = 0;
     loop {
