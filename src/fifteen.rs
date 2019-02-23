@@ -64,7 +64,6 @@ fn compute_came_from_map(
 
         // TODO early exit once we've seen all of the destinations?
         for neighbor in current.filtered_neighbors(open_positions, grid_width, grid_height) {
-            // TODO do we need do anything special if came_from contains neighbor and came_from[neighbor] is > current?
             if !came_from.contains_key(&neighbor) {
                 frontier.push_back(neighbor);
                 came_from.insert(neighbor, current);
@@ -192,6 +191,7 @@ impl Monster {
 
         let mut smallest_cost = std::usize::MAX;
         let mut chosen_move = None;
+        let mut chosen_destination = self.position;
 
         for &neighbor in &neighbors {
             let came_from =
@@ -216,13 +216,17 @@ impl Monster {
                 if path_cost < smallest_cost {
                     smallest_cost = path_cost;
                     chosen_move = Some(neighbor);
+                    chosen_destination = destination;
                 }
                 // "If multiple steps would put the unit equally closer to its destination,
                 // the unit chooses the step which is first in reading order."
                 else if path_cost == smallest_cost {
                     match chosen_move {
-                        Some(position) if neighbor < position => {
+                        Some(position)
+                            if neighbor < position || destination < chosen_destination =>
+                        {
                             chosen_move = Some(neighbor);
+                            chosen_destination = destination;
                         }
                         _ => (),
                     };
