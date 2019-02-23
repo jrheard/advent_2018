@@ -96,6 +96,41 @@ enum MonsterAction<'a> {
 }
 
 impl Monster {
+    /// Returns a MonsterAction indicating what the monster wants to do with its turn.
+    fn choose_action<'a>(
+        &self,
+        enemies: &'a [Monster],
+        open_positions: &HashSet<Position>,
+        grid_width: usize,
+        grid_height: usize,
+    ) -> MonsterAction<'a> {
+        // See if we're next to someone already.
+        let neighbors = self.position.all_neighbors(grid_width, grid_height);
+
+        for enemy in enemies {
+            for &neighbor in &neighbors {
+                if enemy.position == neighbor {
+                    return MonsterAction::Attack(enemy);
+                }
+            }
+        }
+
+        let destinations = HashSet::from_iter(enemies.iter().flat_map(|enemy| {
+            enemy
+                .position
+                .filtered_neighbors(open_positions, grid_width, grid_height)
+        }));
+
+        if destinations.is_empty() {
+            return MonsterAction::Blocked;
+        }
+
+        match self.choose_move(&destinations, &open_positions, grid_width, grid_height) {
+            Some(position) => MonsterAction::MoveTo(position),
+            None => MonsterAction::Blocked,
+        }
+    }
+
     /// Returns Some(position) representing the neighboring position that this monster should move to
     /// in order to pursue an enemy. Returns None if there are no unblocked paths to the monster's enemies.
     fn choose_move(
@@ -133,12 +168,22 @@ impl Monster {
 
                 // If this is the shortest path we've seen so far, record it.
                 if path_cost < smallest_cost {
+                    if self.position == (Position { y: 1, x: 3 }) {
+                        dbg!(path_cost);
+                        dbg!(smallest_cost);
+                        dbg!(neighbor);
+                    }
                     smallest_cost = path_cost;
                     chosen_move = Some(neighbor);
                 }
                 // "If multiple steps would put the unit equally closer to its destination,
                 // the unit chooses the step which is first in reading order."
                 else if path_cost == smallest_cost {
+                    if self.position == (Position { y: 1, x: 3 }) {
+                        dbg!(path_cost);
+                        dbg!(smallest_cost);
+                        dbg!(neighbor);
+                    }
                     match chosen_move {
                         Some(position) if neighbor < position => {
                             chosen_move = Some(neighbor);
@@ -151,40 +196,6 @@ impl Monster {
 
         chosen_move
     }
-
-    fn choose_action<'a>(
-        &self,
-        enemies: &'a [Monster],
-        open_positions: &HashSet<Position>,
-        grid_width: usize,
-        grid_height: usize,
-    ) -> MonsterAction<'a> {
-        // See if we're next to someone already.
-        let neighbors = self.position.all_neighbors(grid_width, grid_height);
-
-        for enemy in enemies {
-            for &neighbor in &neighbors {
-                if enemy.position == neighbor {
-                    return MonsterAction::Attack(enemy);
-                }
-            }
-        }
-
-        let destinations = HashSet::from_iter(enemies.iter().flat_map(|enemy| {
-            enemy
-                .position
-                .filtered_neighbors(open_positions, grid_width, grid_height)
-        }));
-
-        if destinations.is_empty() {
-            return MonsterAction::Blocked;
-        }
-
-        match self.choose_move(&destinations, &open_positions, grid_width, grid_height) {
-            Some(position) => MonsterAction::MoveTo(position),
-            None => MonsterAction::Blocked,
-        }
-    }
 }
 
 struct Game {
@@ -195,6 +206,65 @@ struct Game {
 }
 
 impl Game {
+    /// Performs a round of combat as specified in the day 15 writeup.
+    fn tick(&mut self) {
+        self.monsters
+            .sort_by_key(|monster| (monster.position.y, monster.position.x));
+
+        // TODO while loop?
+        for i in 0..self.monsters.len() {
+            // (left, right) approach suggested by https://www.reddit.com/r/rust/comments/7xl0o9/iterating_over_a_vec_mutably_while_already/
+            let (left, right) = self.monsters.split_at_mut(i);
+            let (monster, right) = right.split_first_mut().unwrap();
+            let other_monsters = left.iter().chain(right.iter());
+
+            let enemy_team = if monster.team == MonsterTeam::Elf {
+                MonsterTeam::Goblin
+            } else {
+                MonsterTeam::Elf
+            };
+
+            let enemies = other_monsters
+                .filter(|&monster| monster.team == enemy_team)
+                .cloned()
+                .collect::<Vec<Monster>>();
+
+            let open_positions = self
+                .open_positions
+                .difference(&HashSet::from_iter(
+                    enemies.iter().map(|monster| monster.position),
+                ))
+                .cloned()
+                .collect();
+
+            if enemies.is_empty() {
+                panic!("combat's over! TODO implement me");
+                break;
+            }
+
+            //dbg!(&monster);
+            let action = monster.choose_action(&enemies, &open_positions, self.width, self.height);
+            //dbg!(&action);
+
+            match action {
+                MonsterAction::MoveTo(position) => {
+                    println!(
+                        "{:?} moving from {:?} to {:?}",
+                        monster.team, monster.position, position
+                    );
+                    monster.position = position;
+                }
+                MonsterAction::Attack(monster) => {
+                    println!("TODO implement attacking");
+                }
+                MonsterAction::Blocked => (),
+            }
+        }
+
+        // TODO remove dead monsters
+        // TODO ignore dead monsters when pathfinding
+    }
+
     /// Parses the puzzle input file into a Game struct.
     fn new() -> Game {
         let contents = fs::read_to_string("src/inputs/15_sample.txt").unwrap();
@@ -256,61 +326,6 @@ impl Game {
         }
 
         grid
-    }
-
-    /// Performs a round of combat as specified in the day 15 writeup.
-    fn tick(&mut self) {
-        self.monsters
-            .sort_by_key(|monster| (monster.position.y, monster.position.x));
-
-        // TODO while loop?
-        for i in 0..self.monsters.len() {
-            // (left, right) approach suggested by https://www.reddit.com/r/rust/comments/7xl0o9/iterating_over_a_vec_mutably_while_already/
-            let (left, right) = self.monsters.split_at_mut(i);
-            let (monster, right) = right.split_first_mut().unwrap();
-            let other_monsters = left.iter().chain(right.iter());
-
-            let enemy_team = if monster.team == MonsterTeam::Elf {
-                MonsterTeam::Goblin
-            } else {
-                MonsterTeam::Elf
-            };
-
-            let enemies = other_monsters
-                .filter(|&monster| monster.team == enemy_team)
-                .cloned()
-                .collect::<Vec<Monster>>();
-
-            let open_positions = self
-                .open_positions
-                .difference(&HashSet::from_iter(
-                    enemies.iter().map(|monster| monster.position),
-                ))
-                .cloned()
-                .collect();
-
-            if enemies.is_empty() {
-                panic!("combat's over! TODO implement me");
-                break;
-            }
-
-            //dbg!(&monster);
-            let action = monster.choose_action(&enemies, &open_positions, self.width, self.height);
-            //dbg!(&action);
-
-            match action {
-                MonsterAction::MoveTo(position) => {
-                    monster.position = position;
-                }
-                MonsterAction::Attack(monster) => {
-                    println!("TODO implement attacking");
-                }
-                MonsterAction::Blocked => (),
-            }
-        }
-
-        // TODO remove dead monsters
-        // TODO ignore dead monsters when pathfinding
     }
 }
 

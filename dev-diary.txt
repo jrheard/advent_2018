@@ -1330,3 +1330,7 @@ like, that's usually a bad thing
 so, what to do instead?
 
 https://www.reddit.com/r/rust/comments/7xl0o9/iterating_over_a_vec_mutably_while_already/ has some tips
+
+TODO there's a bunch of `for enemy in enemy { for neighbor in neighbors { foo }}` code in here.
+once we've got a working implementation, try converting to a straightforward grid implementation
+and see if that code reads better / performs worse
