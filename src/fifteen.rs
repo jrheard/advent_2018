@@ -303,27 +303,31 @@ impl Game {
                 .collect();
 
             let action = monster.choose_action(&enemies, &open_positions, self.width, self.height);
+
             let attack_power = monster.attack_power;
+            let perform_move = |self_: &mut Game, position| {
+                self_
+                    .monsters
+                    .entry(id)
+                    .and_modify(|monster| monster.position = position);
+            };
+            let perform_attack = |self_: &mut Game, target_id| {
+                self_
+                    .monsters
+                    .entry(target_id)
+                    .and_modify(|enemy| enemy.hp -= attack_power as i32);
+            };
 
             match action {
                 MonsterAction::MoveTo(position) => {
-                    self.monsters
-                        .entry(id)
-                        .and_modify(|monster| monster.position = position);
+                    perform_move(self, position);
                 }
                 MonsterAction::Attack(target_id) => {
-                    self.monsters
-                        .entry(target_id)
-                        .and_modify(|enemy| enemy.hp -= attack_power as i32);
+                    perform_attack(self, target_id);
                 }
                 MonsterAction::MoveAndAttack(position, target_id) => {
-                    self.monsters
-                        .entry(id)
-                        .and_modify(|monster| monster.position = position);
-
-                    self.monsters
-                        .entry(target_id)
-                        .and_modify(|enemy| enemy.hp -= attack_power as i32);
+                    perform_move(self, position);
+                    perform_attack(self, target_id);
                 }
                 MonsterAction::Blocked => (),
             }
