@@ -1355,3 +1355,5 @@ so it can move _and_ attack!
 ok, implementing that fixed the first two extended combat examples, but when i tried to run
 the full input i got 227744, which the checker says is too low.
 so let's try the rest of the examples!
+
+TODO run clippy again

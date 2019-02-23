@@ -62,7 +62,6 @@ fn compute_came_from_map(
     while !frontier.is_empty() {
         let current = frontier.pop_front().unwrap();
 
-        // TODO early exit once we've seen all of the destinations?
         for neighbor in current.filtered_neighbors(open_positions, grid_width, grid_height) {
             if !came_from.contains_key(&neighbor) {
                 frontier.push_back(neighbor);
@@ -148,31 +147,22 @@ impl Monster {
                 .filtered_neighbors(open_positions, grid_width, grid_height)
         }));
 
-        if destinations.is_empty() {
-            // There's nowhere to move, because all enemy-adjacent positions are occupied.
-            MonsterAction::Blocked
-        } else {
-            // Open enemy-adjacent spaces exist. Pathfind to them!
-            if let Some(position) =
-                self.choose_move(&destinations, &open_positions, grid_width, grid_height)
+        if let Some(position) =
+            self.choose_move(&destinations, &open_positions, grid_width, grid_height)
+        {
+            // We've found a path, and moving to `position` will get us closer to our destination...
+            if let Some(enemy_id) =
+                Monster::calculate_attack_for_position(&position, enemies, grid_width, grid_height)
             {
-                // We've found a path, and moving to `position` will get us closer to our destination...
-                if let Some(enemy_id) = Monster::calculate_attack_for_position(
-                    &position,
-                    enemies,
-                    grid_width,
-                    grid_height,
-                ) {
-                    // ...and we can attack someone once we get there!
-                    MonsterAction::MoveAndAttack(position, enemy_id)
-                } else {
-                    // ...but there aren't any enemies adjacent to that position, so we should just move there and that's our turn.
-                    MonsterAction::MoveTo(position)
-                }
+                // ...and we can attack someone once we get there!
+                MonsterAction::MoveAndAttack(position, enemy_id)
             } else {
-                // Open enemy-adjacent spaces exist, but all the paths to them are blocked. Stay put.
-                MonsterAction::Blocked
+                // ...but there aren't any enemies adjacent to that position, so we should just move there and that's our turn.
+                MonsterAction::MoveTo(position)
             }
+        } else {
+            // Either there was nowhere to go or no path was found to any destination.
+            MonsterAction::Blocked
         }
     }
 
@@ -185,6 +175,10 @@ impl Monster {
         grid_width: usize,
         grid_height: usize,
     ) -> Option<Position> {
+        if destinations.is_empty() {
+            return None;
+        }
+
         let neighbors = self
             .position
             .filtered_neighbors(open_positions, grid_width, grid_height);
@@ -255,6 +249,9 @@ struct Game {
 impl Game {
     /// Performs a round of combat as specified in the day 15 writeup.
     fn tick(&mut self) -> GameTurnOutcome {
+        // "The order in which units take their turns within a round is the reading order
+        // of their starting positions in that round, regardless of the type of unit
+        // or whether other units have moved after the round started."
         let sorted_monster_ids = self
             .monsters
             .iter()
@@ -265,15 +262,16 @@ impl Game {
 
         for id in sorted_monster_ids {
             let monster = &self.monsters[&id];
+
             if monster.hp <= 0 {
+                // This monster is dead, and will be pruned at the end of this combat round. It doesn't get a turn.
                 continue;
             }
 
             let other_monsters = self
                 .monsters
                 .values()
-                .filter(|other_monster| other_monster.id != monster.id)
-                .filter(|monster| monster.hp > 0)
+                .filter(|other_monster| other_monster.id != monster.id && other_monster.hp > 0)
                 .collect::<Vec<&Monster>>();
 
             let enemy_team = if monster.team == MonsterTeam::Elf {
@@ -282,18 +280,20 @@ impl Game {
                 MonsterTeam::Elf
             };
 
+            // "Each unit begins its turn by identifying all possible targets (enemy units)."
             let enemies = other_monsters
                 .iter()
                 .filter(|&monster| monster.team == enemy_team)
-                .sorted_by_key(|monster| monster.position)
                 .cloned()
                 .collect::<Vec<&Monster>>();
 
             if enemies.is_empty() {
+                // "If no targets remain, combat ends."
                 self.monsters.retain(|_, monster| monster.hp > 0);
                 return GameTurnOutcome::GameOverMidCombat;
             }
 
+            // "Then, the unit identifies all of the open squares that are in range of each target."
             let open_positions = self
                 .open_positions
                 .difference(&HashSet::from_iter(
@@ -303,6 +303,7 @@ impl Game {
                 .collect();
 
             let action = monster.choose_action(&enemies, &open_positions, self.width, self.height);
+            let attack_power = monster.attack_power;
 
             match action {
                 MonsterAction::MoveTo(position) => {
@@ -311,14 +312,11 @@ impl Game {
                         .and_modify(|monster| monster.position = position);
                 }
                 MonsterAction::Attack(target_id) => {
-                    let attack_power = monster.attack_power;
                     self.monsters
                         .entry(target_id)
                         .and_modify(|enemy| enemy.hp -= attack_power as i32);
                 }
                 MonsterAction::MoveAndAttack(position, target_id) => {
-                    let attack_power = monster.attack_power;
-
                     self.monsters
                         .entry(id)
                         .and_modify(|monster| monster.position = position);
@@ -331,6 +329,7 @@ impl Game {
             }
         }
 
+        // Cull dead monsters.
         self.monsters.retain(|_, monster| monster.hp > 0);
         return GameTurnOutcome::ContinueCombat;
     }
