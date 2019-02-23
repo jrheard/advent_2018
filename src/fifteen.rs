@@ -168,22 +168,12 @@ impl Monster {
 
                 // If this is the shortest path we've seen so far, record it.
                 if path_cost < smallest_cost {
-                    if self.position == (Position { y: 1, x: 3 }) {
-                        dbg!(path_cost);
-                        dbg!(smallest_cost);
-                        dbg!(neighbor);
-                    }
                     smallest_cost = path_cost;
                     chosen_move = Some(neighbor);
                 }
                 // "If multiple steps would put the unit equally closer to its destination,
                 // the unit chooses the step which is first in reading order."
                 else if path_cost == smallest_cost {
-                    if self.position == (Position { y: 1, x: 3 }) {
-                        dbg!(path_cost);
-                        dbg!(smallest_cost);
-                        dbg!(neighbor);
-                    }
                     match chosen_move {
                         Some(position) if neighbor < position => {
                             chosen_move = Some(neighbor);
@@ -216,7 +206,12 @@ impl Game {
             // (left, right) approach suggested by https://www.reddit.com/r/rust/comments/7xl0o9/iterating_over_a_vec_mutably_while_already/
             let (left, right) = self.monsters.split_at_mut(i);
             let (monster, right) = right.split_first_mut().unwrap();
-            let other_monsters = left.iter().chain(right.iter());
+
+            let other_monsters = left
+                .iter()
+                .chain(right.iter())
+                .cloned()
+                .collect::<Vec<Monster>>();
 
             let enemy_team = if monster.team == MonsterTeam::Elf {
                 MonsterTeam::Goblin
@@ -225,22 +220,23 @@ impl Game {
             };
 
             let enemies = other_monsters
+                .iter()
                 .filter(|&monster| monster.team == enemy_team)
                 .cloned()
                 .collect::<Vec<Monster>>();
-
-            let open_positions = self
-                .open_positions
-                .difference(&HashSet::from_iter(
-                    enemies.iter().map(|monster| monster.position),
-                ))
-                .cloned()
-                .collect();
 
             if enemies.is_empty() {
                 panic!("combat's over! TODO implement me");
                 break;
             }
+
+            let open_positions = self
+                .open_positions
+                .difference(&HashSet::from_iter(
+                    other_monsters.iter().map(|monster| monster.position),
+                ))
+                .cloned()
+                .collect();
 
             //dbg!(&monster);
             let action = monster.choose_action(&enemies, &open_positions, self.width, self.height);
@@ -248,10 +244,6 @@ impl Game {
 
             match action {
                 MonsterAction::MoveTo(position) => {
-                    println!(
-                        "{:?} moving from {:?} to {:?}",
-                        monster.team, monster.position, position
-                    );
                     monster.position = position;
                 }
                 MonsterAction::Attack(monster) => {
