@@ -7,8 +7,6 @@ use hashbrown::HashMap;
 use hashbrown::HashSet;
 use itertools::Itertools;
 
-use crate::util;
-
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 struct Position {
     y: usize,
@@ -115,13 +113,13 @@ impl Monster {
             }
         }
 
-        if !enemy_neighbors.is_empty() {
+        if enemy_neighbors.is_empty() {
+            None
+        } else {
             // "The adjacent target with the fewest hit points is selected; in a tie,
             // the adjacent target with the fewest hit points which is first in reading order is selected."
             enemy_neighbors.sort_by_key(|monster| (monster.hp, monster.position));
             Some(enemy_neighbors[0].id)
-        } else {
-            None
         }
     }
 
@@ -211,13 +209,15 @@ impl Monster {
                     smallest_cost = path_cost;
                     chosen_move = Some(neighbor);
                     chosen_destination = destination;
-                }
-                // "If multiple steps would put the unit equally closer to its destination,
-                // the unit chooses the step which is first in reading order."
-                else if path_cost == smallest_cost {
+                } else if path_cost == smallest_cost {
                     match chosen_move {
                         Some(position)
-                            if neighbor < position || destination < chosen_destination =>
+                            // "If multiple steps would put the unit equally closer to its destination,
+                            // the unit chooses the step which is first in reading order."
+                            if neighbor < position ||
+                            // "If multiple squares are in range and tied for being reachable
+                            // in the fewest steps, the square which is first in reading order is chosen."
+                            destination < chosen_destination =>
                         {
                             chosen_move = Some(neighbor);
                             chosen_destination = destination;
@@ -387,6 +387,7 @@ impl Game {
     }
 
     /// Returns a grid of chars, useful for printing the state of the game to the screen.
+    #[allow(dead_code)]
     fn to_grid(&self) -> Vec<Vec<char>> {
         let mut grid = vec![vec!['#'; self.height]; self.width];
 
@@ -412,15 +413,11 @@ pub fn fifteen_a(filename: &str) -> usize {
     let mut i = 0;
     loop {
         let outcome = game.tick();
-        util::print_grid(&game.to_grid());
 
         let alive_teams: HashSet<MonsterTeam> =
             HashSet::from_iter(game.monsters.values().map(|monster| monster.team.clone()));
 
         if alive_teams.len() < 2 {
-            dbg!(i);
-            dbg!(&game.monsters);
-
             if outcome == GameTurnOutcome::ContinueCombat {
                 // Combat finished cleanly, so this turn counts toward the final score.
                 i += 1;
