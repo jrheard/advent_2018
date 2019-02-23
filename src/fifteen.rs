@@ -5,10 +5,11 @@ use std::iter::FromIterator;
 
 use hashbrown::HashMap;
 use hashbrown::HashSet;
+use itertools::Itertools;
 
 use crate::util;
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, PartialOrd)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 struct Position {
     y: usize,
     x: usize,
@@ -74,36 +75,39 @@ fn compute_came_from_map(
     came_from
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 enum MonsterTeam {
     Goblin,
     Elf,
 }
 
+type MonsterId = usize;
+
 #[derive(Debug, Clone)]
 struct Monster {
+    id: MonsterId,
     attack_power: u32,
-    hp: u32,
+    hp: i32,
     team: MonsterTeam,
     position: Position,
 }
 
 #[derive(Debug)]
-enum MonsterAction<'a> {
+enum MonsterAction {
     MoveTo(Position),
-    Attack(&'a Monster),
+    Attack(MonsterId),
     Blocked,
 }
 
 impl Monster {
     /// Returns a MonsterAction indicating what the monster wants to do with its turn.
-    fn choose_action<'a>(
+    fn choose_action(
         &self,
-        enemies: &'a [Monster],
+        enemies: &[&Monster],
         open_positions: &HashSet<Position>,
         grid_width: usize,
         grid_height: usize,
-    ) -> MonsterAction<'a> {
+    ) -> MonsterAction {
         // Start by seeing if we're next to someone already.
         let neighbors = self.position.all_neighbors(grid_width, grid_height);
 
@@ -111,7 +115,7 @@ impl Monster {
             for &neighbor in &neighbors {
                 if enemy.position == neighbor {
                     // We're next to an enemy! Attack them!
-                    return MonsterAction::Attack(enemy);
+                    return MonsterAction::Attack(enemy.id);
                 }
             }
         }
@@ -195,7 +199,7 @@ impl Monster {
 
 struct Game {
     open_positions: HashSet<Position>,
-    monsters: Vec<Monster>,
+    monsters: HashMap<usize, Monster>,
     width: usize,
     height: usize,
 }
@@ -203,20 +207,26 @@ struct Game {
 impl Game {
     /// Performs a round of combat as specified in the day 15 writeup.
     fn tick(&mut self) {
-        self.monsters
-            .sort_by_key(|monster| (monster.position.y, monster.position.x));
+        let sorted_monster_ids = self
+            .monsters
+            .iter()
+            .sorted_by_key(|(_, monster)| monster.position)
+            .map(|(id, _)| id)
+            .cloned()
+            .collect::<Vec<usize>>();
 
-        // TODO while loop?
-        for i in 0..self.monsters.len() {
-            // (left, right) approach suggested by https://www.reddit.com/r/rust/comments/7xl0o9/iterating_over_a_vec_mutably_while_already/
-            let (left, right) = self.monsters.split_at_mut(i);
-            let (monster, right) = right.split_first_mut().unwrap();
+        for id in sorted_monster_ids {
+            let monster = &self.monsters[&id];
+            if monster.hp <= 0 {
+                continue;
+            }
 
-            let other_monsters = left
-                .iter()
-                .chain(right.iter())
-                .cloned()
-                .collect::<Vec<Monster>>();
+            let other_monsters = self
+                .monsters
+                .values()
+                .filter(|other_monster| other_monster.id != monster.id)
+                .filter(|monster| monster.hp > 0)
+                .collect::<Vec<&Monster>>();
 
             let enemy_team = if monster.team == MonsterTeam::Elf {
                 MonsterTeam::Goblin
@@ -228,11 +238,10 @@ impl Game {
                 .iter()
                 .filter(|&monster| monster.team == enemy_team)
                 .cloned()
-                .collect::<Vec<Monster>>();
+                .collect::<Vec<&Monster>>();
 
             if enemies.is_empty() {
-                panic!("combat's over! TODO implement me");
-                break;
+                return;
             }
 
             let open_positions = self
@@ -243,31 +252,33 @@ impl Game {
                 .cloned()
                 .collect();
 
-            //dbg!(&monster);
             let action = monster.choose_action(&enemies, &open_positions, self.width, self.height);
-            //dbg!(&action);
 
             match action {
                 MonsterAction::MoveTo(position) => {
-                    monster.position = position;
+                    self.monsters
+                        .entry(id)
+                        .and_modify(|monster| monster.position = position);
                 }
-                MonsterAction::Attack(monster) => {
-                    println!("TODO implement attacking");
+                MonsterAction::Attack(target_id) => {
+                    self.monsters
+                        .entry(target_id)
+                        .and_modify(|monster| monster.hp -= 3);
                 }
                 MonsterAction::Blocked => (),
             }
         }
 
-        // TODO remove dead monsters
-        // TODO ignore dead monsters when pathfinding
+        self.monsters.retain(|_, monster| monster.hp > 0);
     }
 
     /// Parses the puzzle input file into a Game struct.
     fn new() -> Game {
-        let contents = fs::read_to_string("src/inputs/15_sample.txt").unwrap();
+        let contents = fs::read_to_string("src/inputs/15_sample_2.txt").unwrap();
 
+        let mut next_id = 0;
         let mut open_positions = HashSet::new();
-        let mut monsters = vec![];
+        let mut monsters = HashMap::new();
 
         for (y, line) in contents.lines().enumerate() {
             for (x, character) in line.trim().chars().enumerate() {
@@ -279,16 +290,22 @@ impl Game {
                     'G' | 'E' => {
                         open_positions.insert(Position { x, y });
 
-                        monsters.push(Monster {
-                            attack_power: 3,
-                            hp: 200,
-                            team: if character == 'G' {
-                                MonsterTeam::Goblin
-                            } else {
-                                MonsterTeam::Elf
+                        monsters.insert(
+                            next_id,
+                            Monster {
+                                id: next_id,
+                                attack_power: 3,
+                                hp: 200,
+                                team: if character == 'G' {
+                                    MonsterTeam::Goblin
+                                } else {
+                                    MonsterTeam::Elf
+                                },
+                                position: Position { x, y },
                             },
-                            position: Position { x, y },
-                        });
+                        );
+
+                        next_id += 1;
                     }
                     _ => panic!("unknown character {}!", character),
                 };
@@ -314,7 +331,7 @@ impl Game {
             grid[position.x][position.y] = '.';
         }
 
-        for monster in &self.monsters {
+        for monster in self.monsters.values() {
             grid[monster.position.x][monster.position.y] = if monster.team == MonsterTeam::Goblin {
                 'G'
             } else {
@@ -326,13 +343,23 @@ impl Game {
     }
 }
 
-pub fn fifteen_a() {
+pub fn fifteen_a() -> usize {
     let mut game = Game::new();
     util::print_grid(&game.to_grid());
 
-    for _ in 0..3 {
+    let mut i = 0;
+    loop {
         game.tick();
         util::print_grid(&game.to_grid());
+
+        let alive_teams: HashSet<MonsterTeam> =
+            HashSet::from_iter(game.monsters.values().map(|monster| monster.team.clone()));
+
+        if alive_teams.len() < 2 {
+            return i;
+        }
+
+        i += 1;
     }
 }
 
