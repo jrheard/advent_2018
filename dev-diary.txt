@@ -89,7 +89,6 @@ assert_eq!(set.contains(&1), true);
 assert_eq!(set.contains(&4), false);
 
 why does set.contains(&1) have to have the &?
-TODO ask peter
 
 https://www.forrestthewoods.com/blog/learning-rust-via-advent-of-code/
 has a good list of iterator methods and useful crates
@@ -305,8 +304,6 @@ once i've gotten to that part of the book
 2/7/19
 
 spent some time with flamer trying to improve the speed of 5, didn't make much progress, just gonna skip it for now
-TODO read through burntsushi / forrestthewoods' solutions after i'm done with aoc, see how they did day 5
-TODO concurrency perhaps!
 
 ok so i've been having a slight amount of trouble with chapter 15, let's write down my understanding of these things
 
@@ -808,7 +805,7 @@ this is way too long.
 
 https://speice.io/2019/02/understanding-allocations-in-rust.html
 
-unrelated TODO: been thinking about what program i want to write post-aoc.
+unrelated DONE: been thinking about what program i want to write post-aoc.
 so far main contenders are an irc bot and a profiling library.
 irc bot would be easy, profiling library would be hard.
 evan's written some stuff about sampling profilers, not sure if it applies to rust,
@@ -866,7 +863,7 @@ becomes
         // at this point we see that the current node has 1 metadata to process, so we add that
 
         // at this point we see that the current substack has 2 items in it,
-        // and the parent node (TODO: how do we get back tot he parent node? separate stack of parent nodes?)
+        // and the parent node (DONE: how do we get back tot he parent node? separate stack of parent nodes?)
         // has num_c 2, so we set the parent's children to the current substack
     ]
 
@@ -967,7 +964,7 @@ the idea of having a recursive function that operates on a mutable buffer input
 and only consumes some small number of items off of its front just never occurred to me!
 totally worked first try tho once i banged the code out!
 
-TODO profiling links at https://www.reddit.com/r/rust/comments/aqqr0z/what_are_best_resources_on_profiling_and/
+DONE profiling links at https://www.reddit.com/r/rust/comments/aqqr0z/what_are_best_resources_on_profiling_and/
 
 ===
 
@@ -975,8 +972,6 @@ TODO profiling links at https://www.reddit.com/r/rust/comments/aqqr0z/what_are_b
 
 starting 9
 seems pretty straightforward?
-
-TODO try debugging again with optimizations DISabled!!!
 
 ok so the thing about 9b is that my naive 9a implementation is about
 a bajllion times too slow for 9b.
@@ -1158,7 +1153,7 @@ so i think having two deques is fine.
 10a looks interesting
 the first part looks relatively straightforward
 but detecting when letters have been spelled out? how do you do that?
-TODO heuristic: look for straight lines!!!!
+DONE heuristic: look for straight lines!!!!
 have a function that looks at the grid and counts the number of straight lines with length >5
 and if it's high (unclear atm what "high" means), that's the one!
 
@@ -1239,7 +1234,7 @@ so let's write code to detect that
 
 ok cool done
 so the code right now is just totally atrocious
-TODO: tomorrow go back and tidy up
+DONE: tomorrow go back and tidy up
 and write a test for 12b, answer was 3750000001113
 
 ===
@@ -1284,7 +1279,7 @@ how much d'you want to bet that 14b involves drastically bumping up the number o
 
 found the bug in 14a, i was dropping recipes on the ground if they were exactly equal to 0
 
-ok 14b done! runs kinda slow, about 3 seconds, TODO optimize
+ok 14b done! runs kinda slow, about 3 seconds, DONE optimize
 
 ok so yeah the trick is going to be to remove the allocations
 the original solution allocated two vectors every tick, let's kill them one at a time
@@ -1357,3 +1352,27 @@ the full input i got 227744, which the checker says is too low.
 so let's try the rest of the examples!
 
 DONE run clippy again
+
+====
+
+2/24/19
+
+15b done
+runs kinda slow!
+let's do another pass on profiling, yeah?
+https://www.reddit.com/r/rust/comments/aqqr0z/what_are_best_resources_on_profiling_and/
+
+https://blog.anp.lol/rust/2016/07/24/profiling-rust-perf-flamegraph/
+
+"Once you’ve fully excised calls to clone(), are doing everything conceivable in parallel,
+have trimmed any non-essential checks and calculations, what to do?"
+
+TODO: excise calls to clone and do things in parallel!
+
+ok most of the tutorials assume you're on linux and don't work on os x -
+valgrind and perf don't work on os x
+but carol's guide in http://carol-nichols.com/2017/04/20/rust-profiling-with-dtrace-on-osx/ works like a charm
+
+so we spend all of our time in fifteen
+and of that time, it's all spent in malloc
+i think this is probably because of all of my hashsets
