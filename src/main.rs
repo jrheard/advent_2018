@@ -50,4 +50,5 @@ fn main() {
     println!("14a: {}", fourteen::fourteen_a());
     println!("14b: {}", fourteen::fourteen_b());
     println!("15a: {}", fifteen::fifteen_a("src/inputs/15.txt"));
+    println!("15b: {}", fifteen::fifteen_b("src/inputs/15.txt"));
 }

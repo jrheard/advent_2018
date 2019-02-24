@@ -1,4 +1,3 @@
-// don't look at this yet it's hideous
 use std::collections::VecDeque;
 use std::fs;
 use std::iter::FromIterator;
@@ -47,6 +46,7 @@ impl Position {
 /// Returns a `came_from` map that can be used to calculate path costs.
 fn compute_came_from_map(
     origin: Position,
+    destinations: &HashSet<Position>,
     open_positions: &HashSet<Position>,
     grid_width: usize,
     grid_height: usize,
@@ -57,13 +57,16 @@ fn compute_came_from_map(
     let mut came_from = HashMap::new();
     came_from.insert(origin, origin);
 
-    while !frontier.is_empty() {
+    let mut destinations_remaining = destinations.clone();
+
+    while !frontier.is_empty() && !destinations_remaining.is_empty() {
         let current = frontier.pop_front().unwrap();
 
         for neighbor in current.filtered_neighbors(open_positions, grid_width, grid_height) {
             if !came_from.contains_key(&neighbor) {
                 frontier.push_back(neighbor);
                 came_from.insert(neighbor, current);
+                destinations_remaining.remove(&neighbor);
             }
         }
     }
@@ -186,8 +189,13 @@ impl Monster {
         let mut chosen_destination = self.position;
 
         for &neighbor in &neighbors {
-            let came_from =
-                compute_came_from_map(neighbor, open_positions, grid_width, grid_height);
+            let came_from = compute_came_from_map(
+                neighbor,
+                destinations,
+                open_positions,
+                grid_width,
+                grid_height,
+            );
 
             for &destination in destinations {
                 if !came_from.contains_key(&destination) {
@@ -232,12 +240,6 @@ impl Monster {
     }
 }
 
-#[derive(PartialEq)]
-enum GameTurnOutcome {
-    GameOverMidCombat,
-    ContinueCombat,
-}
-
 #[derive(Debug)]
 struct Game {
     open_positions: HashSet<Position>,
@@ -248,7 +250,8 @@ struct Game {
 
 impl Game {
     /// Performs a round of combat as specified in the day 15 writeup.
-    fn tick(&mut self) -> GameTurnOutcome {
+    /// Returns true if the game's over, false otherwise.
+    fn tick(&mut self) -> bool {
         // "The order in which units take their turns within a round is the reading order
         // of their starting positions in that round, regardless of the type of unit
         // or whether other units have moved after the round started."
@@ -264,7 +267,7 @@ impl Game {
             let monster = &self.monsters[&id];
 
             if monster.hp <= 0 {
-                // This monster is dead, and will be pruned at the end of this combat round. It doesn't get a turn.
+                // This monster is dead. It doesn't get a turn.
                 continue;
             }
 
@@ -289,8 +292,7 @@ impl Game {
 
             if enemies.is_empty() {
                 // "If no targets remain, combat ends."
-                self.monsters.retain(|_, monster| monster.hp > 0);
-                return GameTurnOutcome::GameOverMidCombat;
+                return true;
             }
 
             // "Then, the unit identifies all of the open squares that are in range of each target."
@@ -333,14 +335,11 @@ impl Game {
             }
         }
 
-        // Cull dead monsters.
-        self.monsters.retain(|_, monster| monster.hp > 0);
-
-        GameTurnOutcome::ContinueCombat
+        false
     }
 
     /// Parses the puzzle input file into a Game struct.
-    fn new(filename: &str) -> Game {
+    fn new(filename: &str, elf_attack_power: u32) -> Game {
         let contents = fs::read_to_string(filename).unwrap();
 
         let mut next_id = 0;
@@ -357,11 +356,17 @@ impl Game {
                     'G' | 'E' => {
                         open_positions.insert(Position { x, y });
 
+                        let attack_power = if character == 'G' {
+                            3
+                        } else {
+                            elf_attack_power
+                        };
+
                         monsters.insert(
                             next_id,
                             Monster {
                                 id: next_id,
-                                attack_power: 3,
+                                attack_power: attack_power,
                                 hp: 200,
                                 team: if character == 'G' {
                                     MonsterTeam::Goblin
@@ -411,25 +416,20 @@ impl Game {
     }
 }
 
+/// You need to determine the outcome of the battle: the number of full rounds that were completed
+/// (not counting the round in which combat ends) multiplied by the sum of the hit points of all
+/// remaining units at the moment combat ends. (Combat only ends when a unit finds no targets during its turn.)
+/// What is the outcome of the combat described in your puzzle input?
 pub fn fifteen_a(filename: &str) -> usize {
-    let mut game = Game::new(filename);
+    let mut game = Game::new(filename, 3);
 
     let mut i = 0;
     loop {
-        let outcome = game.tick();
-
-        let alive_teams: HashSet<MonsterTeam> =
-            HashSet::from_iter(game.monsters.values().map(|monster| monster.team.clone()));
-
-        if alive_teams.len() < 2 {
-            if outcome == GameTurnOutcome::ContinueCombat {
-                // Combat finished cleanly, so this turn counts toward the final score.
-                i += 1;
-            }
-
+        if game.tick() {
             let summed_health = game
                 .monsters
                 .values()
+                .filter(|monster| monster.hp > 0)
                 .map(|monster| monster.hp)
                 .sum::<i32>() as usize;
 
@@ -437,6 +437,50 @@ pub fn fifteen_a(filename: &str) -> usize {
         }
 
         i += 1;
+    }
+}
+
+/// After increasing the Elves' attack power until it is just barely enough for them to win
+/// without any Elves dying, what is the outcome of the combat described in your puzzle input?
+pub fn fifteen_b(filename: &str) -> usize {
+    let mut attack_power = 3;
+
+    loop {
+        let mut game = Game::new(filename, attack_power);
+        let num_alive_elves_before_combat = game
+            .monsters
+            .values()
+            .filter(|monster| monster.team == MonsterTeam::Elf)
+            .count();
+
+        let mut i = 0;
+        loop {
+            let game_over = game.tick();
+
+            let num_alive_elves = game
+                .monsters
+                .values()
+                .filter(|monster| monster.team == MonsterTeam::Elf && monster.hp > 0)
+                .count();
+
+            if num_alive_elves < num_alive_elves_before_combat {
+                attack_power += 1;
+                break;
+            }
+
+            if game_over {
+                let summed_health = game
+                    .monsters
+                    .values()
+                    .filter(|monster| monster.hp > 0)
+                    .map(|monster| monster.hp)
+                    .sum::<i32>() as usize;
+
+                return i * summed_health;
+            }
+
+            i += 1;
+        }
     }
 }
 
@@ -453,5 +497,6 @@ mod test {
         assert_eq!(fifteen_a("src/inputs/15_sample_6.txt"), 18740);
         assert_eq!(fifteen_a("src/inputs/15_sample_9.txt"), 27755);
         assert_eq!(fifteen_a("src/inputs/15.txt"), 229798);
+        assert_eq!(fifteen_b("src/inputs/15.txt"), 52972);
     }
 }
