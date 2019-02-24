@@ -242,7 +242,11 @@ impl Monster {
 
 #[derive(Debug)]
 struct Game {
+    // Positions that aren't blocked off by cave walls.
     open_positions: HashSet<Position>,
+    // Positions that are open _and_ don't have a monster on them at the moment.
+    // A subset of `open_positions`.
+    unoccupied_positions: HashSet<Position>,
     monsters: HashMap<usize, Monster>,
     width: usize,
     height: usize,
@@ -262,17 +266,6 @@ impl Game {
             .map(|(id, _)| id)
             .cloned()
             .collect::<Vec<usize>>();
-
-        let mut unoccupied_positions: HashSet<Position> = self
-            .open_positions
-            .difference(&HashSet::from_iter(
-                self.monsters
-                    .values()
-                    .filter(|monster| monster.hp > 0)
-                    .map(|monster| monster.position),
-            ))
-            .cloned()
-            .collect();
 
         for id in sorted_monster_ids {
             let monster = &self.monsters[&id];
@@ -306,43 +299,47 @@ impl Game {
                 return true;
             }
 
-            let action =
-                monster.choose_action(&enemies, &unoccupied_positions, self.width, self.height);
+            let action = monster.choose_action(
+                &enemies,
+                &self.unoccupied_positions,
+                self.width,
+                self.height,
+            );
 
             let attack_power = monster.attack_power;
             let old_position = monster.position;
 
-            let perform_move =
-                |self_: &mut Game, open_positions: &mut HashSet<Position>, new_position| {
-                    self_
-                        .monsters
-                        .entry(id)
-                        .and_modify(|monster| monster.position = new_position);
-                    open_positions.remove(&new_position);
-                    open_positions.insert(old_position);
-                };
-            let perform_attack =
-                |self_: &mut Game, open_positions: &mut HashSet<Position>, target_id| {
-                    self_
-                        .monsters
-                        .entry(target_id)
-                        .and_modify(|enemy| enemy.hp -= attack_power as i32);
+            let perform_move = |self_: &mut Game, new_position| {
+                self_
+                    .monsters
+                    .entry(id)
+                    .and_modify(|monster| monster.position = new_position);
+                self_.unoccupied_positions.remove(&new_position);
+                self_.unoccupied_positions.insert(old_position);
+            };
+            let perform_attack = |self_: &mut Game, target_id| {
+                self_
+                    .monsters
+                    .entry(target_id)
+                    .and_modify(|enemy| enemy.hp -= attack_power as i32);
 
-                    if self_.monsters[&target_id].hp <= 0 {
-                        open_positions.insert(self_.monsters[&target_id].position);
-                    }
-                };
+                if self_.monsters[&target_id].hp <= 0 {
+                    self_
+                        .unoccupied_positions
+                        .insert(self_.monsters[&target_id].position);
+                }
+            };
 
             match action {
                 MonsterAction::MoveTo(position) => {
-                    perform_move(self, &mut unoccupied_positions, position);
+                    perform_move(self, position);
                 }
                 MonsterAction::Attack(target_id) => {
-                    perform_attack(self, &mut unoccupied_positions, target_id);
+                    perform_attack(self, target_id);
                 }
                 MonsterAction::MoveAndAttack(position, target_id) => {
-                    perform_move(self, &mut unoccupied_positions, position);
-                    perform_attack(self, &mut unoccupied_positions, target_id);
+                    perform_move(self, position);
+                    perform_attack(self, target_id);
                 }
                 MonsterAction::Blocked => (),
             }
@@ -357,6 +354,7 @@ impl Game {
 
         let mut next_id = 0;
         let mut open_positions = HashSet::new();
+        let mut unoccupied_positions = HashSet::new();
         let mut monsters = HashMap::new();
 
         for (y, line) in contents.lines().enumerate() {
@@ -365,6 +363,7 @@ impl Game {
                     '#' => continue,
                     '.' => {
                         open_positions.insert(Position { x, y });
+                        unoccupied_positions.insert(Position { x, y });
                     }
                     'G' | 'E' => {
                         open_positions.insert(Position { x, y });
@@ -402,6 +401,7 @@ impl Game {
 
         Game {
             open_positions,
+            unoccupied_positions,
             monsters,
             width,
             height,
