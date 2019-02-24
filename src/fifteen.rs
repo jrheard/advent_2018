@@ -263,6 +263,17 @@ impl Game {
             .cloned()
             .collect::<Vec<usize>>();
 
+        let mut unoccupied_positions: HashSet<Position> = self
+            .open_positions
+            .difference(&HashSet::from_iter(
+                self.monsters
+                    .values()
+                    .filter(|monster| monster.hp > 0)
+                    .map(|monster| monster.position),
+            ))
+            .cloned()
+            .collect();
+
         for id in sorted_monster_ids {
             let monster = &self.monsters[&id];
 
@@ -295,41 +306,43 @@ impl Game {
                 return true;
             }
 
-            // "Then, the unit identifies all of the open squares that are in range of each target."
-            let open_positions = self
-                .open_positions
-                .difference(&HashSet::from_iter(
-                    other_monsters.iter().map(|monster| monster.position),
-                ))
-                .cloned()
-                .collect();
-
-            let action = monster.choose_action(&enemies, &open_positions, self.width, self.height);
+            let action =
+                monster.choose_action(&enemies, &unoccupied_positions, self.width, self.height);
 
             let attack_power = monster.attack_power;
-            let perform_move = |self_: &mut Game, position| {
-                self_
-                    .monsters
-                    .entry(id)
-                    .and_modify(|monster| monster.position = position);
-            };
-            let perform_attack = |self_: &mut Game, target_id| {
-                self_
-                    .monsters
-                    .entry(target_id)
-                    .and_modify(|enemy| enemy.hp -= attack_power as i32);
-            };
+            let old_position = monster.position;
+
+            let perform_move =
+                |self_: &mut Game, open_positions: &mut HashSet<Position>, new_position| {
+                    self_
+                        .monsters
+                        .entry(id)
+                        .and_modify(|monster| monster.position = new_position);
+                    open_positions.remove(&new_position);
+                    open_positions.insert(old_position);
+                };
+            let perform_attack =
+                |self_: &mut Game, open_positions: &mut HashSet<Position>, target_id| {
+                    self_
+                        .monsters
+                        .entry(target_id)
+                        .and_modify(|enemy| enemy.hp -= attack_power as i32);
+
+                    if self_.monsters[&target_id].hp <= 0 {
+                        open_positions.insert(self_.monsters[&target_id].position);
+                    }
+                };
 
             match action {
                 MonsterAction::MoveTo(position) => {
-                    perform_move(self, position);
+                    perform_move(self, &mut unoccupied_positions, position);
                 }
                 MonsterAction::Attack(target_id) => {
-                    perform_attack(self, target_id);
+                    perform_attack(self, &mut unoccupied_positions, target_id);
                 }
                 MonsterAction::MoveAndAttack(position, target_id) => {
-                    perform_move(self, position);
-                    perform_attack(self, target_id);
+                    perform_move(self, &mut unoccupied_positions, position);
+                    perform_attack(self, &mut unoccupied_positions, target_id);
                 }
                 MonsterAction::Blocked => (),
             }
