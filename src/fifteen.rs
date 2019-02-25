@@ -15,30 +15,44 @@ struct Position {
 impl Position {
     /// Returns a vector of the Positions immediately north, south, east, and west of `self`.
     /// Only includes Positions that actually fit on the specified grid.
-    fn all_neighbors(&self, grid_width: usize, grid_height: usize) -> Vec<Position> {
-        let deltas = [(0, -1), (-1, 0), (1, 0), (0, 1)];
-
-        deltas
-            .iter()
-            .map(|(delta_x, delta_y)| (self.x as i32 + delta_x, self.y as i32 + delta_y))
-            .filter(|&(x, y)| x >= 0 && x < grid_width as i32 && y >= 0 && y < grid_height as i32)
-            .map(|(x, y)| Position {
-                x: x as usize,
-                y: y as usize,
-            })
-            .collect()
+    fn neighbors(self, grid_width: usize, grid_height: usize) -> NeighborIterator {
+        NeighborIterator {
+            position: self,
+            grid_width: grid_width,
+            grid_height: grid_height,
+            offset: 0,
+        }
     }
+}
 
-    /// Returns a vector of Positions that represent the unoccupied neighboring spaces around `self`.
-    fn filtered_neighbors(
-        &self,
-        open_positions: &HashSet<Position>,
-        grid_width: usize,
-        grid_height: usize,
-    ) -> Vec<Position> {
-        let mut neighbors = self.all_neighbors(grid_width, grid_height);
-        neighbors.retain(|position| open_positions.contains(position));
-        neighbors
+// Got this idea from forrest.
+struct NeighborIterator {
+    position: Position,
+    grid_width: usize,
+    grid_height: usize,
+    offset: usize,
+}
+
+impl Iterator for NeighborIterator {
+    type Item = Position;
+
+    fn next(&mut self) -> Option<Position> {
+        let deltas = [(0, -1), (-1, 0), (1, 0), (0, 1)];
+        let mut ret = None;
+
+        while ret.is_none() && self.offset < 4 {
+            let x = self.position.x as i32 + deltas[self.offset].0;
+            let y = self.position.y as i32 + deltas[self.offset].1;
+            if x >= 0 && x < self.grid_width as i32 && y >= 0 && y < self.grid_height as i32 {
+                ret = Some(Position {
+                    x: x as usize,
+                    y: y as usize,
+                });
+            }
+            self.offset += 1;
+        }
+
+        ret
     }
 }
 
@@ -62,7 +76,10 @@ fn compute_came_from_map(
     while !frontier.is_empty() && !destinations_remaining.is_empty() {
         let current = frontier.pop_front().unwrap();
 
-        for neighbor in current.filtered_neighbors(open_positions, grid_width, grid_height) {
+        for neighbor in current
+            .neighbors(grid_width, grid_height)
+            .filter(|position| open_positions.contains(position))
+        {
             if !came_from.contains_key(&neighbor) {
                 frontier.push_back(neighbor);
                 came_from.insert(neighbor, current);
@@ -106,13 +123,15 @@ impl Monster {
         grid_width: usize,
         grid_height: usize,
     ) -> Option<MonsterId> {
-        let neighbors = position.all_neighbors(grid_width, grid_height);
+        let neighbors = position.neighbors(grid_width, grid_height);
 
         let mut enemy_neighbors = vec![];
-        for enemy in enemies {
-            if neighbors.contains(&enemy.position) {
-                // We're next to an enemy!
-                enemy_neighbors.push(enemy);
+        for neighbor in neighbors {
+            for enemy in enemies {
+                if neighbor == enemy.position {
+                    // We're next to an enemy!
+                    enemy_neighbors.push(enemy);
+                }
             }
         }
 
@@ -145,7 +164,8 @@ impl Monster {
         let destinations = HashSet::from_iter(enemies.iter().flat_map(|enemy| {
             enemy
                 .position
-                .filtered_neighbors(open_positions, grid_width, grid_height)
+                .neighbors(grid_width, grid_height)
+                .filter(|position| open_positions.contains(position))
         }));
 
         if let Some(position) =
@@ -182,13 +202,14 @@ impl Monster {
 
         let neighbors = self
             .position
-            .filtered_neighbors(open_positions, grid_width, grid_height);
+            .neighbors(grid_width, grid_height)
+            .filter(|position| open_positions.contains(position));
 
         let mut smallest_cost = std::usize::MAX;
         let mut chosen_move = None;
         let mut chosen_destination = self.position;
 
-        for &neighbor in &neighbors {
+        for neighbor in neighbors {
             let came_from = compute_came_from_map(
                 neighbor,
                 destinations,
@@ -242,7 +263,11 @@ impl Monster {
 
 #[derive(Debug)]
 struct Game {
+    // Positions that aren't blocked off by cave walls.
     open_positions: HashSet<Position>,
+    // Positions that are open _and_ don't have a monster on them at the moment.
+    // A subset of `open_positions`.
+    unoccupied_positions: HashSet<Position>,
     monsters: HashMap<usize, Monster>,
     width: usize,
     height: usize,
@@ -295,29 +320,35 @@ impl Game {
                 return true;
             }
 
-            // "Then, the unit identifies all of the open squares that are in range of each target."
-            let open_positions = self
-                .open_positions
-                .difference(&HashSet::from_iter(
-                    other_monsters.iter().map(|monster| monster.position),
-                ))
-                .cloned()
-                .collect();
-
-            let action = monster.choose_action(&enemies, &open_positions, self.width, self.height);
+            let action = monster.choose_action(
+                &enemies,
+                &self.unoccupied_positions,
+                self.width,
+                self.height,
+            );
 
             let attack_power = monster.attack_power;
-            let perform_move = |self_: &mut Game, position| {
+            let old_position = monster.position;
+
+            let perform_move = |self_: &mut Game, new_position| {
                 self_
                     .monsters
                     .entry(id)
-                    .and_modify(|monster| monster.position = position);
+                    .and_modify(|monster| monster.position = new_position);
+                self_.unoccupied_positions.remove(&new_position);
+                self_.unoccupied_positions.insert(old_position);
             };
             let perform_attack = |self_: &mut Game, target_id| {
                 self_
                     .monsters
                     .entry(target_id)
                     .and_modify(|enemy| enemy.hp -= attack_power as i32);
+
+                if self_.monsters[&target_id].hp <= 0 {
+                    self_
+                        .unoccupied_positions
+                        .insert(self_.monsters[&target_id].position);
+                }
             };
 
             match action {
@@ -344,6 +375,7 @@ impl Game {
 
         let mut next_id = 0;
         let mut open_positions = HashSet::new();
+        let mut unoccupied_positions = HashSet::new();
         let mut monsters = HashMap::new();
 
         for (y, line) in contents.lines().enumerate() {
@@ -352,6 +384,7 @@ impl Game {
                     '#' => continue,
                     '.' => {
                         open_positions.insert(Position { x, y });
+                        unoccupied_positions.insert(Position { x, y });
                     }
                     'G' | 'E' => {
                         open_positions.insert(Position { x, y });
@@ -389,6 +422,7 @@ impl Game {
 
         Game {
             open_positions,
+            unoccupied_positions,
             monsters,
             width,
             height,
