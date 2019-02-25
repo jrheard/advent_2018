@@ -12,8 +12,6 @@ struct Position {
     x: usize,
 }
 
-// return an iterator instead of a vec
-
 impl Position {
     /// Returns a vector of the Positions immediately north, south, east, and west of `self`.
     /// Only includes Positions that actually fit on the specified grid.
