@@ -1376,3 +1376,18 @@ but carol's guide in http://carol-nichols.com/2017/04/20/rust-profiling-with-dtr
 so we spend all of our time in fifteen
 and of that time, it's all spent in malloc
 i think this is probably because of all of my hashsets
+
+actually it had more to do with the fact that .filtered_neighbors() and .all_neighbors() returned Vecs!
+forrest solved this problem by returning a struct that implements Iterator, which makes sense.
+i did that and my runtime went from 5s down to 2s!
+
+BTW the commands i'm using for profiling:
+
+(from cargo project)
+sudo dtrace -c './target/debug/advent_2018' -o out.stacks -n 'profile-3000 /execname == "advent_2018"/ { @[ustack(100)] = count(); }'
+(from flamegraph clone)
+./stackcollapse.pl ~/dev/advent_2018/out.stacks | ./flamegraph.pl > advent.svg
+
+from carol's writeup. super helpful!
+
+there's still room for improvement, but i think that this iterator change makes for a good stopping point.
