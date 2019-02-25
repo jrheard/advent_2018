@@ -37,6 +37,7 @@ impl Iterator for NeighborIterator {
     type Item = Position;
 
     fn next(&mut self) -> Option<Position> {
+        // Deltas listed in reading order.
         let deltas = [(0, -1), (-1, 0), (1, 0), (0, 1)];
         let mut ret = None;
 
@@ -438,7 +439,7 @@ impl Game {
             grid[position.x][position.y] = '.';
         }
 
-        for monster in self.monsters.values() {
+        for monster in self.monsters.values().filter(|monster| monster.hp > 0) {
             grid[monster.position.x][monster.position.y] = if monster.team == MonsterTeam::Goblin {
                 'G'
             } else {

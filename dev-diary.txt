@@ -1381,13 +1381,48 @@ actually it had more to do with the fact that .filtered_neighbors() and .all_nei
 forrest solved this problem by returning a struct that implements Iterator, which makes sense.
 i did that and my runtime went from 5s down to 2s!
 
+-
 BTW the commands i'm using for profiling:
 
 (from cargo project)
+rm out.stacks
 sudo dtrace -c './target/debug/advent_2018' -o out.stacks -n 'profile-3000 /execname == "advent_2018"/ { @[ustack(100)] = count(); }'
+
 (from flamegraph clone)
 ./stackcollapse.pl ~/dev/advent_2018/out.stacks | ./flamegraph.pl > advent.svg
+-
 
 from carol's writeup. super helpful!
 
-there's still room for improvement, but i think that this iterator change makes for a good stopping point.
+now that we've gotten rid of the main source of allocations, the remaining bottleneck appears to be in the bfs function
+we spend all our time manipulating this `came_from` map
+i can't see an obvious way to optimize this though
+
+====
+
+2/25/19
+
+well, we could reduce the number of times that we call bfs
+what if the game stored these additional fields:
+tick_number
+someone_last_moved_on
+
+and so that way we don't have to bfs a million times if nobody's changed positions in a few ticks?
+
+it doesn't look like that buys us much
+
+BUT
+it _does_ look like the puzzle input we've been given divides pretty cleanly into multiple _regions_
+so what if at the start of each combat round, we do a flood fill to find the number of distinct blocked-off regions
+and if the current monster is in region A but all of its destinations are in region B, we know that it can't possibly get to any of them
+so we know we can safely skip bfs for it?
+
+and perhaps we could send that region information along to bfs if we find out that we _do_ have to bfs?
+so compute_came_from also gets a `region` input, and when it's expanding the frontier it skips candidates that aren't in `region`?
+
+hm but no, never mind, compute_came_from already does this after all, so there's no need for a separate flood fill step
+because it takes `unoccupied_positions` as an input, and so it can't expand its search into other regions
+
+hm but even so - if we had this precomputed region information, we could use it to _skip_ bfs for the affected monsters
+if i'm in region A but my destinations are all in region B, don't bfs
+that seems worth investigating!
