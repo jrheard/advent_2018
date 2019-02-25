@@ -13,7 +13,7 @@ struct Position {
 }
 
 impl Position {
-    /// Returns a vector of the Positions immediately north, south, east, and west of `self`.
+    /// Returns an iterator over the Positions immediately north, south, east, and west of `self`.
     /// Only includes Positions that actually fit on the specified grid.
     fn neighbors(self, grid_width: usize, grid_height: usize) -> NeighborIterator {
         NeighborIterator {
