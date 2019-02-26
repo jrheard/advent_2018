@@ -6,7 +6,7 @@ use hashbrown::HashMap;
 use hashbrown::HashSet;
 use itertools::Itertools;
 
-use crate::util;
+//use crate::util;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 struct Position {
@@ -28,6 +28,7 @@ impl Position {
 }
 
 // Got this idea from forrest.
+/// An iterator over the within-grid-bounds n/w/e/s Positions around `position`.
 struct NeighborIterator {
     position: Position,
     grid_width: usize,
@@ -103,6 +104,7 @@ enum MonsterTeam {
 type MonsterId = usize;
 
 #[derive(Debug, Clone)]
+/// A monster! A goblin or an elf, which can wander around the game and attack other monsters.
 struct Monster {
     id: MonsterId,
     attack_power: u32,
@@ -112,6 +114,7 @@ struct Monster {
 }
 
 #[derive(Debug)]
+/// An enum expressing the possible actions that a monster can perform on its turn.
 enum MonsterAction {
     MoveTo(Position),
     Attack(MonsterId),
@@ -120,6 +123,7 @@ enum MonsterAction {
 }
 
 impl Monster {
+    /// Returns Some(target_monster_id) if it's possible to attack an enemy from `position`, None otherwise.
     fn calculate_attack_for_position(
         position: &Position,
         enemies: &[&Monster],
@@ -276,7 +280,7 @@ struct Game {
     height: usize,
 }
 
-use std::{thread, time};
+//use std::{thread, time};
 
 impl Game {
     /// Performs a round of combat as specified in the day 15 writeup.
@@ -344,6 +348,7 @@ impl Game {
                 self_.unoccupied_positions.remove(&new_position);
                 self_.unoccupied_positions.insert(old_position);
             };
+
             let perform_attack = |self_: &mut Game, target_id| {
                 self_
                     .monsters
@@ -392,10 +397,12 @@ impl Game {
             for (x, character) in line.trim().chars().enumerate() {
                 match character {
                     '#' => continue,
+                    // An open space!
                     '.' => {
                         open_positions.insert(Position { x, y });
                         unoccupied_positions.insert(Position { x, y });
                     }
+                    // A goblin or elf!
                     'G' | 'E' => {
                         open_positions.insert(Position { x, y });
 
@@ -507,11 +514,13 @@ pub fn fifteen_b(filename: &str) -> usize {
                 .count();
 
             if num_alive_elves < num_alive_elves_before_combat {
+                // Oh no, an elf died! Buff the elves by 1 attack power and try again.
                 attack_power += 1;
                 break;
             }
 
             if game_over {
+                // Combat ended and all the elves survived! Compute our combat outcome and return it!
                 let summed_health = game
                     .monsters
                     .values()
