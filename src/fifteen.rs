@@ -340,6 +340,7 @@ impl Game {
             let attack_power = monster.attack_power;
             let old_position = monster.position;
 
+            // Moves `monster` to `new_position`.
             let perform_move = |self_: &mut Game, new_position| {
                 self_
                     .monsters
@@ -349,6 +350,7 @@ impl Game {
                 self_.unoccupied_positions.insert(old_position);
             };
 
+            // Attacks the Monster identified by `target_id` and removes it from the game if it dies.
             let perform_attack = |self_: &mut Game, target_id| {
                 self_
                     .monsters
@@ -356,6 +358,7 @@ impl Game {
                     .and_modify(|enemy| enemy.hp -= attack_power as i32);
 
                 if self_.monsters[&target_id].hp <= 0 {
+                    // It's dead!
                     self_
                         .unoccupied_positions
                         .insert(self_.monsters[&target_id].position);

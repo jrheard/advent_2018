@@ -7,15 +7,17 @@ useful data structures i hadn't touched in a while:
 * deque
 
 TODOs:
-* read nomicon
+* read through std lib docs
+* watch all of jon gjengest's videos
 * read rust by example
+* read nomicon
 * read source code for a rust web server
 * implement a doubly linked list that lets you insert in the middle and pop off the middle with unsafe
 * really experiment with debugging
 * really experiment with profiling
 
 ideas for a program to write after this:
-* port quinto to rust and compare perf?
+* port quinto to rust and compare perf? (might require a react-like rust lib to replace reagent, does one exist?)
 * irc bot (good excuse to try out tokio)
 * profiler (????)
 * flocking simulator (?)
