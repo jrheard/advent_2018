@@ -6,6 +6,8 @@ use hashbrown::HashMap;
 use hashbrown::HashSet;
 use itertools::Itertools;
 
+use crate::util;
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 struct Position {
     y: usize,
@@ -274,6 +276,8 @@ struct Game {
     height: usize,
 }
 
+use std::{thread, time};
+
 impl Game {
     /// Performs a round of combat as specified in the day 15 writeup.
     /// Returns true if the game's over, false otherwise.
@@ -290,17 +294,18 @@ impl Game {
             .collect::<Vec<usize>>();
 
         for id in sorted_monster_ids {
-            let monster = &self.monsters[&id];
-
-            if monster.hp <= 0 {
-                // This monster is dead. It doesn't get a turn.
-                continue;
-            }
+            let monster = match self.monsters.get(&id) {
+                Some(monster) => monster,
+                None => {
+                    // The monster was killed earlier this round.
+                    continue;
+                }
+            };
 
             let other_monsters = self
                 .monsters
                 .values()
-                .filter(|other_monster| other_monster.id != monster.id && other_monster.hp > 0)
+                .filter(|other_monster| other_monster.id != monster.id)
                 .collect::<Vec<&Monster>>();
 
             let enemy_team = if monster.team == MonsterTeam::Elf {
@@ -349,6 +354,7 @@ impl Game {
                     self_
                         .unoccupied_positions
                         .insert(self_.monsters[&target_id].position);
+                    self_.monsters.remove(&target_id);
                 }
             };
 
@@ -366,6 +372,9 @@ impl Game {
                 MonsterAction::Blocked => (),
             }
         }
+
+        //util::print_grid(&self.to_grid());
+        //thread::sleep(time::Duration::from_millis(50));
 
         false
     }
@@ -439,7 +448,7 @@ impl Game {
             grid[position.x][position.y] = '.';
         }
 
-        for monster in self.monsters.values().filter(|monster| monster.hp > 0) {
+        for monster in self.monsters.values() {
             grid[monster.position.x][monster.position.y] = if monster.team == MonsterTeam::Goblin {
                 'G'
             } else {
@@ -464,7 +473,6 @@ pub fn fifteen_a(filename: &str) -> usize {
             let summed_health = game
                 .monsters
                 .values()
-                .filter(|monster| monster.hp > 0)
                 .map(|monster| monster.hp)
                 .sum::<i32>() as usize;
 
@@ -495,7 +503,7 @@ pub fn fifteen_b(filename: &str) -> usize {
             let num_alive_elves = game
                 .monsters
                 .values()
-                .filter(|monster| monster.team == MonsterTeam::Elf && monster.hp > 0)
+                .filter(|monster| monster.team == MonsterTeam::Elf)
                 .count();
 
             if num_alive_elves < num_alive_elves_before_combat {
@@ -507,7 +515,6 @@ pub fn fifteen_b(filename: &str) -> usize {
                 let summed_health = game
                     .monsters
                     .values()
-                    .filter(|monster| monster.hp > 0)
                     .map(|monster| monster.hp)
                     .sum::<i32>() as usize;
 

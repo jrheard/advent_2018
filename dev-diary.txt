@@ -15,6 +15,7 @@ TODOs:
 * really experiment with profiling
 
 ideas for a program to write after this:
+* port quinto to rust and compare perf?
 * irc bot (good excuse to try out tokio)
 * profiler (????)
 * flocking simulator (?)
