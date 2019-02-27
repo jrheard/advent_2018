@@ -49,10 +49,7 @@ mod game {
                     self.wrap_around();
                 }
 
-                ret = Some((
-                    self.current_player,
-                    self.next_marble_id + self.left.pop_back().unwrap(),
-                ));
+                ret = Some((self.current_player, self.next_marble_id + self.left.pop_back().unwrap()));
 
                 // "The marble located immediately clockwise of the marble that was removed becomes the new current marble."
                 self.move_right();

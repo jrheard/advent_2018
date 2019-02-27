@@ -71,10 +71,7 @@ mod test {
             map! { 'a' => 2, 'b' => 2, 'c' => 4, 'd' => 1}
         );
 
-        assert_eq!(
-            frequencies("abcabcaa".chars()),
-            map! {'a' => 4, 'b' => 2, 'c' => 2}
-        );
+        assert_eq!(frequencies("abcabcaa".chars()), map! {'a' => 4, 'b' => 2, 'c' => 2});
 
         assert_eq!(frequencies("".chars()), HashMap::new());
     }

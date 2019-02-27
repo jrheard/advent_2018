@@ -110,10 +110,7 @@ fn parse_input(filename: &str) -> Mine {
         }
     }
 
-    Mine {
-        carts,
-        grid: ret_grid,
-    }
+    Mine { carts, grid: ret_grid }
 }
 
 struct Mine {
@@ -207,8 +204,7 @@ impl Mine {
         }
 
         // Remove any carts that were involved in a crash this tick.
-        self.carts
-            .retain(|cart| !crash_sites.contains(&(cart.x, cart.y)));
+        self.carts.retain(|cart| !crash_sites.contains(&(cart.x, cart.y)));
 
         crash_sites
     }

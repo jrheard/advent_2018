@@ -45,11 +45,7 @@ pub fn three_a() -> usize {
         mark_claim_on_grid(&mut grid, &claim);
     }
 
-    grid.iter()
-        .map(|x| x.iter())
-        .flatten()
-        .filter(|x| **x > 1)
-        .count()
+    grid.iter().map(|x| x.iter()).flatten().filter(|x| **x > 1).count()
 }
 
 // What is the ID of the only claim that doesn't overlap?

@@ -163,8 +163,7 @@ impl Monster {
         grid_height: usize,
     ) -> MonsterAction {
         // Start by seeing if we're next to someone already.
-        if let Some(enemy_id) =
-            Monster::calculate_attack_for_position(&self.position, enemies, grid_width, grid_height)
+        if let Some(enemy_id) = Monster::calculate_attack_for_position(&self.position, enemies, grid_width, grid_height)
         {
             return MonsterAction::Attack(enemy_id);
         }
@@ -177,12 +176,9 @@ impl Monster {
                 .filter(|position| open_positions.contains(position))
         }));
 
-        if let Some(position) =
-            self.choose_move(&destinations, &open_positions, grid_width, grid_height)
-        {
+        if let Some(position) = self.choose_move(&destinations, &open_positions, grid_width, grid_height) {
             // We've found a path, and moving to `position` will get us closer to our destination...
-            if let Some(enemy_id) =
-                Monster::calculate_attack_for_position(&position, enemies, grid_width, grid_height)
+            if let Some(enemy_id) = Monster::calculate_attack_for_position(&position, enemies, grid_width, grid_height)
             {
                 // ...and we can attack someone once we get there!
                 MonsterAction::MoveAndAttack(position, enemy_id)
@@ -219,13 +215,7 @@ impl Monster {
         let mut chosen_destination = self.position;
 
         for neighbor in neighbors {
-            let came_from = compute_came_from_map(
-                neighbor,
-                destinations,
-                open_positions,
-                grid_width,
-                grid_height,
-            );
+            let came_from = compute_came_from_map(neighbor, destinations, open_positions, grid_width, grid_height);
 
             for &destination in destinations {
                 if !came_from.contains_key(&destination) {
@@ -332,12 +322,7 @@ impl Game {
                 return true;
             }
 
-            let action = monster.choose_action(
-                &enemies,
-                &self.unoccupied_positions,
-                self.width,
-                self.height,
-            );
+            let action = monster.choose_action(&enemies, &self.unoccupied_positions, self.width, self.height);
 
             let attack_power = monster.attack_power;
             let old_position = monster.position;
@@ -361,9 +346,7 @@ impl Game {
 
                 if self_.monsters[&target_id].hp <= 0 {
                     // It's dead!
-                    self_
-                        .unoccupied_positions
-                        .insert(self_.monsters[&target_id].position);
+                    self_.unoccupied_positions.insert(self_.monsters[&target_id].position);
                     self_.monsters.remove(&target_id);
                 }
             };
@@ -411,11 +394,7 @@ impl Game {
                     'G' | 'E' => {
                         open_positions.insert(Position { x, y });
 
-                        let attack_power = if character == 'G' {
-                            3
-                        } else {
-                            elf_attack_power
-                        };
+                        let attack_power = if character == 'G' { 3 } else { elf_attack_power };
 
                         monsters.insert(
                             next_id,
@@ -461,11 +440,7 @@ impl Game {
         }
 
         for monster in self.monsters.values() {
-            grid[monster.position.x][monster.position.y] = if monster.team == MonsterTeam::Goblin {
-                'G'
-            } else {
-                'E'
-            };
+            grid[monster.position.x][monster.position.y] = if monster.team == MonsterTeam::Goblin { 'G' } else { 'E' };
         }
 
         grid
@@ -482,11 +457,7 @@ pub fn fifteen_a(filename: &str) -> usize {
     let mut i = 0;
     loop {
         if game.tick() {
-            let summed_health = game
-                .monsters
-                .values()
-                .map(|monster| monster.hp)
-                .sum::<i32>() as usize;
+            let summed_health = game.monsters.values().map(|monster| monster.hp).sum::<i32>() as usize;
 
             return i * summed_health;
         }
@@ -526,11 +497,7 @@ pub fn fifteen_b(filename: &str) -> usize {
 
             if game_over {
                 // Combat ended and all the elves survived! Compute our combat outcome and return it!
-                let summed_health = game
-                    .monsters
-                    .values()
-                    .map(|monster| monster.hp)
-                    .sum::<i32>() as usize;
+                let summed_health = game.monsters.values().map(|monster| monster.hp).sum::<i32>() as usize;
 
                 return i * summed_health;
             }

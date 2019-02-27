@@ -1,22 +1,21 @@
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
 
-// Rustfmt doesn't let me alphabetize these, oh well!
-mod eight;
-mod eleven;
-mod fifteen;
-mod five;
-mod four;
-mod fourteen;
-mod nine;
-mod one;
-mod seven;
-mod six;
-mod ten;
-mod thirteen;
-mod three;
-mod twelve;
-mod two;
 mod util;
+mod one;
+mod two;
+mod three;
+mod four;
+mod five;
+mod six;
+mod seven;
+mod eight;
+mod nine;
+mod ten;
+mod eleven;
+mod twelve;
+mod thirteen;
+mod fourteen;
+mod fifteen;
 
 fn main() {
     println!("1a: {}", one::one_a());

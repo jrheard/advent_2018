@@ -28,10 +28,7 @@ impl LogEntry {
         let dt = parse_log_entry_datetime(log_entry_str);
 
         let kind = if log_entry_str.contains("begins shift") {
-            let relevant_string_portion = log_entry_str
-                .chars()
-                .skip_while(|&x| x != ']')
-                .collect::<String>();
+            let relevant_string_portion = log_entry_str.chars().skip_while(|&x| x != ']').collect::<String>();
             let trimmed_str = relevant_string_portion.trim();
             let guard_id = scan!("] Guard #{} begins shift" <- trimmed_str).unwrap();
             LogEntryKind::BeginsShift(guard_id)
@@ -47,10 +44,7 @@ impl LogEntry {
 
 // Parses a DateTime<Utc> out of a string like "[1518-10-18 23:51] Guard #349 begins shift".
 fn parse_log_entry_datetime(log_entry_str: &str) -> DateTime<Utc> {
-    let dt_string = log_entry_str
-        .chars()
-        .take_while(|&x| x != ']')
-        .collect::<String>();
+    let dt_string = log_entry_str.chars().take_while(|&x| x != ']').collect::<String>();
     let dt_str = dt_string.as_str();
     let (year, month, day, hour, minute) = scan!("[{}-{}-{} {}:{}" <- dt_str).unwrap();
     Utc.ymd(year, month, day).and_hms(hour, minute, 0)
@@ -75,9 +69,7 @@ fn get_guard_sleep_log() -> HashMap<GuardID, Vec<u32>> {
                 sleep_start_minute = entry.dt.minute();
             }
             LogEntryKind::WakesUp => {
-                let guard_entry = guard_sleep_log
-                    .entry(current_guard_id)
-                    .or_insert(Vec::new());
+                let guard_entry = guard_sleep_log.entry(current_guard_id).or_insert(Vec::new());
                 guard_entry.extend(sleep_start_minute..entry.dt.minute());
             }
         }
@@ -109,10 +101,8 @@ pub fn four_b() -> u32 {
     for (&guard_id, sleep_minutes) in &guard_sleep_log {
         let sleep_minute_frequencies = util::frequencies(sleep_minutes.iter());
         // TODO why do i have to double-deref sleepiest_minute here?
-        let (&&sleepiest_minute, &sleep_count_for_minute) = sleep_minute_frequencies
-            .iter()
-            .max_by_key(|(_, count)| *count)
-            .unwrap();
+        let (&&sleepiest_minute, &sleep_count_for_minute) =
+            sleep_minute_frequencies.iter().max_by_key(|(_, count)| *count).unwrap();
 
         sleepiest_minute_per_guard.insert(guard_id, (sleepiest_minute, sleep_count_for_minute));
     }

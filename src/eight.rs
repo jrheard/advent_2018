@@ -8,11 +8,7 @@ struct Node {
 
 fn parse_license_text() -> Vec<u32> {
     let contents = fs::read_to_string("src/inputs/8.txt").unwrap();
-    let mut license_data_buffer: Vec<u32> = contents
-        .trim()
-        .split(' ')
-        .map(|x| x.parse::<u32>().unwrap())
-        .collect();
+    let mut license_data_buffer: Vec<u32> = contents.trim().split(' ').map(|x| x.parse::<u32>().unwrap()).collect();
 
     license_data_buffer.reverse();
     license_data_buffer

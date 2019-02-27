@@ -18,8 +18,7 @@ struct StepConstraint {
 
 impl StepConstraint {
     pub fn new(s: &str) -> StepConstraint {
-        let (first, then) =
-            scan!("Step {} must be finished before step {} can begin." <- s).unwrap();
+        let (first, then) = scan!("Step {} must be finished before step {} can begin." <- s).unwrap();
         StepConstraint { first, then }
     }
 }
@@ -87,9 +86,7 @@ fn construct_dependency_graph(step_constraints: &[StepConstraint]) -> GraphWalke
         if let Some(node_rc) = find_step_in_graph(Rc::clone(&root_node), constraint.first) {
             // The first step of this constraint has an entry in the dependency graph!
 
-            let child = if let Some(child_rc) =
-                find_step_in_graph(Rc::clone(&root_node), constraint.then)
-            {
+            let child = if let Some(child_rc) = find_step_in_graph(Rc::clone(&root_node), constraint.then) {
                 // The second step of this constraint also has an entry in the graph,
                 // so let's just Rc::clone it and that'll be this constraint's child node.
                 Rc::clone(&child_rc)
@@ -132,11 +129,7 @@ impl GraphWalker {
     }
 
     fn pop_node(&mut self, step: char) {
-        let index = self
-            .buffer
-            .iter()
-            .position(|node| node.step == step)
-            .unwrap();
+        let index = self.buffer.iter().position(|node| node.step == step).unwrap();
         let node = self.buffer.remove(index);
 
         for child in node.children.borrow().iter() {
@@ -283,10 +276,7 @@ mod test {
     fn test_step_constraint_new() {
         assert_eq!(
             StepConstraint::new("Step C must be finished before step A can begin."),
-            StepConstraint {
-                first: 'C',
-                then: 'A'
-            }
+            StepConstraint { first: 'C', then: 'A' }
         )
     }
 

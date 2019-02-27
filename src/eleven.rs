@@ -49,11 +49,7 @@ fn make_summed_area_table(grid: &[Vec<i32>]) -> Vec<Vec<i32>> {
 
             let left = if x > 0 { table[x - 1][y] } else { 0 };
 
-            let above_left = if x > 0 && y > 0 {
-                table[x - 1][y - 1]
-            } else {
-                0
-            };
+            let above_left = if x > 0 && y > 0 { table[x - 1][y - 1] } else { 0 };
 
             table[x][y] = grid[x][y] + above + left - above_left;
         }
@@ -106,11 +102,7 @@ fn square_with_most_power(table: &[Vec<i32>], square_side_len: usize) -> (usize,
         }
     }
 
-    (
-        ret_x - (square_side_len - 1),
-        ret_y - (square_side_len - 1),
-        most_power,
-    )
+    (ret_x - (square_side_len - 1), ret_y - (square_side_len - 1), most_power)
 }
 
 /// Each fuel cell has a coordinate ranging from 1 to 300 in both the X (horizontal)

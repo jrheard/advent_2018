@@ -12,11 +12,7 @@ fn parse_input() -> cave::Cave {
             .chars()
             .map(|c| c == '#')
             .collect(),
-        lines
-            .iter()
-            .skip(2)
-            .map(|line| GenerationRule::new(line))
-            .collect(),
+        lines.iter().skip(2).map(|line| GenerationRule::new(line)).collect(),
     )
 }
 
@@ -35,8 +31,7 @@ impl GenerationRule {
     /// the current pot will have a plant in the next generation."
     fn new(input: &str) -> Self {
         lazy_static! {
-            static ref re: Regex =
-                Regex::new(r"(?P<pattern>[\.#]{5}) => (?P<result>[.#])").unwrap();
+            static ref re: Regex = Regex::new(r"(?P<pattern>[\.#]{5}) => (?P<result>[.#])").unwrap();
         }
 
         let caps = re.captures(input).unwrap();
@@ -166,8 +161,7 @@ pub fn twelve_b() -> u64 {
             if num_times_saw_same_sum_increase_in_a_row > 10 {
                 // Our cave has reached a stable cycle, and we can safely predict
                 // what the plant sum will look like in (fifty billion - num_elapsed) generations.
-                return previous_sum as u64
-                    + ((FIFTY_BILLION - i) * (sum as u64 - previous_sum as u64));
+                return previous_sum as u64 + ((FIFTY_BILLION - i) * (sum as u64 - previous_sum as u64));
             }
         } else {
             num_times_saw_same_sum_increase_in_a_row = 0;

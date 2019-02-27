@@ -15,17 +15,13 @@ struct Point {
 impl Point {
     fn new(input_line: &str) -> Self {
         lazy_static! {
-            static ref pattern: Regex = Regex::new(r".*< ?(?P<x>-?[0-9]+),  ?(?P<y>-?[0-9]+)>.*< ?(?P<dx>-?[0-9]+),  ?(?P<dy>-?[0-9]+)>").unwrap();
+            static ref pattern: Regex =
+                Regex::new(r".*< ?(?P<x>-?[0-9]+),  ?(?P<y>-?[0-9]+)>.*< ?(?P<dx>-?[0-9]+),  ?(?P<dy>-?[0-9]+)>")
+                    .unwrap();
         }
 
         let caps = pattern.captures(input_line).unwrap();
-        let value = |match_name| {
-            caps.name(match_name)
-                .unwrap()
-                .as_str()
-                .parse::<i32>()
-                .unwrap()
-        };
+        let value = |match_name| caps.name(match_name).unwrap().as_str().parse::<i32>().unwrap();
 
         Point {
             x: value("x"),
@@ -46,18 +42,8 @@ struct Grid {
 
 impl Grid {
     fn bounds(points: &[Point]) -> (i32, i32, i32, i32) {
-        let (min_x, max_x) = points
-            .iter()
-            .map(|point| point.x)
-            .minmax()
-            .into_option()
-            .unwrap();
-        let (min_y, max_y) = points
-            .iter()
-            .map(|point| point.y)
-            .minmax()
-            .into_option()
-            .unwrap();
+        let (min_x, max_x) = points.iter().map(|point| point.x).minmax().into_option().unwrap();
+        let (min_y, max_y) = points.iter().map(|point| point.y).minmax().into_option().unwrap();
 
         (min_x, max_x, min_y, max_y)
     }
@@ -88,10 +74,8 @@ impl Grid {
     }
 
     fn to_vec(&self) -> Vec<Vec<bool>> {
-        let mut grid = vec![
-            vec![false; (self.max_y - self.min_y) as usize + 1];
-            (self.max_x - self.min_x) as usize + 1
-        ];
+        let mut grid =
+            vec![vec![false; (self.max_y - self.min_y) as usize + 1]; (self.max_x - self.min_x) as usize + 1];
 
         for point in &self.points {
             grid[(point.x - self.min_x) as usize][(point.y - self.min_y) as usize] = true;
@@ -142,10 +126,7 @@ fn num_lines(grid: Vec<Vec<bool>>) -> usize {
         all_lines.push(row);
     }
 
-    all_lines
-        .iter()
-        .filter(|line| longest_contiguous_line(line))
-        .count()
+    all_lines.iter().filter(|line| longest_contiguous_line(line)).count()
 }
 
 const TOO_LARGE_WIDTH: i32 = 100;
@@ -163,9 +144,7 @@ pub fn ten() -> u32 {
         grid.advance();
         seconds += 1;
 
-        if (grid.max_x - grid.min_x) > TOO_LARGE_WIDTH
-            || (grid.max_y - grid.min_y) > TOO_LARGE_HEIGHT
-        {
+        if (grid.max_x - grid.min_x) > TOO_LARGE_WIDTH || (grid.max_y - grid.min_y) > TOO_LARGE_HEIGHT {
             continue;
         } else if num_lines(grid.to_vec()) > 8 {
             break;
