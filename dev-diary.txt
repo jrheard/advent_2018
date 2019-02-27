@@ -1508,7 +1508,30 @@ criterion results for 15b at the moment:
 
 so now we have a good well-measured baseline that we can be confident about!
 
-TODO see if it would be reasonable to run benchmarks nightly on ci or something;
+DONE see if it would be reasonable to run benchmarks nightly on ci or something;
 don't really need to, just curious
 
+"Note that cloud CI providers like Travis-CI and Appveyor introduce a great deal of noise
+into the benchmarking process. For example, unpredictable load on the physical hosts of
+their build VM's. Benchmarks measured on such services tend to be unreliable, so you should
+be skeptical of the results. In particular, benchmarks that detect performance regressions
+should not cause the build to fail, and apparent performance regressions should be verified
+manually before rejecting a pull request."
+
 criterion seems really good btw!
+
+https://www.youtube.com/watch?v=4QZ0-vIIFug *** good stuff
+
+gives _tons_ of narrative context around how they got to the .poll()-based system we see today, nice
+although this talk is from the era where they had this task::current() thread local variable thing
+and hadn't yet come up with Pin etc
+
+https://boats.gitlab.io/blog/post/2018-01-04-unsafe-abstractions/
+
+****
+"The unsafe keyword is required to apply the abstraction because the abstraction introduces
+some invariant which cannot be type checked and which the rest of the program is allowed
+to assume is maintained in order to assume type safety."
+****
+
+v v v well expressed
