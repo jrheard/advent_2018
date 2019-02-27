@@ -1,21 +1,18 @@
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
-
-mod util;
-mod one;
-mod two;
-mod three;
-mod four;
-mod five;
-mod six;
-mod seven;
-mod eight;
-mod nine;
-mod ten;
-mod eleven;
-mod twelve;
-mod thirteen;
-mod fourteen;
-mod fifteen;
+use advent_2018::eight;
+use advent_2018::eleven;
+use advent_2018::fifteen;
+use advent_2018::five;
+use advent_2018::four;
+use advent_2018::fourteen;
+use advent_2018::nine;
+use advent_2018::one;
+use advent_2018::seven;
+use advent_2018::six;
+use advent_2018::ten;
+use advent_2018::thirteen;
+use advent_2018::three;
+use advent_2018::twelve;
+use advent_2018::two;
 
 fn main() {
     println!("1a: {}", one::one_a());

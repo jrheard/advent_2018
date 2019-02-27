@@ -12,9 +12,9 @@ TODOs:
 * read rust by example
 * read nomicon
 * read source code for a rust web server
-* implement a doubly linked list that lets you insert in the middle and pop off the middle with unsafe
+* read https://github.com/bheisler/Corrosion
+* implement a doubly linked list that lets you insert in the middle and pop off the middle (with unsafe?)
 * really experiment with debugging
-* really experiment with profiling
 
 ideas for a program to write after this:
 * port quinto to rust and compare perf? (might require a react-like rust lib to replace reagent, does one exist?)
@@ -1493,4 +1493,22 @@ https://doc.rust-lang.org/rust-by-example/conversion/from_into.html
 "The Into trait is simply the reciprocal of the From trait. That is, if you have
 implemented the From trait for your type you get the Into implementation for free."
 
-TODO try out https://github.com/bheisler/criterion.rs for measuring optimizations to day15
+DONE try out https://github.com/bheisler/criterion.rs for measuring optimizations to day15
+
+====
+
+2/27/19
+
+been spending some time reading through the criterion docs
+https://bheisler.github.io/criterion.rs/book/user_guide/timing_loops.html has a good summary of
+all the different methods available on a Bencher, eg b.iter() etc, and when you'd want to use them
+
+criterion results for 15b at the moment:
+15b                     time:   [881.40 ms 900.86 ms 922.18 ms]     
+
+so now we have a good well-measured baseline that we can be confident about!
+
+TODO see if it would be reasonable to run benchmarks nightly on ci or something;
+don't really need to, just curious
+
+criterion seems really good btw!
