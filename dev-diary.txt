@@ -1429,3 +1429,68 @@ because it takes `unoccupied_positions` as an input, and so it can't expand its 
 hm but even so - if we had this precomputed region information, we could use it to _skip_ bfs for the affected monsters
 if i'm in region A but my destinations are all in region B, don't bfs
 that seems worth investigating!
+
+=====
+
+2/26/19
+
+so i finally finished https://www.youtube.com/watch?v=9_3krAQtD2k
+it was really good! lots of meaty narrative context
+
+reading through https://github.com/aturon/rfcs/blob/future/text/0000-futures.md now
+the "runtime characteristics" comment is really good
+the sections toward the bottom are very good, lots of good context
+
+http://aturon.github.io/2016/08/11/futures/
+
+"Early on, Rust had a “green threading” model, not unlike Go’s...
+The problem is that green threads were at odds with Rust’s ambitions to be a true C replacement,
+with no imposed runtime system or FFI costs: we were unable to find an implementation strategy
+that didn’t impose serious global costs."
+interesting!
+
+http://aturon.github.io/2016/09/07/futures-design/
+^^^^^^^ this is very good
+
+"By eliminating all the intermediate callbacks, we’ve addressed some of the key problems
+of the previous version of the trait. But we’ve introduced a new one: after NotReady is returned,
+who polls the future, and when do they do so?"
+
+this whole .poll()-driven architecture is v interesting
+
+https://github.com/rust-lang/rfcs/blob/master/text/2394-async_await.md
+
+one thing i hadn't really appreciated was that it's a major design decision re:
+how to annotate the return value of an async fn. rust has gone with annotating it with the inner type,
+eg u8, which is the type of the value that's eventually returned from the function;
+they could have instead had async fn return types be annotated with Future<foo, bar, whatever> syntax
+i'm fine with the inner type, sg2m
+
+"Rustdoc can handle async functions using the inner return type in a couple of ways
+to make them easier to understand. At minimum we should make sure to include the async annotation
+in the documentation, so that users who understand async notation know that the function will
+return a future. We can also perform other transformations, possibly optionally, to display the
+outer signature of the function."
+
+"A fundamental difference between Rust's futures and those from other languages
+is that Rust's futures do not do anything unless polled. The whole system is built
+around this: for example, cancellation is dropping the future for precisely this reason.
+In contrast, in other languages, calling an async fn spins up a future that starts
+executing immediately."
+
+looks like i'm reading and watching vids all day
+still planning on implementing that regions change for day15 though
+really looking forward to seeing what it does to perf / how it affects the flamegraph
+
+https://doc.rust-lang.org/std/mem/fn.discriminant.html interesting
+"This can be used to compare enums that carry data, while disregarding the actual data"
+assert!(mem::discriminant(&Foo::A("bar")) == mem::discriminant(&Foo::A("baz")));
+assert!(mem::discriminant(&Foo::B(1))     == mem::discriminant(&Foo::B(2)));
+assert!(mem::discriminant(&Foo::B(3))     != mem::discriminant(&Foo::C(3)));
+
+https://doc.rust-lang.org/rust-by-example/conversion/from_into.html
+
+"The Into trait is simply the reciprocal of the From trait. That is, if you have
+implemented the From trait for your type you get the Into implementation for free."
+
+TODO try out https://github.com/bheisler/criterion.rs for measuring optimizations to day15

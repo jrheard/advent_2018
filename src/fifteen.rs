@@ -1,3 +1,5 @@
+// TODO consider adding narrative doc comments to this module and any other interesting ones
+// explaining design iteration, perf improvements, etc
 use std::collections::VecDeque;
 use std::fs;
 use std::iter::FromIterator;
