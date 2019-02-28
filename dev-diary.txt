@@ -1554,7 +1554,7 @@ so you have to basically compute regions for each monster in every tick and that
 so this optimization doesn't really work! oh well!
 gonna run criterion on it just for grins:
 
-TODO this could still work
+DONE this could still work
 only update regions on attack if a monster _DIED_!
 
 here's the benchmark with my initial buggy implementation that recomputes on every move AND attack:

@@ -1,8 +1,3 @@
-// TODO consider adding narrative doc comments to this module and any other interesting ones
-// explaining design iteration, perf improvements, etc
-
-//use crate::util;
-
 mod game {
     use std::collections::VecDeque;
     use std::fs;
@@ -370,9 +365,6 @@ mod game {
                 }
             }
 
-            //util::print_grid(&self.to_grid());
-            //thread::sleep(time::Duration::from_millis(50));
-
             false
         }
 
@@ -496,9 +488,7 @@ pub fn fifteen_b(filename: &str) -> usize {
         loop {
             let game_over = game.tick();
 
-            let num_alive_elves = game.num_elves();
-
-            if num_alive_elves < num_alive_elves_before_combat {
+            if game.num_elves() < num_alive_elves_before_combat {
                 // Oh no, an elf died! Buff the elves by 1 attack power and try again.
                 attack_power += 1;
                 break;
