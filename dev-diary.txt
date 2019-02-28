@@ -1535,3 +1535,46 @@ to assume is maintained in order to assume type safety."
 ****
 
 v v v well expressed
+
+so i started implementing regions
+and the bfs was pretty straightforward
+until i realized that this is a little more complicated than i thought, or anyway more subtle to express
+my intiial implementation just dealt with self.unoccupied_spaces
+but at the same time, i want each monster to be in a region
+but regions are defined by the borders created by # spaces _and_ by monsters
+so it's like, i need to be in looking-at-monsters mode but also in not-looking-at-monsters mode
+hm. i guess it's just not the case that monsters can be in regions, i can think of a lot of edge cases there
+
+oh
+
+so i got this mostly working, except:
+regions _can't_ just be computed one time at the start of each tick, because they can
+be invalidated whenever a monster moves or attacks.
+so you have to basically compute regions for each monster in every tick and that's not great perfwise
+so this optimization doesn't really work! oh well!
+gonna run criterion on it just for grins:
+
+TODO this could still work
+only update regions on attack if a monster _DIED_!
+
+here's the benchmark with my initial buggy implementation that recomputes on every move AND attack:
+15b                     time:   [1.1716 s 1.1974 s 1.2250 s]
+
+benchmark after making it still recompute on all moves but only recompute on attack if the target died:
+15b                     time:   [988.00 ms 990.34 ms 995.06 ms]               
+                        change: [-16.588% -13.451% -9.9169%] (p = 0.00 < 0.05)
+                        Performance has improved.
+
+which is still worse than where we started
+gonna profile just for grins
+
+so now we spend 11% of our time in hashset.contains and 14% of our time in find_regions
+not a super huge amount of time doing allocations interestingly
+
+changed from using contains to intersection when computing region+destination combo, no change:
+
+15b                     time:   [1.0324 s 1.0362 s 1.0409 s]                  
+                        change: [-1.3267% +2.7950% +6.7726%] (p = 0.18 > 0.05)
+                        No change in performance detected.
+
+so anyway i'm gonna revert to the pre-region code, but still this was a fun exercise!
