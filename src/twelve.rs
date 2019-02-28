@@ -31,10 +31,10 @@ impl GenerationRule {
     /// the current pot will have a plant in the next generation."
     fn new(input: &str) -> Self {
         lazy_static! {
-            static ref re: Regex = Regex::new(r"(?P<pattern>[\.#]{5}) => (?P<result>[.#])").unwrap();
+            static ref RE: Regex = Regex::new(r"(?P<pattern>[\.#]{5}) => (?P<result>[.#])").unwrap();
         }
 
-        let caps = re.captures(input).unwrap();
+        let caps = RE.captures(input).unwrap();
 
         GenerationRule {
             pattern: caps

@@ -8,6 +8,7 @@ use advent_2018::nine;
 use advent_2018::one;
 use advent_2018::seven;
 use advent_2018::six;
+use advent_2018::sixteen;
 use advent_2018::ten;
 use advent_2018::thirteen;
 use advent_2018::three;
@@ -47,4 +48,5 @@ fn main() {
     println!("14b: {}", fourteen::fourteen_b());
     println!("15a: {}", fifteen::fifteen_a("src/inputs/15.txt"));
     println!("15b: {}", fifteen::fifteen_b("src/inputs/15.txt"));
+    println!("16a: {}", sixteen::sixteen_a());
 }

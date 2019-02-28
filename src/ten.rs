@@ -15,12 +15,12 @@ struct Point {
 impl Point {
     fn new(input_line: &str) -> Self {
         lazy_static! {
-            static ref pattern: Regex =
+            static ref PATTERN: Regex =
                 Regex::new(r".*< ?(?P<x>-?[0-9]+),  ?(?P<y>-?[0-9]+)>.*< ?(?P<dx>-?[0-9]+),  ?(?P<dy>-?[0-9]+)>")
                     .unwrap();
         }
 
-        let caps = pattern.captures(input_line).unwrap();
+        let caps = PATTERN.captures(input_line).unwrap();
         let value = |match_name| caps.name(match_name).unwrap().as_str().parse::<i32>().unwrap();
 
         Point {

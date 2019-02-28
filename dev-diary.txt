@@ -1578,3 +1578,29 @@ changed from using contains to intersection when computing region+destination co
                         No change in performance detected.
 
 so anyway i'm gonna revert to the pre-region code, but still this was a fun exercise!
+
+====
+
+2/28/19
+
+https://boats.gitlab.io/blog/post/shifgrethor-iv/
+
+"The tracing algorithm works like this: starting at a root, visit every Gc object it references
+and mark that object so that it will not be collected. This algorithm is an instance of
+the visitor pattern, which Rust has a well-known manner of encoding: a trait and a derive
+for that trait which calls the trait’s method recursively on all fields. serde’s traits,
+for example, are an instance of this pattern."
+
+https://boats.gitlab.io/blog/post/rust-2019/
+boats organizational debt post
+this one is super duper good, i hope something comes of it this year
+
+http://fitzgeraldnick.com/2018/12/14/rust-and-webassembly-in-2019.html
+sounds like we won't be rewriting quinto into rust+wasm in 2019, maybe 2020
+although it might be fun to do an original laborious rewrite and then incrementally improve it
+as the landscape improves
+for certain values of "fun" :)
+
+ok i've processed all my tabs let's do another day
+day 16
+
