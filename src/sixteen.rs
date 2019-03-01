@@ -1,3 +1,4 @@
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::type_complexity))]
 use std::fs;
 
 use itertools::Itertools;
@@ -8,7 +9,7 @@ use serde_scan::scan;
 #[derive(Debug, PartialEq)]
 struct Sample {
     before: [u8; 4],
-    instruction: [u8; 4],
+    instruction: [usize; 4],
     after: [u8; 4],
 }
 
@@ -40,8 +41,40 @@ fn parse_input() -> Vec<Sample> {
     ret
 }
 
+/// Returns the number of operations whose behavior could satisfy this Sample.
+fn test_sample(sample: &Sample) -> usize {
+    let mut num_satisfied = 0;
+
+    let operations: Vec<Box<Fn(&mut [u8; 4], usize, usize, usize)>> = vec![
+        // "addr (add register) stores into register C the result of adding register A and register B."
+        Box::new(|registers, a, b, c| registers[c] = registers[a] + registers[b]),
+        // "addi (add immediate) stores into register C the result of adding register A and value B."
+        Box::new(|registers, a, b, c| registers[c] = registers[a] + b as u8),
+    ];
+
+    let (a, b, c) = (sample.instruction[1], sample.instruction[2], sample.instruction[3]);
+
+    for operation in operations {
+        let mut output = sample.before;
+
+        operation(&mut output, a, b, c);
+
+        if output == sample.after {
+            num_satisfied += 1;
+        }
+    }
+
+    num_satisfied
+}
+
 pub fn sixteen_a() -> usize {
-    5
+    let samples = parse_input();
+
+    samples
+        .iter()
+        .map(|sample| test_sample(sample))
+        .filter(|&num_satisfied| num_satisfied > 0)
+        .count()
 }
 
 #[cfg(test)]
