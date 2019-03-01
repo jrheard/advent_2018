@@ -50,6 +50,34 @@ fn test_sample(sample: &Sample) -> usize {
         Box::new(|registers, a, b, c| registers[c] = registers[a] + registers[b]),
         // "addi (add immediate) stores into register C the result of adding register A and value B."
         Box::new(|registers, a, b, c| registers[c] = registers[a] + b as u8),
+        // "mulr (multiply register) stores into register C the result of multiplying register A and register B."
+        Box::new(|registers, a, b, c| registers[c] = registers[a] * registers[b]),
+        // "muli (multiply immediate) stores into register C the result of multiplying register A and value B."
+        Box::new(|registers, a, b, c| registers[c] = registers[a] * b as u8),
+        // "banr (bitwise AND register) stores into register C the result of the bitwise AND of register A and register B."
+        Box::new(|registers, a, b, c| registers[c] = registers[a] & registers[b]),
+        // "bani (bitwise AND immediate) stores into register C the result of the bitwise AND of register A and value B."
+        Box::new(|registers, a, b, c| registers[c] = registers[a] & b as u8),
+        // "borr (bitwise OR register) stores into register C the result of the bitwise OR of register A and register B."
+        Box::new(|registers, a, b, c| registers[c] = registers[a] | registers[b]),
+        // "bori (bitwise OR immediate) stores into register C the result of the bitwise OR of register A and value B."
+        Box::new(|registers, a, b, c| registers[c] = registers[a] | b as u8),
+        // "setr (set register) copies the contents of register A into register C. (Input B is ignored.)"
+        Box::new(|registers, a, _, c| registers[c] = registers[a]),
+        // "seti (set immediate) stores value A into register C. (Input B is ignored.)"
+        Box::new(|registers, a, _, c| registers[c] = a as u8),
+        // "gtir (greater-than immediate/register) sets register C to 1 if value A is greater than register B. Otherwise, register C is set to 0."
+        Box::new(|registers, a, b, c| registers[c] = if a as u8 > registers[b] { 1 } else { 0 }),
+        // "gtri (greater-than register/immediate) sets register C to 1 if register A is greater than value B. Otherwise, register C is set to 0."
+        Box::new(|registers, a, b, c| registers[c] = if registers[a] > b as u8 { 1 } else { 0 }),
+        // "gtrr (greater-than register/register) sets register C to 1 if register A is greater than register B. Otherwise, register C is set to 0."
+        Box::new(|registers, a, b, c| registers[c] = if registers[a] > registers[b] { 1 } else { 0 }),
+        // "eqir (equal immediate/register) sets register C to 1 if value A is equal to register B. Otherwise, register C is set to 0."
+        Box::new(|registers, a, b, c| registers[c] = if a as u8 == registers[b] { 1 } else { 0 }),
+        // "eqri (equal register/immediate) sets register C to 1 if register A is equal to value B. Otherwise, register C is set to 0."
+        Box::new(|registers, a, b, c| registers[c] = if registers[a] == b as u8 { 1 } else { 0 }),
+        // "eqrr (equal register/register) sets register C to 1 if register A is equal to register B. Otherwise, register C is set to 0."
+        Box::new(|registers, a, b, c| registers[c] = if registers[a] == registers[b] { 1 } else { 0 }),
     ];
 
     let (a, b, c) = (sample.instruction[1], sample.instruction[2], sample.instruction[3]);
@@ -73,7 +101,7 @@ pub fn sixteen_a() -> usize {
     samples
         .iter()
         .map(|sample| test_sample(sample))
-        .filter(|&num_satisfied| num_satisfied > 0)
+        .filter(|&num_satisfied| num_satisfied >= 3)
         .count()
 }
 
@@ -82,7 +110,9 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_solution() {}
+    fn test_solution() {
+        assert_eq!(sixteen_a(), 588);
+    }
 
     #[test]
     fn test_parse_input() {
