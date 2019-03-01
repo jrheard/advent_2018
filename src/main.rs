@@ -49,4 +49,5 @@ fn main() {
     println!("15a: {}", fifteen::fifteen_a("src/inputs/15.txt"));
     println!("15b: {}", fifteen::fifteen_b("src/inputs/15.txt"));
     println!("16a: {}", sixteen::sixteen_a());
+    println!("16b: {}", sixteen::sixteen_b());
 }

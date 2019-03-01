@@ -112,6 +112,37 @@ pub fn sixteen_a() -> usize {
 /// Using the samples you collected, work out the number of each opcode and execute the test program
 /// (the second section of your puzzle input). What value is contained in register 0 after executing the test program?
 pub fn sixteen_b() -> u8 {
+    let samples = parse_input();
+
+    // An array whose indices represent the opcodes 0-15,
+    // and whose values represent the possible Operations for those opcodes.
+    let mut opcode_candidates = [[true; 16]; 16];
+
+    for sample in samples {
+        let satisfied_operation_indexes = test_sample(&sample);
+        for index in 0..16 {
+            if !satisfied_operation_indexes.contains(&index) {
+                opcode_candidates[sample.instruction[0]][index] = false;
+            }
+        }
+    }
+
+    dbg!(opcode_candidates);
+
+    let mut opcode_to_operation_index = [std::usize::MAX; 16];
+
+    for (i, candidates) in opcode_candidates.iter().enumerate() {
+        for (operation_index, &value) in candidates.iter().enumerate() {
+            if value {
+                println!("opcode {} maps to operation {}", i, operation_index);
+                opcode_to_operation_index[i] = operation_index;
+            }
+        }
+    }
+
+    // 1. identify mapping from opcode num to operation
+    // 2. update parse fn to handle second part of file
+    // 3. run program
     5
 }
 
