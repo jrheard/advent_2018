@@ -1,4 +1,3 @@
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::type_complexity))]
 use std::fs;
 
 use itertools::Itertools;
@@ -41,11 +40,10 @@ fn parse_input() -> Vec<Sample> {
     ret
 }
 
-/// Returns the number of operations whose behavior could satisfy this Sample.
-fn test_sample(sample: &Sample) -> usize {
-    let mut num_satisfied = 0;
+type Operation = Fn(&mut [u8; 4], usize, usize, usize);
 
-    let operations: Vec<Box<Fn(&mut [u8; 4], usize, usize, usize)>> = vec![
+fn get_operations() -> Vec<Box<Operation>> {
+    vec![
         // "addr (add register) stores into register C the result of adding register A and register B."
         Box::new(|registers, a, b, c| registers[c] = registers[a] + registers[b]),
         // "addi (add immediate) stores into register C the result of adding register A and value B."
@@ -78,31 +76,43 @@ fn test_sample(sample: &Sample) -> usize {
         Box::new(|registers, a, b, c| registers[c] = if registers[a] == b as u8 { 1 } else { 0 }),
         // "eqrr (equal register/register) sets register C to 1 if register A is equal to register B. Otherwise, register C is set to 0."
         Box::new(|registers, a, b, c| registers[c] = if registers[a] == registers[b] { 1 } else { 0 }),
-    ];
+    ]
+}
+
+/// Returns a Vec containing the indexes of the Operations whose behavior satisfies this Sample.
+fn test_sample(sample: &Sample) -> Vec<usize> {
+    let mut ret = vec![];
 
     let (a, b, c) = (sample.instruction[1], sample.instruction[2], sample.instruction[3]);
 
-    for operation in operations {
+    for (i, operation) in get_operations().iter().enumerate() {
         let mut output = sample.before;
 
         operation(&mut output, a, b, c);
 
         if output == sample.after {
-            num_satisfied += 1;
+            ret.push(i);
         }
     }
 
-    num_satisfied
+    ret
 }
 
+/// Ignoring the opcode numbers, how many samples in your puzzle input behave like three or more opcodes?
 pub fn sixteen_a() -> usize {
     let samples = parse_input();
 
     samples
         .iter()
         .map(|sample| test_sample(sample))
-        .filter(|&num_satisfied| num_satisfied >= 3)
+        .filter(|satisfied_indexes| satisfied_indexes.len() > 3)
         .count()
+}
+
+/// Using the samples you collected, work out the number of each opcode and execute the test program
+/// (the second section of your puzzle input). What value is contained in register 0 after executing the test program?
+pub fn sixteen_b() -> u8 {
+    5
 }
 
 #[cfg(test)]

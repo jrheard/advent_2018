@@ -18,6 +18,7 @@ TODOs:
 
 ideas for a program to write after this:
 * port quinto to rust and compare perf? (might require a react-like rust lib to replace reagent, does one exist?)
+* look at the `battery` program and figure out how it generates its terminal graphs, come up with something to graph on the pi
 * irc bot (good excuse to try out tokio)
 * profiler (????)
 * flocking simulator (?)
