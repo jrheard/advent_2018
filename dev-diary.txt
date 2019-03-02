@@ -1605,3 +1605,32 @@ for certain values of "fun" :)
 ok i've processed all my tabs let's do another day
 day 16
 
+====
+
+3/1/16
+
+so i had this one function with this signature
+
+fn find_mapping(
+    commitments: &mut HashMap<usize, usize>,
+    possibilities: &mut HashMap<usize, HashSet<usize>>,
+) -> bool {
+
+and in there i wanted to modify `possibilities` in a loop, but i got a compiler error complaining that
+the first iteration of the loop borrowed possibilities mutably and then the second iteration
+couldn't get a mutable borrow because the first one still existed
+and this was really confusing because i was like, didn't the first one go out of scope at the end of the first loop iteration?
+and i googled around and none of the answers were super helpful
+
+but i *think* that this answer https://stackoverflow.com/questions/46393890/mutable-borrow-in-loop is talking about my specific problem
+i think that having two mutable references in this function signature causes the compiler to give them lifetimes 'a and 'b
+and apparently, if a mutable reference has a lifetime, then that reference has to live as long as the lifetime(?)
+
+so i'm going to try to counteract this by making a struct that bundles these two mutable hashmaps together
+
+struct MappingComputationData {
+    commitments: HashMap<usize, usize>,
+    possibilities: HashMap<usize, HashSet<usize>>,
+}
+
+not a great name but maybe i'll come up with a better one later if this works

@@ -1,5 +1,9 @@
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::needless_range_loop))]
 use std::fs;
+use std::iter::FromIterator;
 
+use hashbrown::HashMap;
+use hashbrown::HashSet;
 use itertools::Itertools;
 use serde_scan::scan;
 
@@ -107,6 +111,121 @@ pub fn sixteen_a() -> usize {
         .map(|sample| test_sample(sample))
         .filter(|satisfied_indexes| satisfied_indexes.len() > 3)
         .count()
+}
+
+struct MappingComputationData {
+    commitments: HashMap<usize, usize>,
+    possibilities: HashMap<usize, HashSet<usize>>,
+}
+
+fn find_mapping(data: &mut MappingComputationData) -> bool {
+    if data.commitments.len() == 16 {
+        // Base case 1: we've successfully filled out `commitments`!
+        return true;
+    }
+
+    let commitment_keys: HashSet<usize> = HashSet::from_iter(data.commitments.keys().cloned());
+    let possibilities_keys: HashSet<usize> = HashSet::from_iter(data.possibilities.keys().cloned());
+
+    for i in 0..16 {
+        if !commitment_keys.contains(&i) && !possibilities_keys.contains(&i) {
+            // Base case 2: An opcode has become orphaned - it isn't included in `commitments`,
+            // and has no entries in `possibilities`. Return false to indicate that this set of commitments is invalid.
+            return false;
+        }
+    }
+
+    // Find the opcode that has the smallest number of possibilities.
+    let opcode = data
+        .possibilities
+        .iter()
+        .sorted_by_key(|(_, possible_indexes)| possible_indexes.len())
+        .map(|(opcode, _)| opcode)
+        .cloned()
+        .nth(0)
+        .unwrap();
+
+    let possibilities_for_opcode = data.possibilities[&opcode].clone();
+
+    for possible_operation_index in possibilities_for_opcode {
+        // Record a mapping from opcode -> posible_operation_index in commitments.
+        data.commitments.insert(opcode, possible_operation_index);
+
+        // Since we've commited to `possible_operation_index` for this opcode,
+        // remove it from all other possibile-indexes hashsets in `possibilities`.
+        let mut affected_opcodes = vec![];
+        for (opcode, v) in data.possibilities.iter_mut() {
+            let did_remove = v.remove(&possible_operation_index);
+            if did_remove {
+                affected_opcodes.push(opcode.clone());
+            }
+        }
+
+        // Get rid of entries in `possibilities` whose value is an empty hashset.
+        data.possibilities.retain(|_, v| !v.is_empty());
+
+        if find_mapping(data) {
+            // This commitment ended up working out! We're done!
+            return true;
+        }
+
+        // If that didn't work, this commitment was a failure.
+        // Back it out and try again with the next possible operation index.
+
+        data.commitments.remove(&opcode);
+
+        for affected_opcode in affected_opcodes {
+            data.possibilities
+                .entry(affected_opcode)
+                .or_insert(HashSet::new())
+                .insert(possible_operation_index);
+        }
+    }
+
+    false
+}
+
+fn compute_opcode_to_operation_mapping(samples: &[Sample]) -> [u8; 16] {
+    // `possibilities` is a map of opcode -> possible operation index.
+    // It'll have entries like {5: #{2, 4, 11}}.
+    let mut possibilities = HashMap::new();
+
+    for i in 0..16 {
+        // All operation indexes are possible candidates until proven otherwise.
+        possibilities.insert(i, HashSet::from_iter(0..16));
+    }
+
+    for sample in samples {
+        let satisfied_operation_indexes = test_sample(&sample);
+
+        for index in 0..16 {
+            if !satisfied_operation_indexes.contains(&index) {
+                // The operation with at this index doesn't satisfy the opcode `sample.instructions[0]`.
+                // It's not a possible candidate for this opcode!
+                possibilities.entry(sample.instruction[0]).and_modify(|set| {
+                    set.remove(&index);
+                });
+            }
+        }
+    }
+
+    let mut data = MappingComputationData {
+        commitments: HashMap::new(),
+        possibilities,
+    };
+
+    find_mapping(&mut data);
+
+    assert_eq!(data.commitments.len(), 16);
+    assert_eq!(data.commitments.values().unique().count(), 16);
+
+    let mut ret = [0; 16];
+
+    for i in 0..16 {
+        ret[i] = data.commitments[&i] as u8;
+    }
+
+    ret
 }
 
 /// Using the samples you collected, work out the number of each opcode and execute the test program
