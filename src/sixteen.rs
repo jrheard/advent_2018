@@ -109,7 +109,7 @@ pub fn sixteen_a() -> usize {
     samples
         .iter()
         .map(|sample| test_sample(sample))
-        .filter(|satisfied_indexes| satisfied_indexes.len() > 3)
+        .filter(|satisfied_indexes| satisfied_indexes.len() >= 3)
         .count()
 }
 
