@@ -113,76 +113,35 @@ pub fn sixteen_a() -> usize {
         .count()
 }
 
-struct MappingComputationData {
-    commitments: HashMap<usize, usize>,
-    possibilities: HashMap<usize, HashSet<usize>>,
-}
+fn find_mapping(mut possibilities: HashMap<usize, HashSet<usize>>) -> HashMap<usize, usize> {
+    let mut mapping = HashMap::new();
 
-fn find_mapping(data: &mut MappingComputationData) -> bool {
-    if data.commitments.len() == 16 {
-        // Base case 1: we've successfully filled out `commitments`!
-        return true;
-    }
+    while mapping.len() < 16 {
+        // At every step along the way, there should be an opcode that has only 1 possible operation index.
+        let opcode = possibilities
+            .iter()
+            .filter(|(_, possible_indexes)| possible_indexes.len() == 1)
+            .map(|(opcode, _)| opcode)
+            .nth(0)
+            .unwrap();
 
-    let commitment_keys: HashSet<usize> = HashSet::from_iter(data.commitments.keys().cloned());
-    let possibilities_keys: HashSet<usize> = HashSet::from_iter(data.possibilities.keys().cloned());
+        let possibilities_for_opcode = possibilities[&opcode].clone();
+        let index = possibilities_for_opcode.iter().nth(0).unwrap();
 
-    for i in 0..16 {
-        if !commitment_keys.contains(&i) && !possibilities_keys.contains(&i) {
-            // Base case 2: An opcode has become orphaned - it isn't included in `commitments`,
-            // and has no entries in `possibilities`. Return false to indicate that this set of commitments is invalid.
-            return false;
-        }
-    }
+        // We've successfully found the index for this opcode!
+        mapping.insert(*opcode, *index);
 
-    // Find the opcode that has the smallest number of possibilities.
-    let opcode = data
-        .possibilities
-        .iter()
-        .sorted_by_key(|(_, possible_indexes)| possible_indexes.len())
-        .map(|(opcode, _)| opcode)
-        .cloned()
-        .nth(0)
-        .unwrap();
-
-    let possibilities_for_opcode = data.possibilities[&opcode].clone();
-
-    for possible_operation_index in possibilities_for_opcode {
-        // Record a mapping from opcode -> posible_operation_index in commitments.
-        data.commitments.insert(opcode, possible_operation_index);
-
-        // Since we've commited to `possible_operation_index` for this opcode,
+        // Since we've commited to `index` for this opcode,
         // remove it from all other possibile-indexes hashsets in `possibilities`.
-        let mut affected_opcodes = vec![];
-        for (opcode, v) in data.possibilities.iter_mut() {
-            let did_remove = v.remove(&possible_operation_index);
-            if did_remove {
-                affected_opcodes.push(opcode.clone());
-            }
-        }
-
-        // Get rid of entries in `possibilities` whose value is an empty hashset.
-        data.possibilities.retain(|_, v| !v.is_empty());
-
-        if find_mapping(data) {
-            // This commitment ended up working out! We're done!
-            return true;
-        }
-
-        // If that didn't work, this commitment was a failure.
-        // Back it out and try again with the next possible operation index.
-
-        data.commitments.remove(&opcode);
-
-        for affected_opcode in affected_opcodes {
-            data.possibilities
-                .entry(affected_opcode)
-                .or_insert(HashSet::new())
-                .insert(possible_operation_index);
+        for v in possibilities.values_mut() {
+            v.remove(&index);
         }
     }
 
-    false
+    assert_eq!(mapping.len(), 16);
+    assert_eq!(mapping.values().unique().count(), 16);
+
+    mapping
 }
 
 fn compute_opcode_to_operation_mapping(samples: &[Sample]) -> [u8; 16] {
@@ -209,20 +168,12 @@ fn compute_opcode_to_operation_mapping(samples: &[Sample]) -> [u8; 16] {
         }
     }
 
-    let mut data = MappingComputationData {
-        commitments: HashMap::new(),
-        possibilities,
-    };
-
-    find_mapping(&mut data);
-
-    assert_eq!(data.commitments.len(), 16);
-    assert_eq!(data.commitments.values().unique().count(), 16);
+    let mapping = find_mapping(possibilities);
 
     let mut ret = [0; 16];
 
     for i in 0..16 {
-        ret[i] = data.commitments[&i] as u8;
+        ret[i] = mapping[&i] as u8;
     }
 
     ret
@@ -233,33 +184,9 @@ fn compute_opcode_to_operation_mapping(samples: &[Sample]) -> [u8; 16] {
 pub fn sixteen_b() -> u8 {
     let samples = parse_input();
 
-    // An array whose indices represent the opcodes 0-15,
-    // and whose values represent the possible Operations for those opcodes.
-    let mut opcode_candidates = [[true; 16]; 16];
+    let opcodes_to_operation_indexes = compute_opcode_to_operation_mapping(&samples);
+    dbg!(opcodes_to_operation_indexes);
 
-    for sample in samples {
-        let satisfied_operation_indexes = test_sample(&sample);
-        for index in 0..16 {
-            if !satisfied_operation_indexes.contains(&index) {
-                opcode_candidates[sample.instruction[0]][index] = false;
-            }
-        }
-    }
-
-    dbg!(opcode_candidates);
-
-    let mut opcode_to_operation_index = [std::usize::MAX; 16];
-
-    for (i, candidates) in opcode_candidates.iter().enumerate() {
-        for (operation_index, &value) in candidates.iter().enumerate() {
-            if value {
-                println!("opcode {} maps to operation {}", i, operation_index);
-                opcode_to_operation_index[i] = operation_index;
-            }
-        }
-    }
-
-    // 1. identify mapping from opcode num to operation
     // 2. update parse fn to handle second part of file
     // 3. run program
     5

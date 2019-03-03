@@ -1634,3 +1634,10 @@ struct MappingComputationData {
 }
 
 not a great name but maybe i'll come up with a better one later if this works
+
+...lol fuck me the algorithm ran successfully on the first try but when i added printlns to see how it behaved
+it never backs out!
+so this actually could have been solved iteratively / without this nutso recursion
+so DONE next up let's rewrite this thing to be simpler
+i was pretty convinced that this would need a recursive implementation because the possibilities were too vague,
+but i've been really really sick all week so i guess my brain was just wrong
