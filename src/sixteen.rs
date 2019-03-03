@@ -1,4 +1,3 @@
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::needless_range_loop))]
 use std::fs;
 use std::iter::FromIterator;
 
@@ -7,8 +6,6 @@ use hashbrown::HashSet;
 use itertools::Itertools;
 use serde_scan::scan;
 
-// implement all sixteen opcodes
-
 #[derive(Debug, PartialEq)]
 struct Sample {
     before: [usize; 4],
@@ -16,6 +13,7 @@ struct Sample {
     after: [usize; 4],
 }
 
+/// Returns a tuple of (puzzle samples, puzzle instructions).
 fn parse_input() -> (Vec<Sample>, Vec<[usize; 4]>) {
     let contents = fs::read_to_string("src/inputs/16.txt").unwrap();
 
@@ -69,6 +67,7 @@ fn parse_input() -> (Vec<Sample>, Vec<[usize; 4]>) {
 
 type Operation = Fn(&mut [usize; 4], usize, usize, usize);
 
+/// Returns a Vec of the 16 operations described in the day's writeup.
 fn get_operations() -> Vec<Box<Operation>> {
     vec![
         // "addr (add register) stores into register C the result of adding register A and register B."
@@ -136,38 +135,8 @@ pub fn sixteen_a() -> usize {
         .count()
 }
 
-fn find_mapping(mut possibilities: HashMap<usize, HashSet<usize>>) -> HashMap<usize, usize> {
-    let mut mapping = HashMap::new();
-
-    while mapping.len() < 16 {
-        // At every step along the way, there should be an opcode that has only 1 possible operation index.
-        let opcode = possibilities
-            .iter()
-            .filter(|(_, possible_indexes)| possible_indexes.len() == 1)
-            .map(|(opcode, _)| opcode)
-            .nth(0)
-            .unwrap();
-
-        let possibilities_for_opcode = possibilities[&opcode].clone();
-        let index = possibilities_for_opcode.iter().nth(0).unwrap();
-
-        // We've successfully found the index for this opcode!
-        mapping.insert(*opcode, *index);
-
-        // Since we've commited to `index` for this opcode,
-        // remove it from all other possibile-indexes hashsets in `possibilities`.
-        for v in possibilities.values_mut() {
-            v.remove(&index);
-        }
-    }
-
-    assert_eq!(mapping.len(), 16);
-    assert_eq!(mapping.values().unique().count(), 16);
-
-    mapping
-}
-
-fn compute_opcode_to_operation_mapping(samples: &[Sample]) -> [usize; 16] {
+/// Takes a slice of Samples, returns a HashMap of {opcode: index into the vector returned by get_operations()}.
+fn compute_opcode_to_operation_mapping(samples: &[Sample]) -> HashMap<usize, usize> {
     // `possibilities` is a map of opcode -> possible operation index.
     // It'll have entries like {5: #{2, 4, 11}}.
     let mut possibilities = HashMap::new();
@@ -184,22 +153,45 @@ fn compute_opcode_to_operation_mapping(samples: &[Sample]) -> [usize; 16] {
             if !satisfied_operation_indexes.contains(&index) {
                 // The operation with at this index doesn't satisfy the opcode `sample.instructions[0]`.
                 // It's not a possible candidate for this opcode!
-                possibilities.entry(sample.instruction[0]).and_modify(|set| {
-                    set.remove(&index);
-                });
+                possibilities
+                    .entry(sample.instruction[0])
+                    .and_modify(|set: &mut HashSet<usize>| {
+                        set.remove(&index);
+                    });
             }
         }
     }
 
-    let mapping = find_mapping(possibilities);
+    let mut mapping = HashMap::new();
 
-    let mut ret = [0; 16];
+    while mapping.len() < 16 {
+        // At every step along the way, there should be an opcode that has only 1 possible operation index.
+        // That isn't a natural law of the universe or anything, it's just something that the puzzle creator
+        // seems to have done intentionally.
+        let opcode = possibilities
+            .iter()
+            .filter(|(_, possible_indexes)| possible_indexes.len() == 1)
+            .map(|(opcode, _)| opcode)
+            .nth(0)
+            .unwrap();
 
-    for i in 0..16 {
-        ret[i] = mapping[&i];
+        let possibilities_for_opcode = possibilities[&opcode].clone();
+        let index = possibilities_for_opcode.iter().nth(0).unwrap();
+
+        // We've successfully found the index for this opcode! That wasn't much work.
+        mapping.insert(*opcode, *index);
+
+        // Since we've commited to `index` for this opcode,
+        // remove it from all other possibile-indexes hashsets in `possibilities`.
+        for v in possibilities.values_mut() {
+            v.remove(&index);
+        }
     }
 
-    ret
+    assert_eq!(mapping.len(), 16);
+    assert_eq!(mapping.values().unique().count(), 16);
+
+    mapping
 }
 
 /// Using the samples you collected, work out the number of each opcode and execute the test program
@@ -212,7 +204,7 @@ pub fn sixteen_b() -> usize {
 
     for line in program {
         let (a, b, c, d) = (line[0], line[1], line[2], line[3]);
-        let operation = &operations[opcodes_to_operation_indexes[a]];
+        let operation = &operations[opcodes_to_operation_indexes[&a]];
         operation(&mut registers, b, c, d);
     }
 
