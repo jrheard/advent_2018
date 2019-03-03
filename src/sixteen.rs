@@ -203,9 +203,9 @@ pub fn sixteen_b() -> usize {
     let mut registers = [0, 0, 0, 0];
 
     for line in program {
-        let (a, b, c, d) = (line[0], line[1], line[2], line[3]);
-        let operation = &operations[opcodes_to_operation_indexes[&a]];
-        operation(&mut registers, b, c, d);
+        let (opcode, a, b, c) = (line[0], line[1], line[2], line[3]);
+        let operation = &operations[opcodes_to_operation_indexes[&opcode]];
+        operation(&mut registers, a, b, c);
     }
 
     registers[0]
