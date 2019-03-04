@@ -1650,3 +1650,32 @@ https://www.youtube.com/watch?v=ycMiMDHopNc - jonhoo's setup *****
 https://github.com/livioribeiro/cargo-readme looks useful
 also maaaaybe cargo tree -i, i can see it being useful in specific investigations but don't expect i'd use it on the regular
 cargo benchcmp looks useful if you've got a ton of benchmarks defined
+
+====
+
+3/4/19
+
+thoughts on 17
+don't store the whole 2d grid, no need to represent the empty spaces
+store the grid as a list of Points in y, x order
+have a queue of Streams (is there a better name?)
+a Stream has fields position and mode; mode is either Falling or Filling
+a stream falls until it reaches something solid, then fills until its container is full, then is destroyed
+AND is then replaced by either one or two streams, depending on if the vessel it just filled has equally tall walls
+TODO one edge case that might come up - what if we have a vessel like this
+
+ |
+# # 
+# # #
+#   #
+#####
+
+it will end up looking like this
+
+|~~~|
+ #~# 
+ #~# #
+ #~~~#
+ #####
+
+note the new stream on the right. we'll need to make sure we handle falling onto water correctly
