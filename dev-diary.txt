@@ -1641,3 +1641,12 @@ so this actually could have been solved iteratively / without this nutso recursi
 so DONE next up let's rewrite this thing to be simpler
 i was pretty convinced that this would need a recursive implementation because the possibilities were too vague,
 but i've been really really sick all week so i guess my brain was just wrong
+
+=====
+
+3/3/19
+
+https://www.youtube.com/watch?v=ycMiMDHopNc - jonhoo's setup *****
+https://github.com/livioribeiro/cargo-readme looks useful
+also maaaaybe cargo tree -i, i can see it being useful in specific investigations but don't expect i'd use it on the regular
+cargo benchcmp looks useful if you've got a ton of benchmarks defined
