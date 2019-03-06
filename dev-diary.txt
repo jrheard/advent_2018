@@ -1679,3 +1679,12 @@ it will end up looking like this
  #####
 
 note the new stream on the right. we'll need to make sure we handle falling onto water correctly
+
+====
+
+3/5/19
+
+gonna put this on pause for now, gettin kinda tired of puzzles. this was a good way to learn rust
+but i'm ready to take a break! might still use this repo for note-taking when watching rust vids / 
+reading rust blogs/books; would like my next rust project to be some sort of small application
+where _i_ get to choose the rules :)
