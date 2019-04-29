@@ -1685,6 +1685,25 @@ note the new stream on the right. we'll need to make sure we handle falling onto
 3/5/19
 
 gonna put this on pause for now, gettin kinda tired of puzzles. this was a good way to learn rust
-but i'm ready to take a break! might still use this repo for note-taking when watching rust vids / 
+but i'm ready to take a break! might still use this repo for note-taking when watching rust vids /
 reading rust blogs/books; would like my next rust project to be some sort of small application
 where _i_ get to choose the rules :)
+
+===
+
+4/28/19
+
+not doing any advent stuff atm, just using this doc as a scratchpad
+someday i'll formalize my dev diary process a little bit better
+
+https://www.youtube.com/watch?v=0zOg8_B71gE
+around 12:30, he says: avoid having lots of booleans in your api surface, instead you should feel totally fine
+about using 2-variant enums, like
+
+enum DisplayStyle {Color, Monochrome}
+
+i _love_ this, this is super super smart. i've known for a long time (since code complete iirc) that having tons of
+booleans in your api surface is an antipattern, but i haven't had a good sense of what to do instead -
+this totally answers that question. it's great because it's way more self-documenting.
+
+around 20 minute mark: implement all std traits on your types, especially iterator
